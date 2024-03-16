@@ -1,2 +1,23 @@
 server:
-  port: 4040
+  port: 8082
+  error:
+    whitelabel:
+      enabled: true
+
+spring:
+  datasource:
+      password: postgres
+      username: postgres
+      url: jdbc:postgresql://localhost:5432/postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  security:
+    user:
+      name: postgres
+      password: postgres
+  mvc:
+    servlet:
+      path: /
