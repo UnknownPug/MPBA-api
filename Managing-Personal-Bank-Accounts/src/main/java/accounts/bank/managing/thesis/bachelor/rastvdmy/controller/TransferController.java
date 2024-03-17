@@ -28,36 +28,28 @@ public class TransferController {
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Transfer>> getTransfers() {
-        LOG.info("Get all transfers");
+        LOG.debug("Getting all transfers ...");
         return ResponseEntity.ok(transferService.getTransfers());
     }
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Transfer> getTransferById(@PathVariable(value = "id") Long transferId) {
-        LOG.info("Get transfer by id: {}", transferId);
+        LOG.debug("Getting transfer id: {} ...", transferId);
         return ResponseEntity.ok(transferService.getTransferById(transferId));
     }
 
     @PostMapping(path = "/")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Transfer> createTransfer(@RequestBody TransferRequest transfer) {
-        if (transfer.amount() == null || transfer.description() == null || transfer.commission() == null) {
-            throw new IllegalArgumentException("Transfer data is not valid");
-        }
-        LOG.info("Create transfer...");
+        LOG.debug("Creating transfer ...");
         return ResponseEntity.ok(
-                transferService.createTransfer(transfer.amount(), transfer.description(), transfer.commission())
+                transferService.createTransfer(
+                        transfer.senderId(),
+                        transfer.receiverId(),
+                        transfer.receiverCardNumber(),
+                        transfer.amount(),
+                        transfer.description())
         );
-    }
-
-    @PutMapping(path = "/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateTransfer(@PathVariable(value = "id") Long transferId, @RequestBody TransferRequest transfer) {
-        if (transfer.amount() == null || transfer.description() == null || transfer.commission() == null) {
-            throw new IllegalArgumentException("Transfer data is not valid");
-        }
-        LOG.info("Update transfer...");
-        transferService.updateTransfer(transferId, transfer.amount(), transfer.description(), transfer.commission());
     }
 }

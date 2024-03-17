@@ -31,29 +31,21 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/")
     public ResponseEntity<List<User>> getUsers() {
-        LOG.info("Get all users");
+        LOG.debug("Getting all users ...");
         return ResponseEntity.ok(userService.getUsers());
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable(value = "id") Long userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("Set user id properly.");
-        }
-        LOG.info("Get user by id: {}", userId);
+        LOG.debug("Getting user id: {} ...", userId);
         return ResponseEntity.ok(userService.getUserById(userId));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/")
     public ResponseEntity<User> createUser(@RequestBody UserRequest user) {
-        LOG.info("Create user: {}", user.name());
-        if (user.name() == null || user.surname() == null ||
-                user.dateOfBirth() == null || user.countryOfOrigin() == null ||
-                user.email() == null || user.password() == null || user.phoneNumber() == null) {
-            throw new IllegalArgumentException("User data must be fully completed.");
-        }
+        LOG.debug("Creating user: {} ...", user.name());
         return ResponseEntity.ok(userService.createUser(
                 user.name(),
                 user.surname(),
@@ -65,48 +57,48 @@ public class UserController {
         ));
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @PutMapping(path = "/{id}")
     public void updateUserById(@PathVariable(value = "id") Long userId, @RequestBody UserRequest user) {
+        LOG.debug("Updating user id: {} ...", userId);
         userService.updateUserById(userId,
                 user.email(),
                 user.password(),
                 user.phoneNumber());
-        LOG.info("Update user by id: {}", userId);
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/avatar")
     public void uploadUserAvatar(@PathVariable(value = "id") Long userId, @RequestBody MultipartFile userAvatar) {
-        LOG.info("Upload user avatar by id: {}", userId);
+        LOG.debug("Uploading user avatar id: {} ...", userId);
         userService.uploadUserAvatar(userId, userAvatar);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping(path = "/{id}/email")
     public void updateUserEmailById(@PathVariable(value = "id") Long userId, @RequestBody String email) {
+        LOG.debug("Updating user email id: {} ...", userId);
         userService.updateUserEmailById(userId, email);
-        LOG.info("Update user email by id: {}", userId);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping(path = "/{id}/password")
     public void updateUserPasswordById(@PathVariable(value = "id") Long userId, @RequestBody String password) {
+        LOG.debug("Updating user password id: {} ...", userId);
         userService.updateUserPasswordById(userId, password);
-        LOG.info("Update user password by id: {}", userId);
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/phoneNumber")
     public void updateUserPhoneNumberById(@PathVariable(value = "id") Long userId, @RequestBody String phoneNumber) {
+        LOG.debug("Updating user phone number id: {} ...", userId);
         userService.updateUserPhoneNumberById(userId, phoneNumber);
-        LOG.info("Update user phone number by id: {}", userId);
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(path = "/{id}")
     public void deleteUserById(@PathVariable(value = "id") Long userId) {
-        LOG.info("Delete user by id: {}", userId);
+        LOG.debug("Deleting user by id: {} ...", userId);
         userService.deleteUserById(userId);
     }
 }

@@ -45,6 +45,10 @@ public class Transfer {
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
+    @Column(name = "reference_number", nullable = false, unique = true)
+    @Size(min = 1, max = 11)
+    private String referenceNumber;
+
     @JsonIgnore
     @OneToOne
     @ToString.Exclude

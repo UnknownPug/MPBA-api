@@ -5,9 +5,7 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.DepositReposit
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class DepositService {
@@ -28,52 +26,19 @@ public class DepositService {
         );
     }
 
-    public Deposit createDeposit(String description, Integer referenceNumber) {
-        Deposit deposit = new Deposit();
-        deposit.setDescription(description);
-        deposit.setReferenceNumber(referenceNumber);
-        deposit.setStartDate(LocalDateTime.now());
-        deposit.setExpirationDate(LocalDateTime.now().plusYears(1));
-        return depositRepository.save(deposit);
+    public Deposit createDeposit(String description) {
+        // TODO: complete this method
+        return null;
     }
 
-
-    public Object updateDeposit(Long depositId, String description, Integer referenceNumber) {
-        Deposit deposit = depositRepository.findById(depositId).orElseThrow(
-                () -> new IllegalArgumentException("Deposit is not valid")
-        );
-        if (description.isEmpty() && Objects.equals(deposit.getDescription(), description)) {
-            throw new IllegalArgumentException("Description is not valid");
-        }
-        if (referenceNumber.equals(deposit.getReferenceNumber())) {
-            throw new IllegalArgumentException("Reference number is not valid");
-        }
-        deposit.setDescription(description);
-        deposit.setReferenceNumber(referenceNumber);
-        return depositRepository.save(deposit);
-    }
-
-    public void updateDepositDescription(Long depositId, String description) {
-        Deposit deposit = depositRepository.findById(depositId).orElseThrow(
-                () -> new IllegalArgumentException("Deposit is not valid")
-        );
-        if (description.isEmpty() && Objects.equals(deposit.getDescription(), description)) {
-            throw new IllegalArgumentException("Description is not valid");
-        }
-        deposit.setDescription(description);
-    }
-
-    public void updateDepositReferenceNumber(Long depositId, Integer referenceNumber) {
-        Deposit deposit = depositRepository.findById(depositId).orElseThrow(
-                () -> new IllegalArgumentException("Deposit is not valid")
-        );
-        if (referenceNumber.equals(deposit.getReferenceNumber())) {
-            throw new IllegalArgumentException("Reference number is not valid");
-        }
-        deposit.setReferenceNumber(referenceNumber);
+    public void updateDeposit(Long depositId, String description) {
+        // TODO: complete this method
+        // The deposit cannot be renewed before the end of the deposit period
+        // (with the condition of not improving/deteriorating).
     }
 
     public void deleteDeposit(Long depositId) {
+        // TODO: check this method
         depositRepository.findById(depositId).orElseThrow(
                 () -> new IllegalArgumentException("Deposit is not valid")
         );

@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -41,6 +42,10 @@ public class BankLoan {
     @DateTimeFormat(pattern = "dd.MM.yyyy", iso = DateTimeFormat.ISO.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
     private LocalDateTime expirationDate;
+
+    @Column(name = "reference_number", nullable = false, unique = true)
+    @Size(min = 1, max = 11)
+    private String referenceNumber;
 
     @JsonIgnore
     @OneToOne

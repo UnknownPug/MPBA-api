@@ -5,9 +5,7 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.MessageReposit
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class MessageService {
@@ -29,39 +27,23 @@ public class MessageService {
     }
 
     public List<Message> getSortedMessagesBySenderId(Long senderId) {
-        return messageRepository.getSortedMessagesBySenderId(senderId);
+        List<Message> messages = messageRepository.findAll();
+        return messages.stream()
+                .sorted()
+                .filter(message -> message.getSender().getId().equals(senderId))
+                .toList();
     }
 
     public List<Message> getSortedMessagesByReceiverId(Long receiverID) {
-        return messageRepository.getSortedMessagesByReceiverId(receiverID);
+        List<Message> messages = messageRepository.findAll();
+        return messages.stream()
+                .sorted()
+                .filter(message -> message.getReceiver().getId().equals(receiverID))
+                .toList();
     }
 
-    public Message addMessage(String content) {
-        Message message = new Message();
-        if (content.isEmpty()) {
-            throw new IllegalStateException("Message content cannot be empty");
-        }
-        message.setContent(content);
-        message.setTimestamp(LocalDateTime.now());
-        return messageRepository.save(message);
-    }
-
-    public void updateMessage(Long messageId, String content) {
-        Message message = messageRepository.findById(messageId).orElseThrow(
-                () -> new IllegalStateException("Message with id " + messageId + " does not exist")
-        );
-        if (content.isEmpty() || Objects.equals(message.getContent(), content)) {
-            throw new IllegalStateException("Message content cannot be empty");
-        }
-        message.setContent(content);
-        message.setTimestamp(LocalDateTime.now());
-        messageRepository.save(message);
-    }
-
-    public void deleteMessage(Long messageId) {
-        messageRepository.findById(messageId).orElseThrow(
-                () -> new IllegalStateException("Message with id " + messageId + " does not exist")
-        );
-        messageRepository.deleteById(messageId);
+    public Message sendMessage(Long senderId, Long receiverId, String content) {
+        // TODO: complete this method
+        return null;
     }
 }

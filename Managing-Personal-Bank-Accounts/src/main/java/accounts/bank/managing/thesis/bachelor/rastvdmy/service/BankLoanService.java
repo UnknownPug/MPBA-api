@@ -28,48 +28,41 @@ public class BankLoanService {
         );
     }
 
-    public BankLoan createLoan(BigDecimal loanAmount) {
-        BankLoan bankLoan = new BankLoan();
-        if (loanAmount == null || loanRange(loanAmount)) {
-            throw new IllegalArgumentException("Bank loan is not valid");
-        }
-        bankLoan.setLoanAmount(loanAmount);
-        bankLoan.setStartDate(LocalDateTime.now());
-        bankLoan.setExpirationDate(LocalDateTime.now().plusYears(1));
-        return loanRepository.save(bankLoan);
+    public BankLoan openSettlementAccount(Long id, BigDecimal bigDecimal) {
+        // TODO: complete this method
+        return null;
     }
 
-    public void updateLoan(Long loanId, BigDecimal loanAmount) {
-        BankLoan bankLoan = loanRepository.findById(loanId).orElseThrow(
-                () -> new IllegalArgumentException("Loan is not found.")
-        );
-        if (loanAmount == null || loanRange(loanAmount) || !loanAmount.equals(bankLoan.getLoanAmount())) {
-            throw new IllegalArgumentException("Bank loan is not valid");
-        }
-        bankLoan.setLoanAmount(loanAmount);
-        loanRepository.save(bankLoan);
+    public BankLoan addLoanToCard(Long id, BigDecimal bigDecimal) {
+        // TODO: complete this method
+        return null;
+    }
+
+    public void repaySettlementAccountLoan(Long loanId, BigDecimal bigDecimal) {
+        // TODO: complete this method
+    }
+
+    public void repayCardLoan(Long loanId, BigDecimal bigDecimal) {
+        // TODO: complete this method
     }
 
     private boolean loanRange(BigDecimal loanAmount) {
         return loanAmount.compareTo(BigDecimal.ZERO) <= 0 && loanAmount.compareTo(BigDecimal.valueOf(1000000)) >= 0;
     }
 
-    public void updateLoanDate(Long loanId, LocalDateTime dateTime, LocalDateTime expirationDateTime) {
-        BankLoan bankLoan = loanRepository.findById(loanId).orElseThrow(
-                () -> new IllegalArgumentException("Loan is not found.")
-        );
-        if (dateTime == null || expirationDateTime == null || dateTime.isAfter(expirationDateTime)) {
-            throw new IllegalArgumentException("Date could not be set.");
-        }
-        bankLoan.setStartDate(dateTime);
-        bankLoan.setExpirationDate(expirationDateTime);
-        loanRepository.save(bankLoan);
+    public void updateSettlementAccountLoanDate(Long loanId, LocalDateTime localDateTime, LocalDateTime localDateTime1) {
+        // TODO: complete this method
     }
 
-    public void deleteLoan(Long loanId) {
-        loanRepository.findById(loanId).orElseThrow(
-                () -> new IllegalArgumentException("Loan is not found.")
-        );
-        loanRepository.deleteById(loanId);
+    public void updateCardLoanDate(Long loanId, LocalDateTime localDateTime, LocalDateTime localDateTime1) {
+        // TODO: complete this method
+    }
+
+    public void deleteSettlementAccountLoan(Long loanId) {
+        // TODO: complete this method
+    }
+
+    public void deleteCardLoan(Long loanId) {
+        // TODO: complete this method
     }
 }

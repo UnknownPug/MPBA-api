@@ -12,5 +12,6 @@ public record UserRequest(
         String countryOfOrigin,
         String email,
         String password,
-        String phoneNumber
-) {}
+        String phoneNumber) {
+
+}

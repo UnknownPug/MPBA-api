@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,19 +37,40 @@ public class Card {
     @Column(name = "balance", nullable = false)
     private BigDecimal balance;
 
-    @Column(name = "card_number", nullable = false)
+    @Column(name = "card_number", nullable = false, unique = true)
     @Size(min = 16, max = 16, message = "Card number must be 16 digits.")
-    private Integer cardNumber;
+    private String cardNumber;
 
-    @JsonIgnore
+    @Column(name = "cvv", nullable = false)
+    private Integer cvv;
+
+    @Column(name = "pin", nullable = false)
+    private Integer pin;
+
+    @Column(name = "card_holder", nullable = false)
+    private String cardHolder;
+
+    @Column(name = "account_number", nullable = false, unique = true)
+    @Pattern(regexp = "^\\d{10}/\\d{4}$")
+    private String accountNumber;
+
+    @Column(name = "iban", nullable = false, unique = true)
+    @Size(min = 24, max = 24)
+    private String iban;
+
+    @Column(name = "swift", nullable = false)
+    @Size(min = 8, max = 8)
+    private String swift;
+
     @Column(name = "expiration_date", nullable = false)
     @DateTimeFormat(pattern = "dd.MM.yyyy", iso = DateTimeFormat.ISO.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
-    private LocalDateTime expirationDate;
+    private LocalDateTime cardExpirationDate;
 
-    @JsonIgnore
-    @Column(name = "cvv", nullable = false)
-    private Integer cvv;
+    @Column(name = "recipient_time", nullable = false)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm", iso = DateTimeFormat.ISO.DATE_TIME)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
+    private LocalDateTime recipientTime;
 
     @JsonIgnore
     @OneToOne(mappedBy = "cardLoan", cascade = CascadeType.ALL)

@@ -40,8 +40,9 @@ public class Deposit {
     @Size(min = 1, max = 100, message = "The length of the description must be between 1 and 100 characters")
     private String description;
 
-    @Column(name = "reference_number", nullable = false)
-    private Integer referenceNumber;
+    @Column(name = "reference_number", nullable = false, unique = true)
+    @Size(min = 1, max = 11)
+    private String referenceNumber;
 
     @JsonIgnore
     @OneToOne

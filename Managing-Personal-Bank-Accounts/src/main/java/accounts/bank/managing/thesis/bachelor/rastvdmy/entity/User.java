@@ -95,16 +95,6 @@ public class User {
     @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL)
     @JoinTable(
-            name = "user_transfer",
-            joinColumns = @JoinColumn(name = "user_id", nullable = false),
-            inverseJoinColumns = @JoinColumn(name = "transfer_id")
-    )
-    @ToString.Exclude
-    private List<Transfer> transfers;
-
-    @JsonIgnore
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
             name = "user_bank_loan",
             joinColumns = @JoinColumn(name = "user_id", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "loan_id")
@@ -121,16 +111,6 @@ public class User {
     )
     @ToString.Exclude
     private List<Deposit> deposits;
-
-    @JsonIgnore
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_card_conversion",
-            joinColumns = @JoinColumn(name = "user_id", nullable = false),
-            inverseJoinColumns = @JoinColumn(name = "conversion_id")
-    )
-    @ToString.Exclude
-    private List<CardConversion> cardConversions;
 
     // Default Constructor for user
     public User() {

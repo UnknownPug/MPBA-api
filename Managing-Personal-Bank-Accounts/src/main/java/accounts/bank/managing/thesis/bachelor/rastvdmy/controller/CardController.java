@@ -30,39 +30,35 @@ public class CardController {
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Card>> getCards() {
-        LOG.info("Getting all cards");
+        LOG.debug("Getting all cards ...");
         return ResponseEntity.ok(cardService.getAllCards());
     }
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Card> getCardById(@PathVariable(value = "id") Long cardId) {
-        LOG.info("Getting card by id: " + cardId);
+        LOG.debug("Getting card id {} ...", cardId);
         return ResponseEntity.ok(cardService.getCardById(cardId));
     }
 
-    @PostMapping(path = "/")
+    @PostMapping(path = "/") // Both admin and user
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Card> createCard(@RequestBody CardRequest cardRequest) {
-        if (cardRequest.cardNumber() == null || cardRequest.cvv() == null) {
-            LOG.error("Card number is not valid.");
-            return ResponseEntity.badRequest().build();
-        }
-        LOG.info("Creating card");
-        return ResponseEntity.ok(cardService.createCard(cardRequest.cardNumber(), cardRequest.cvv()));
+    public ResponseEntity<Card> createCard() {
+        LOG.debug("Creating card...");
+        return ResponseEntity.ok(cardService.createCard());
     }
 
     @PatchMapping(path = "/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void changeCardBalance(@PathVariable(value = "id") Long cardId, @RequestBody CardRequest cardRequest) {
-        LOG.info("Changing card balance");
-        cardService.changeCardBalance(cardId, cardRequest.balance());
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void cardRefill(@PathVariable(value = "id") Long cardId, @RequestBody CardRequest cardRequest) {
+        LOG.debug("Refilling card ...");
+        cardService.cardRefill(cardId, cardRequest.pin(), cardRequest.balance());
     }
 
-    @DeleteMapping(path = "/{id}")
+    @DeleteMapping(path = "/{id}") // Only admin
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCard(@PathVariable(value = "id") Long cardId) {
-        LOG.info("Deleting card");
+        LOG.debug("Deleting card {} ...", cardId);
         cardService.deleteCard(cardId);
     }
 }

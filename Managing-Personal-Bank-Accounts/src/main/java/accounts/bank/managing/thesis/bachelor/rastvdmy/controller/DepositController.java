@@ -29,56 +29,37 @@ public class DepositController {
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Deposit>> getAllDeposits() {
-        LOG.info("Getting all deposits");
+        LOG.debug("Getting all deposits ...");
         return ResponseEntity.ok(depositService.getAllDeposits());
     }
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Deposit> getAllDepositById(@PathVariable(value = "id") Long depositId) {
-        LOG.info("Getting all deposits");
+        LOG.debug("Getting deposit id: {} ...", depositId);
         return ResponseEntity.ok(depositService.getAllDepositById(depositId));
     }
 
     @PostMapping(path = "/")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Deposit> createDeposit(@RequestBody DepositRequest request) {
-        if (request.description() == null || request.referenceNumber() == null) {
-            throw new IllegalArgumentException("Request is not valid.");
-        }
-        return ResponseEntity.ok(depositService.createDeposit(request.description(), request.referenceNumber()));
+        LOG.debug("Creating deposit ...");
+        return ResponseEntity.ok(depositService.createDeposit(request.description()));
     }
 
     @PutMapping(path = "/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateDeposit(@PathVariable(value = "id") Long depositId, @RequestBody DepositRequest request) {
-        if (request.description() == null || request.referenceNumber() == null) {
-            throw new IllegalArgumentException("Request is not valid.");
-        }
-        depositService.updateDeposit(depositId, request.description(), request.referenceNumber());
-    }
-
-    @PatchMapping(path = "/{id}/description")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateDepositDescription(@PathVariable(value = "id") Long depositId, @RequestBody DepositRequest request) {
-        if (request.description() == null) {
-            throw new IllegalArgumentException("Request is not valid.");
-        }
-        depositService.updateDepositDescription(depositId, request.description());
-    }
-
-    @PatchMapping(path = "/{id}/reference")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateDepositReferenceNumber(@PathVariable(value = "id") Long depositId, @RequestBody DepositRequest request) {
-        if (request.referenceNumber() == null) {
-            throw new IllegalArgumentException("Request is not valid.");
-        }
-        depositService.updateDepositReferenceNumber(depositId, request.referenceNumber());
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void updateDeposit(
+            @PathVariable(value = "id") Long depositId,
+            @RequestBody DepositRequest request) {
+        LOG.debug("Updating deposit ...");
+        depositService.updateDeposit(depositId, request.description());
     }
 
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDeposit(@PathVariable(value = "id") Long depositId) {
+        LOG.debug("Deleting deposit ...");
         depositService.deleteDeposit(depositId);
     }
 }

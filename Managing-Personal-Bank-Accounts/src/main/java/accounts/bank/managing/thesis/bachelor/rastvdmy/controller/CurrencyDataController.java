@@ -1,6 +1,5 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
-import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.CurrencyDataRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.CurrencyData;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.CurrencyDataService;
 import lombok.extern.slf4j.Slf4j;
@@ -29,38 +28,14 @@ public class CurrencyDataController {
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<CurrencyData>> getCurrencyData() {
-        LOG.info("Get currency data.");
+        LOG.debug("Getting currency data ...");
         return ResponseEntity.ok(currencyDataService.getAllCurrencyData());
     }
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<CurrencyData> getCurrencyDataById(@PathVariable Long id) {
-        LOG.info("Get currency data by id: {}", id);
+        LOG.debug("Get currency data id: {} ...", id);
         return ResponseEntity.ok(currencyDataService.getCurrencyDataById(id));
-    }
-
-    @PostMapping(path = "/")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<CurrencyData> addCurrencyData(@RequestBody CurrencyDataRequest dataRequest) {
-        LOG.info("Add currency data: {}", dataRequest.currencyCode());
-        return ResponseEntity.ok(currencyDataService.addCurrencyData(dataRequest.currencyCode()));
-    }
-
-    @PutMapping(path = "/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateCurrencyData(
-            @PathVariable Long id,
-            @RequestBody CurrencyDataRequest dataRequest
-    ) {
-        LOG.info("Update currency data with id: {}", id);
-        currencyDataService.updateCurrencyData(id, dataRequest.currencyCode());
-    }
-
-    @DeleteMapping(path = "/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCurrencyData(@PathVariable Long id) {
-        LOG.info("Delete currency data with id: {}", id);
-        currencyDataService.deleteCurrencyData(id);
     }
 }

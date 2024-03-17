@@ -38,6 +38,9 @@ public class CardConversion {
     @Column(name = "commission", nullable = false)
     private BigDecimal commission;
 
+    @Column(name = "reference_number", nullable = false, unique = true)
+    private String referenceNumber;
+
     @Column(name = "date_time", nullable = false)
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm", iso = DateTimeFormat.ISO.DATE_TIME)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")

@@ -29,27 +29,26 @@ public class CardService {
         );
     }
 
-    public Card createCard(Integer cardNumber, Integer cvv) {
-        Card card = new Card();
-        card.setCardNumber(cardNumber);
-        card.setCvv(cvv);
-        card.setBalance(BigDecimal.ZERO);
-        card.setExpirationDate(LocalDateTime.now().plusYears(5));
-        return cardRepository.save(card);
+    public Card createCard() {
+        // TODO: complete this method
+        return null;
     }
 
-    public void changeCardBalance(Long cardId, BigDecimal balance) {
+    public void cardRefill(Long cardId, Integer pin, BigDecimal balance) {
+        // TODO: complete this method
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new RuntimeException("Card with id: " + cardId + " not found")
         );
-        card.setBalance(balance);
-        cardRepository.save(card);
+        if (card.getPin().equals(pin)) {
+            card.setBalance(balance);
+            card.setRecipientTime(LocalDateTime.now());
+            cardRepository.save(card);
+        } else {
+            throw new RuntimeException("Wrong pin");
+        }
     }
 
     public void deleteCard(Long cardId) {
-        cardRepository.findById(cardId).orElseThrow(
-                () -> new RuntimeException("Card with id: " + cardId + " not found")
-        );
-        cardRepository.deleteById(cardId);
+        // TODO: complete this method
     }
 }

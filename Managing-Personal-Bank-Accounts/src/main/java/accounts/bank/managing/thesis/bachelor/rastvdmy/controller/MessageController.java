@@ -2,6 +2,7 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.MessageRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Message;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.MessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -30,51 +31,42 @@ public class MessageController {
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Message>> getMessages() {
-        LOG.info("Getting messages");
+        LOG.debug("Getting messages ...");
         return ResponseEntity.ok(messageService.getMessages());
     }
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Message> getMessageById(@PathVariable (value = "id") Long messageId) {
-        LOG.info("Getting message by id");
+    public ResponseEntity<Message> getMessageById(@PathVariable(value = "id") Long messageId) {
+        LOG.debug("Getting message id: {} ...", messageId);
         return ResponseEntity.ok(messageService.getMessageById(messageId));
     }
+
     @GetMapping(path = "/{id}/")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Message>> getSortedMessages(
             @PathVariable(value = "id") Long userId,
             @RequestParam(value = "sort") String sort) {
-        LOG.info("Getting sorted messages");
-        if (sort.equals("sender_id")) {
+        if (sort.equals("sender-id")) {
+            LOG.debug("Getting sorted messages by senderId: {} ...", userId);
             return ResponseEntity.ok(messageService.getSortedMessagesBySenderId(userId));
-        } else if (sort.equals("receiver_id")) {
+        } else if (sort.equals("receiver-id")) {
+            LOG.debug("Getting sorted messages by receiverId: {} ...", userId);
             return ResponseEntity.ok(messageService.getSortedMessagesByReceiverId(userId));
         } else {
-            return ResponseEntity.badRequest().build();
+            throw new ApplicationException(
+                    HttpStatus.BAD_REQUEST, "Invalid type of sorting. Use 'sender-id' or 'receiver-id'");
         }
     }
 
     @PostMapping(path = "/")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Message> addMessage(@RequestBody MessageRequest messageRequest) {
-        LOG.info("Adding message");
-        return ResponseEntity.ok(messageService.addMessage(messageRequest.content()));
-    }
-
-    @PutMapping(path = "/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateMessage(
-            @PathVariable(value = "id") Long messageId,
-            @RequestBody MessageRequest messageRequest) {
-        LOG.info("Updating message");
-        messageService.updateMessage(messageId, messageRequest.content());
-    }
-
-    @DeleteMapping(path = "/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteMessage(@PathVariable(value = "id") Long messageId) {
-        LOG.info("Deleting message");
-        messageService.deleteMessage(messageId);
+    public ResponseEntity<Message> sendMessage(@RequestBody MessageRequest messageRequest) {
+        LOG.debug("Sending message ...");
+        return ResponseEntity.ok(messageService.sendMessage(
+                messageRequest.senderId(),
+                messageRequest.receiverId(),
+                messageRequest.content())
+        );
     }
 }

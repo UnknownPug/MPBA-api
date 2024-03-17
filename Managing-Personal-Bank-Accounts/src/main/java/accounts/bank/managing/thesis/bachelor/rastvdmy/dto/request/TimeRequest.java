@@ -8,6 +8,5 @@ public record TimeRequest(
         @JsonProperty("start_date")
         LocalDateTime startDate,
         @JsonProperty("expiration_date")
-        LocalDateTime expirationDate
-) {
+        LocalDateTime expirationDate) {
 }
