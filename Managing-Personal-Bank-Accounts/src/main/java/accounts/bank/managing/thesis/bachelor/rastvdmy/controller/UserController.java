@@ -88,6 +88,20 @@ public class UserController {
         userService.updateUserPasswordById(userId, password);
     }
 
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping(path = "/{id}/role")
+    public void updateUserRoleById(@PathVariable(value = "id") Long userId, @RequestBody String role) {
+        LOG.debug("Updating user role id: {} ...", userId);
+        userService.updateUserRoleById(userId, role);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping(path = "/{id}/status")
+    public void updateUserStatusById(@PathVariable(value = "id") Long userId, @RequestBody String status) {
+        LOG.debug("Updating user state id: {} ...", userId);
+        userService.updateUserStateById(userId, status);
+    }
+
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/phoneNumber")
     public void updateUserPhoneNumberById(@PathVariable(value = "id") Long userId, @RequestBody String phoneNumber) {

@@ -1,6 +1,9 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.User;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.UserRole;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.UserStatus;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +23,13 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final CardService cardService;
+
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CardService cardService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.cardService = cardService;
     }
 
     public List<User> getUsers() {
@@ -32,43 +38,84 @@ public class UserService {
 
     public User getUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
         );
     }
 
-    public User createUser(String name, String surname, Date date, String countryOfOrigin,
+    public User createUser(String name, String surname, Date dateOfBirth, String countryOfOrigin,
                            String email, String password, String phoneNumber) {
-        // TODO: complete this method
-        // Bind the card to the user
-        return null;
+        if (name.isEmpty() || surname.isEmpty() || countryOfOrigin.isEmpty() ||
+                email.isEmpty() || password.isEmpty() || phoneNumber.isEmpty()) {
+            throw new ApplicationException(HttpStatus.NO_CONTENT, "All user fields must be filled");
+        }
+        if (userRepository.existsByEmail(email)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable");
+        }
+        if (userRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number " + phoneNumber + " is unavailable");
+        }
+        // Creating user with default role and status
+        User user = new User();
+        user.setName(name);
+        user.setSurname(surname);
+        user.setDateOfBirth(dateOfBirth);
+        user.setCountryOrigin(countryOfOrigin);
+        user.setEmail(email);
+        user.setPassword(password);
+        user.encodePassword(passwordEncoder);
+        user.setPhoneNumber(phoneNumber);
+        user.setUserRole(UserRole.ROLE_USER);
+        user.setStatus(UserStatus.STATUS_ONLINE);
+        // Save the user and get the saved instance. Then create a card for the user
+        User savedUser = userRepository.save(user);
+        Card card = cardService.createCard(savedUser.getId());
+        savedUser.getCards().add(card);
+        userRepository.save(savedUser);
+        return savedUser;
     }
 
     public void updateUserById(Long userId, String email, String password, String phoneNumber) {
-        // TODO: complete this method
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+        );
+        if (email == null || password == null || phoneNumber == null) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "All user fields must be filled");
+        }
+        if (userRepository.existsByEmail(email)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable");
+        }
+        if (userRepository.existsByPhoneNumber(phoneNumber)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number " + phoneNumber + " is unavailable");
+        }
+        if (Objects.equals(password, user.getPassword())) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered password is the same as the old one");
+        }
+        user.setEmail(email);
+        user.setPassword(password);
+        user.encodePassword(passwordEncoder);
+        user.setPhoneNumber(phoneNumber);
+        userRepository.save(user);
     }
 
     public void uploadUserAvatar(Long userId, MultipartFile userAvatar) {
-        // TODO: check this method
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
         );
         user.setAvatar(userAvatar.getOriginalFilename());
         userRepository.save(user);
     }
 
     public void updateUserEmailById(Long userId, String email) {
-        // TODO: check this method
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
         );
-        if (email == null || !Objects.equals(email, user.getEmail())) {
-            throw new IllegalArgumentException("Email " + email + " is unavailable");
+        if (email == null) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email must be filled");
         }
-        List<User> users = userRepository.findAll();
-        List<User> sortedUsersByEmail = users
-                .stream()
-                .filter(mail -> email.equals(user.getEmail())).toList();
-        if (sortedUsersByEmail.isEmpty()) {
+        if (Objects.equals(email, user.getEmail())) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered email is the same as the old one");
+        }
+        if (userRepository.existsByEmail(email)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable");
         }
         user.setEmail(email);
@@ -76,20 +123,55 @@ public class UserService {
     }
 
     public void updateUserPasswordById(Long userId, String password) {
-        // TODO: check this method
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
         );
-        if (password == null || !Objects.equals(password, user.getPassword())) {
-            throw new IllegalArgumentException("Password is the same or was not entered");
+        if (password == null) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Password must be filled");
+        }
+        if (Objects.equals(password, user.getPassword())) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered password is the same as the old one");
         }
         user.setPassword(password);
         user.encodePassword(passwordEncoder);
         userRepository.save(user);
     }
 
+    public void updateUserRoleById(Long userId, String role) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+        );
+        UserRole newRole;
+        try {
+            newRole = UserRole.valueOf(role.toUpperCase());
+        } catch (Exception e) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Role " + role + " does not exist");
+        }
+        if (user.getUserRole().equals(newRole)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered role is the same as the old one");
+        }
+        user.setUserRole(newRole);
+        userRepository.save(user);
+    }
+
+    public void updateUserStateById(Long userId, String status) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+        );
+        UserStatus newStatus;
+        try {
+            newStatus = UserStatus.valueOf(status.toUpperCase());
+        } catch (Exception e) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Status " + status + " does not exist");
+        }
+        if (user.getStatus().equals(newStatus)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered status is the same as the old one");
+        }
+        user.setStatus(newStatus);
+        userRepository.save(user);
+    }
+
     public void updateUserPhoneNumberById(Long userId, String phoneNumber) {
-        // TODO: check this method
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new IllegalArgumentException("User with id: " + userId + " not found")
         );
@@ -109,11 +191,15 @@ public class UserService {
     }
 
     public void deleteUserById(Long userId) {
-        // TODO: check this method
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new IllegalArgumentException("User with id " + userId + " not found.")
         );
-        userRepository.delete(user);
+        if (user.getCards().isEmpty()) {
+            userRepository.delete(user);
+        } else {
+            throw new IllegalArgumentException(
+                    "User with id " + userId + " has cards. Delete the cards to remove user.");
+        }
     }
 }
 
