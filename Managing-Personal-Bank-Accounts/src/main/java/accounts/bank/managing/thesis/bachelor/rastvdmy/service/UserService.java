@@ -1,9 +1,6 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.User;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.UserRole;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.UserStatus;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.*;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +65,7 @@ public class UserService {
         user.setStatus(UserStatus.STATUS_ONLINE);
         // Save the user and get the saved instance. Then create a card for the user
         User savedUser = userRepository.save(user);
-        Card card = cardService.createCard(savedUser.getId());
+        Card card = cardService.createCard(savedUser.getId(), Currency.CZK.toString(), CardType.VISA.toString());
         savedUser.getCards().add(card);
         userRepository.save(savedUser);
         return savedUser;

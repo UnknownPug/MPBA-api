@@ -1,7 +1,5 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-public record CardRequest(BigDecimal balance, Integer pin) {
+public record CardRequest(String currency, String type) {
 }

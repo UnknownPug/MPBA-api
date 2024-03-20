@@ -1,6 +1,7 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
 
+import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.CardRefillRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.CardRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.CardService;
@@ -41,24 +42,40 @@ public class CardController {
         return ResponseEntity.ok(cardService.getCardById(cardId));
     }
 
-    @PostMapping(path = "/") // Both admin and user
+    @PostMapping(path = "/{id}") // Both admin and user
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Card> createCard() {
-        LOG.debug("Creating card...");
-        return ResponseEntity.ok(cardService.createCard());
+    public ResponseEntity<Card> createCard(@PathVariable(value = "id") Long userId,
+                                           @RequestBody CardRequest cardRequest) {
+        LOG.debug("Creating card ...");
+        return ResponseEntity.ok(cardService.createCard(userId, cardRequest.currency(), cardRequest.type()));
     }
 
     @PatchMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public void cardRefill(@PathVariable(value = "id") Long cardId, @RequestBody CardRequest cardRequest) {
+    public void cardRefill(@PathVariable(value = "id") Long cardId, @RequestBody CardRefillRequest cardRefillRequest) {
         LOG.debug("Refilling card ...");
-        cardService.cardRefill(cardId, cardRequest.pin(), cardRequest.balance());
+        cardService.cardRefill(cardId, cardRefillRequest.pin(), cardRefillRequest.balance());
     }
 
-    @DeleteMapping(path = "/{id}") // Only admin
+    @PatchMapping(path = "/{id}/type")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void changeCardType
+            (@PathVariable(value = "id") Long cardId, @RequestBody String cardType) {
+        LOG.debug("Changing card type ...");
+        cardService.changeCardType(cardId, cardType);
+    }
+
+    @PatchMapping(path = "/{id}/card-status")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void changeCardStatus(@PathVariable(value = "id") Long cardId, @RequestBody String cardStatus) {
+        LOG.debug("Changing card status ...");
+        cardService.changeCardStatus(cardId, cardStatus);
+    }
+
+    @DeleteMapping(path = "/{id}/from/{uid}") // Only admin
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCard(@PathVariable(value = "id") Long cardId) {
-        LOG.debug("Deleting card {} ...", cardId);
-        cardService.deleteCard(cardId);
+    public void deleteCard(@PathVariable(value = "id") Long cardId, @PathVariable(value = "uid") Long userId) {
+        LOG.debug("Deleting card {} from user {}...", cardId, userId);
+        cardService.deleteCard(cardId, userId);
     }
 }
