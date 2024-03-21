@@ -18,9 +18,15 @@ public class CurrencyData {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Column(name = "currency", nullable = false)
+    private String currency;
+
+    @Column(name = "rate", nullable = false)
+    private Double rate;
+
     @JsonIgnore
     @OneToOne
     @JoinColumn(name = "user_bank_currency", nullable = false)
     @ToString.Exclude
-    private User bankCurrency;
+    private User userCurrency;
 }

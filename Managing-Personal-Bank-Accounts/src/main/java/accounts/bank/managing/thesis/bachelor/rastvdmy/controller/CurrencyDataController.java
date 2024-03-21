@@ -27,15 +27,16 @@ public class CurrencyDataController {
 
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<List<CurrencyData>> getCurrencyData() {
-        LOG.debug("Getting currency data ...");
-        return ResponseEntity.ok(currencyDataService.getAllCurrencyData());
+    public List<CurrencyData> updateAndFetchAllCurrencies() {
+        LOG.debug("Updating currency data ...");
+        currencyDataService.updateCurrencyData();
+        return currencyDataService.findAllCurrencies();
     }
 
-    @GetMapping(path = "/{id}")
+    @GetMapping(path = "/{currency}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<CurrencyData> getCurrencyDataById(@PathVariable Long id) {
-        LOG.debug("Get currency data id: {} ...", id);
-        return ResponseEntity.ok(currencyDataService.getCurrencyDataById(id));
+    public ResponseEntity<CurrencyData> findByCurrency(@PathVariable(value = "currency") String currencyType) {
+        LOG.debug("Getting currency {} ...", currencyType);
+        return ResponseEntity.ok(currencyDataService.findByCurrency(currencyType));
     }
 }
