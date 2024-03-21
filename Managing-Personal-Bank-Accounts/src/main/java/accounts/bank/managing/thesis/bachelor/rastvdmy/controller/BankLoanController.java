@@ -30,7 +30,7 @@ public class BankLoanController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/")
     public ResponseEntity<List<BankLoan>> getAllLoans() {
-        LOG.debug("Getting all loans...");
+        LOG.debug("Getting all loans ...");
         return ResponseEntity.ok(bankLoanService.getAllLoans());
     }
 
@@ -44,14 +44,16 @@ public class BankLoanController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/{id}")
     public ResponseEntity<BankLoan> openLoan(@PathVariable(value = "id") Long id,
-                                             @RequestParam(value = "type") String type,
+                                             @RequestParam(value = "option") String option,
                                              @RequestBody BankLoanRequest loanRequest) {
-        if (type.equals("settlement-account")) {
+        if (option.equals("settlement-account")) {
             LOG.debug("Opening settlement account for loan for user {} ...", id);
-            return ResponseEntity.ok(bankLoanService.openSettlementAccount(id, loanRequest.loanAmount()));
-        } else if (type.equals("card")) {
+            return ResponseEntity.ok(bankLoanService.openSettlementAccount(
+                    id, loanRequest.loanAmount(), loanRequest.currencyType()));
+        } else if (option.equals("card")) {
             LOG.debug("Opening card for loan for user with card {} ...", id);
-            return ResponseEntity.ok(bankLoanService.addLoanToCard(id, loanRequest.loanAmount()));
+            return ResponseEntity.ok(bankLoanService.addLoanToCard(
+                    id, loanRequest.loanAmount(), loanRequest.currencyType()));
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid type. Use 'settlement-account' or 'card'");
         }
@@ -59,51 +61,22 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}")
-    public void loanRepayment(@PathVariable(value = "id") Long loanId,
-                              @RequestParam(value = "type") String type,
-                              @RequestBody BankLoanRequest loanRequest) {
-        if (type.equals("settlement-account")) {
-            LOG.debug("Repaying settlement account loan for user {} ...", loanId);
-            bankLoanService.repaySettlementAccountLoan(loanId, loanRequest.loanAmount());
-        } else if (type.equals("card")) {
-            LOG.debug("Repaying card loan for user {} ...", loanId);
-            bankLoanService.repayCardLoan(loanId, loanRequest.loanAmount());
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid type. Use 'settlement-account' or 'card'");
-        }
+    public void loanRepayment(@PathVariable(value = "id") Long loanId, @RequestBody BankLoanRequest loanRequest) {
+        LOG.debug("Repaying settlement account loan {} ...", loanId);
+        bankLoanService.repayLoan(loanId, loanRequest.loanAmount(), loanRequest.currencyType());
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/date")
-    public void updateLoanDate(@PathVariable(value = "id") Long loanId,
-                               @RequestParam(value = "type") String type,
-                               @RequestBody TimeRequest timeRequest) {
-        if (type.equals("settlement-account")) {
-            LOG.debug("Updating settlement account loan date for user {} ...", loanId);
-            bankLoanService.updateSettlementAccountLoanDate(loanId,
-                    timeRequest.startDate(),
-                    timeRequest.expirationDate()
-            );
-        } else if (type.equals("card")) {
-            LOG.debug("Updating card loan date for user {} ...", loanId);
-            bankLoanService.updateCardLoanDate(loanId, timeRequest.startDate(), timeRequest.expirationDate());
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid type. Use 'settlement-account' or 'card'");
-        }
+    public void updateLoanDate(@PathVariable(value = "id") Long loanId, @RequestBody TimeRequest timeRequest) {
+        LOG.debug("Updating settlement account loan {} ...", loanId);
+        bankLoanService.updateLoanDate(loanId, timeRequest.startDate(), timeRequest.expirationDate());
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(path = "/{id}")
-    public void deleteLoan(@PathVariable(value = "id") Long loanId,
-                           @RequestParam(value = "type") String type) {
-        if (type.equals("settlement-account")) {
-            LOG.debug("Deleting settlement account loan for user {} ...", loanId);
-            bankLoanService.deleteSettlementAccountLoan(loanId);
-        } else if (type.equals("card")) {
-            LOG.debug("Deleting card loan for user {} ...", loanId);
-            bankLoanService.deleteCardLoan(loanId);
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid type. Use 'settlement-account' or 'card'");
-        }
+    public void deleteLoan(@PathVariable(value = "id") Long loanId) {
+        LOG.debug("Deleting settlement account loan for user {} ...", loanId);
+        bankLoanService.deleteCardLoan(loanId);
     }
 }

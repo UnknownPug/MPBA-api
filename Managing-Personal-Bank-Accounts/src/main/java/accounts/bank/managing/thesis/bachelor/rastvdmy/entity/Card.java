@@ -48,7 +48,7 @@ public class Card {
     private Integer pin;
 
     @Column(name = "card_holder", nullable = false)
-    private String cardHolder;
+    private String holderName;
 
     @Column(name = "account_number", nullable = false, unique = true)
     @Pattern(regexp = "^\\d{10}/\\d{4}$")
@@ -71,6 +71,11 @@ public class Card {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm", iso = DateTimeFormat.ISO.DATE_TIME)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime recipientTime;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @JsonIgnore
     @OneToOne(mappedBy = "cardLoan", cascade = CascadeType.ALL)

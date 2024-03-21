@@ -5,8 +5,11 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationExce
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
@@ -21,6 +24,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final CardService cardService;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CardService cardService) {
@@ -56,7 +60,11 @@ public class UserService {
         user.setName(name);
         user.setSurname(surname);
         user.setDateOfBirth(dateOfBirth);
-        user.setCountryOrigin(countryOfOrigin);
+        if (countryExists(countryOfOrigin)) {
+            user.setCountryOrigin(countryOfOrigin);
+        } else {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Country " + countryOfOrigin + " does not exist");
+        }
         user.setEmail(email);
         user.setPassword(password);
         user.encodePassword(passwordEncoder);
@@ -69,6 +77,16 @@ public class UserService {
         savedUser.getCards().add(card);
         userRepository.save(savedUser);
         return savedUser;
+    }
+
+    private boolean countryExists(String countryName) {
+        final String url = "https://restcountries.eu/rest/v2/name/" + countryName;
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            return response.getStatusCode().is2xxSuccessful() && response.getBody() != null && !response.getBody().isEmpty();
+        } catch (RestClientException e) {
+            return false;
+        }
     }
 
     public void updateUserById(Long userId, String email, String password, String phoneNumber) {
@@ -175,12 +193,7 @@ public class UserService {
         if (phoneNumber == null || !Objects.equals(phoneNumber, user.getPhoneNumber())) {
             throw new IllegalArgumentException("Phone number " + phoneNumber + " is unavailable");
         }
-        List<User> users = userRepository.findAll();
-        List<User> usersWithGivenPhoneNumber = users
-                .stream()
-                .filter(u -> phoneNumber.equals(u.getPhoneNumber()))
-                .toList();
-        if (usersWithGivenPhoneNumber.isEmpty()) {
+        if (userRepository.existsByPhoneNumber(phoneNumber)) {
             throw new IllegalArgumentException("Phone number " + phoneNumber + " is unavailable");
         }
         user.setPhoneNumber(phoneNumber);

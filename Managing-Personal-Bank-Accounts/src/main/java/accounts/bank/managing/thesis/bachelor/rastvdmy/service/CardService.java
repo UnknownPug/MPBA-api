@@ -17,15 +17,11 @@ import java.util.Random;
 public class CardService {
 
     private final CardRepository cardRepository;
-
-    private final UserService userService;
     private final UserRepository userRepository;
 
     @Autowired
-    public CardService(CardRepository cardRepository, UserService userService,
-                       UserRepository userRepository) {
+    public CardService(CardRepository cardRepository, UserRepository userRepository) {
         this.cardRepository = cardRepository;
-        this.userService = userService;
         this.userRepository = userRepository;
     }
 
@@ -40,13 +36,14 @@ public class CardService {
     }
 
     public Card createCard(Long userId, String chosenCurrency, String type) {
-        Card card = new Card();
         long minCardLimit = 1_000_000_000_000_000L;
         long maxCardLimit = 9_999_999_999_999_999L;
         int minCvvLimit = 100;
         int maxCvvLimit = 999;
         int minPinLimit = 1000;
         int maxPinLimit = 9999;
+
+        Card card = new Card();
         Random random = new Random();
 
         long generatedCardNumber = minCardLimit + random.nextLong() * (maxCardLimit - minCardLimit);
@@ -59,9 +56,10 @@ public class CardService {
         card.setPin(generatePin);
 
         card.setBalance(BigDecimal.ZERO);
-        card.setCardHolder(
-                userService.getUserById(userId).getName() + " " + userService.getUserById(userId).getSurname()
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NO_CONTENT, "User with id: " + userId + " not found")
         );
+        card.setHolderName(user.getName() + " " + user.getSurname());
         card.setIban(generateIban());
         card.setSwift(generateSwift());
         if (chosenCurrency.isEmpty()) {
