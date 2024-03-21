@@ -68,9 +68,14 @@ public class User {
     private String phoneNumber;
 
     @JsonIgnore
-    @OneToOne(mappedBy = "bankCurrency", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "userCurrency", cascade = CascadeType.ALL)
     @ToString.Exclude
     private CurrencyData currencyData;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "userLoan", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private BankLoan bankLoan;
 
     @JsonIgnore
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -82,25 +87,11 @@ public class User {
     @ToString.Exclude
     private List<Message> receiverMessages;
 
-    @JsonIgnore
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_card",
-            joinColumns = @JoinColumn(name = "user_id", nullable = false),
-            inverseJoinColumns = @JoinColumn(name = "card_id", nullable = false)
-    )
-    @ToString.Exclude
-    private List<Card> cards;
 
     @JsonIgnore
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_bank_loan",
-            joinColumns = @JoinColumn(name = "user_id", nullable = false),
-            inverseJoinColumns = @JoinColumn(name = "loan_id")
-    )
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @ToString.Exclude
-    private List<BankLoan> loans;
+    private List<Card> cards;
 
     @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL)

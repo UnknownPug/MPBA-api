@@ -52,4 +52,10 @@ public class BankLoan {
     @ToString.Exclude
     @JoinColumn(name = "card", nullable = false)
     private Card cardLoan;
+
+    @JsonIgnore
+    @OneToOne
+    @ToString.Exclude
+    @JoinColumn(name = "user_id", nullable = false)
+    private User userLoan;
 }
