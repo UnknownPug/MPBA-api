@@ -1,29 +1,88 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Currency;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.CurrencyData;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CurrencyDataService {
-    // TODO: complete this class by adding Currency API
     private final CurrencyDataRepository currencyDataRepository;
+    private final RestTemplate restTemplate;
 
     @Autowired
-    public CurrencyDataService(CurrencyDataRepository currencyDataRepository) {
+    public CurrencyDataService(CurrencyDataRepository currencyDataRepository, RestTemplate restTemplate) {
         this.currencyDataRepository = currencyDataRepository;
+        this.restTemplate = restTemplate;
     }
 
-    public List<CurrencyData> getAllCurrencyData() {
-        return currencyDataRepository.findAll();
-    }
-
-    public CurrencyData getCurrencyDataById(Long id) {
-        return currencyDataRepository.findById(id).orElseThrow(
-                () -> new IllegalStateException("Currency data with id " + id + " does not exist.")
+    @Scheduled(fixedRate = 180000) // Update every 3 minutes
+    public void updateCurrencyData() {
+        String apiUrl = "https://api.exchangeratesapi.io/latest?symbols="
+                + Currency.CZK + Currency.UAH + Currency.PLN + Currency.USD + Currency.EUR;
+        ResponseEntity<Map<String, Object>> responseEntity = restTemplate.exchange(
+                apiUrl,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
         );
+        Map<String, Object> response = responseEntity.getBody();
+        if (response != null && response.containsKey("rates")) {
+            Object ratesObj = response.get("rates");
+            if (ratesObj instanceof Map<?, ?> ratesMap) {
+                for (Map.Entry<?, ?> entry : ratesMap.entrySet()) {
+                    if (entry.getKey() instanceof String currency && entry.getValue() instanceof Double rate) {
+                        CurrencyData currencyData = new CurrencyData();
+                        currencyData.setCurrency(currency);
+                        currencyData.setRate(rate);
+                        currencyDataRepository.save(currencyData);
+                    } else {
+                        throw new ApplicationException(
+                                HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update currency data.");
+                    }
+                }
+            } else {
+                throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update currency data.");
+            }
+        }
+    }
+
+    public CurrencyData findByCurrency(String currencyType) {
+        if (currencyType.isEmpty()) {
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Specify currency type.");
+        }
+        if (currencyExists(currencyType)) {
+            return currencyDataRepository.findByCurrency(currencyType);
+        } else {
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Currency " + currencyType + " is not found.");
+        }
+    }
+
+    private boolean currencyExists(String currencyType) {
+        final String url = "https://api.exchangeratesapi.io/latest?symbols=" + currencyType;
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            return response.getStatusCode().is2xxSuccessful() &&
+                    response.getBody() != null && !response.getBody().isEmpty();
+        } catch (RestClientException e) {
+            return false;
+        }
+    }
+
+    public List<CurrencyData> findAllCurrencies() {
+        return currencyDataRepository.findAll();
     }
 }
