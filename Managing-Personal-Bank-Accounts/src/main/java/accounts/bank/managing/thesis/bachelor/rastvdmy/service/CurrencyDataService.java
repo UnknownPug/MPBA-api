@@ -40,25 +40,22 @@ public class CurrencyDataService {
                 }
         );
         Map<String, Object> response = responseEntity.getBody();
-        if (response != null && response.containsKey("rates")) {
-            Object ratesObj = response.get("rates");
-            if (ratesObj instanceof Map<?, ?> ratesMap) {
-                for (Map.Entry<?, ?> entry : ratesMap.entrySet()) {
-                    if (entry.getKey() instanceof String currency && entry.getValue() instanceof Double rate) {
-                        CurrencyData currencyData = new CurrencyData();
-                        currencyData.setCurrency(currency);
-                        currencyData.setRate(rate);
-                        currencyDataRepository.save(currencyData);
-                    } else {
-                        throw new ApplicationException(
-                                HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update currency data.");
-                    }
+        if ((response != null && response.containsKey("rates")) && response.get("rates") instanceof Map<?, ?> ratesMap) {
+            for (Map.Entry<?, ?> entry : ratesMap.entrySet()) {
+                if (entry.getKey() instanceof String currency && entry.getValue() instanceof Double rate) {
+                    CurrencyData currencyData = new CurrencyData();
+                    currencyData.setCurrency(currency);
+                    currencyData.setRate(rate);
+                    currencyDataRepository.save(currencyData);
+                } else {
+                    throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update currency data.");
                 }
-            } else {
-                throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update currency data.");
             }
+        } else {
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update currency data.");
         }
     }
+
 
     public CurrencyData findByCurrency(String currencyType) {
         if (currencyType.isEmpty()) {
