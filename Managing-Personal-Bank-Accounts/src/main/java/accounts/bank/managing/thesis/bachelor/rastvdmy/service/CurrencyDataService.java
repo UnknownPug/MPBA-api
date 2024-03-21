@@ -56,7 +56,6 @@ public class CurrencyDataService {
         }
     }
 
-
     public CurrencyData findByCurrency(String currencyType) {
         if (currencyType.isEmpty()) {
             throw new ApplicationException(HttpStatus.NOT_FOUND, "Specify currency type.");
