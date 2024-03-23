@@ -46,7 +46,6 @@ public class TransferController {
         return ResponseEntity.ok(
                 transferService.createTransfer(
                         transfer.senderId(),
-                        transfer.receiverId(),
                         transfer.receiverCardNumber(),
                         transfer.amount(),
                         transfer.description())
