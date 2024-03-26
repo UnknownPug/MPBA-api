@@ -96,9 +96,4 @@ public class Card {
     @OneToOne(mappedBy = "receiverCard", cascade = CascadeType.ALL)
     @ToString.Exclude
     private Transfer receiverTransferTransaction;
-
-    @JsonIgnore
-    @OneToOne(mappedBy = "card", cascade = CascadeType.ALL)
-    @ToString.Exclude
-    private CardConversion conversionTransaction;
 }

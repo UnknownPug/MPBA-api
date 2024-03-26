@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Random;
 
 @Service
 public class BankLoanService {
@@ -25,13 +24,16 @@ public class BankLoanService {
     private final CurrencyDataService currencyDataService;
     private final CardRepository cardRepository;
 
+    private final Generator generator;
+
     @Autowired
     public BankLoanService(BankLoanRepository loanRepository, UserRepository userRepository,
-                           CurrencyDataService currencyDataService, CardRepository cardRepository) {
+                           CurrencyDataService currencyDataService, CardRepository cardRepository, Generator generator) {
         this.loanRepository = loanRepository;
         this.userRepository = userRepository;
         this.currencyDataService = currencyDataService;
         this.cardRepository = cardRepository;
+        this.generator = generator;
     }
 
     public List<BankLoan> getAllLoans() {
@@ -100,7 +102,7 @@ public class BankLoanService {
         loan.setRepaidLoan(BigDecimal.ZERO);
         loan.setStartDate(LocalDateTime.now());
         loan.setExpirationDate(LocalDateTime.now().plusYears(1));
-        loan.setReferenceNumber(generateReferenceNumber());
+        loan.setReferenceNumber(generator.generateReferenceNumber());
         try {
             Currency currencyType = Currency.valueOf(chosenCurrencyType.toUpperCase());
             loan.setCurrency(currencyType);
@@ -108,28 +110,6 @@ public class BankLoanService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid currency: " + chosenCurrencyType);
         }
         return loanRepository.save(loan);
-    }
-
-    private String generateReferenceNumber() {
-        Random random = new Random();
-        StringBuilder referenceNumber = new StringBuilder();
-
-        // Generate 8 random uppercase letters
-        for (int i = 0; i < 8; i++) {
-            char randomChar = (char) (random.nextInt(26) + 'A');
-            referenceNumber.append(randomChar);
-        }
-
-        // Determine the number of digits to append
-        int numDigits = random.nextInt(3) + 1;
-
-        // Generate the determined number of random digits
-        for (int i = 0; i < numDigits; i++) {
-            int randomDigit = random.nextInt(10);
-            referenceNumber.append(randomDigit);
-        }
-
-        return referenceNumber.toString();
     }
 
     public void repayLoan(Long loanId, BigDecimal bigDecimal, String currencyType) {

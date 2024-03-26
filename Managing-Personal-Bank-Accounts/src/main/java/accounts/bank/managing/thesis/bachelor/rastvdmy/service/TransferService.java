@@ -68,38 +68,41 @@ public class TransferService {
         setDefaultTransferData(description, transfer, senderCard, receiverCard);
 
         if (!senderCard.getCurrencyType().equals(receiverCard.getCurrencyType())) {
-            switch (senderCard.getCurrencyType()) {
-                case USD:
-                    transfer.setAmount(amount.multiply(
-                            BigDecimal.valueOf(
-                                    currencyRepository.findByCurrency(Currency.USD.toString()).getRate())
-                    ));
-                    break;
-                case EUR:
-                    transfer.setAmount(amount.multiply(
-                            BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.EUR.toString()).getRate())
-                    ));
-                    break;
-                case UAH:
-                    transfer.setAmount(amount.multiply(
-                            BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.UAH.toString()).getRate())
-                    ));
-
-                    break;
-                case CZK:
-                    transfer.setAmount(amount.multiply(
-                            BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.CZK.toString()).getRate())
-                    ));
-                    break;
-                case PLN:
-                    transfer.setAmount(amount.multiply(
-                            BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.PLN.toString()).getRate())
-                    ));
-                    break;
-                default:
-                    throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency type is not supported");
+            if (senderCard.getUser().equals(receiverCard.getUser())) { // If sender and receiver have the same user
+                switch (senderCard.getCurrencyType()) {
+                    case USD:
+                        transfer.setAmount(amount.multiply(
+                                BigDecimal.valueOf(
+                                        currencyRepository.findByCurrency(Currency.USD.toString()).getRate())
+                        ));
+                        break;
+                    case EUR:
+                        transfer.setAmount(amount.multiply(
+                                BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.EUR.toString()).getRate())
+                        ));
+                        break;
+                    case UAH:
+                        transfer.setAmount(amount.multiply(
+                                BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.UAH.toString()).getRate())
+                        ));
+                        break;
+                    case CZK:
+                        transfer.setAmount(amount.multiply(
+                                BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.CZK.toString()).getRate())
+                        ));
+                        break;
+                    case PLN:
+                        transfer.setAmount(amount.multiply(
+                                BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.PLN.toString()).getRate())
+                        ));
+                        break;
+                    default:
+                        throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency type is not supported ...");
+                }
+            } else {
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Different currency types ...");
             }
-        } else {
+        } else { // If sender and receiver have the same currency
             transfer.setAmount(amount);
         }
 
