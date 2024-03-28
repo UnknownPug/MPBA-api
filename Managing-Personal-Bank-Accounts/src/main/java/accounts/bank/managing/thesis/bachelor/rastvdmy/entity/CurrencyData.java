@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -25,8 +27,7 @@ public class CurrencyData {
     private Double rate;
 
     @JsonIgnore
-    @OneToOne
-    @JoinColumn(name = "user_bank_currency", nullable = false)
     @ToString.Exclude
-    private User userCurrency;
+    @OneToMany(mappedBy = "currencyData")
+    private List<User> users;
 }

@@ -30,8 +30,9 @@ public class Transfer {
     @Enumerated(EnumType.STRING)
     private FinancialStatus status;
 
-    @Column(name = "commission", nullable = false)
-    private BigDecimal commission;
+    @Column(name = "reference_number", nullable = false, unique = true)
+    @Size(min = 1, max = 11)
+    private String referenceNumber;
 
     @Column(name = "date_time", nullable = false)
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm", iso = DateTimeFormat.ISO.DATE_TIME)
@@ -44,10 +45,6 @@ public class Transfer {
 
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
-
-    @Column(name = "reference_number", nullable = false, unique = true)
-    @Size(min = 1, max = 11)
-    private String referenceNumber;
 
     @JsonIgnore
     @OneToOne

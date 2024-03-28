@@ -41,6 +41,13 @@ public class BankLoanController {
         return ResponseEntity.ok(bankLoanService.getLoanById(loanId));
     }
 
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/reference")
+    public ResponseEntity<BankLoan> getLoanByReferenceNumber(String referenceNumber) {
+        LOG.debug("Getting loan by reference: {} ...", referenceNumber);
+        return ResponseEntity.ok(bankLoanService.getLoanByReferenceNumber(referenceNumber));
+    }
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/{id}")
     public ResponseEntity<BankLoan> openLoan(@PathVariable(value = "id") Long id,

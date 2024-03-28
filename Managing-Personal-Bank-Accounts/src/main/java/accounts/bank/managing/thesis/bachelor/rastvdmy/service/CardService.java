@@ -34,8 +34,15 @@ public class CardService {
 
     public Card getCardById(Long cardId) {
         return cardRepository.findById(cardId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Card with id: " + cardId + " not found")
         );
+    }
+
+    public Card getCardByCardNumber(String cardNumber) {
+        if (cardNumber.isEmpty()) {
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card with number: " + cardNumber + " not found");
+        }
+        return cardRepository.findByCardNumber(cardNumber);
     }
 
     public Card createCard(Long userId, String chosenCurrency, String type) {
@@ -60,8 +67,9 @@ public class CardService {
 
         card.setBalance(BigDecimal.ZERO);
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NO_CONTENT, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
         );
+        card.setUser(user);
         card.setHolderName(user.getName() + " " + user.getSurname());
         card.setIban(generator.generateIban());
         card.setSwift(generator.generateSwift());
@@ -74,6 +82,7 @@ public class CardService {
         } catch (Exception e) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency " + chosenCurrency + " does not exist");
         }
+        card.setAccountNumber(generator.generateAccountNumber());
         card.setCurrencyType(currencyType);
         cardTypeCheck(type, card);
         card.setStatus(CardStatus.STATUS_CARD_UNBLOCKED);

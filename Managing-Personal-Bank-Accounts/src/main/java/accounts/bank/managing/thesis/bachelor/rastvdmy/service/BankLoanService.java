@@ -46,6 +46,13 @@ public class BankLoanService {
         );
     }
 
+    public BankLoan getLoanByReferenceNumber(String referenceNumber) {
+        if (referenceNumber.isEmpty()) {
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card with reference number " + referenceNumber + " not found.");
+        }
+        return loanRepository.findByReferenceNumber(referenceNumber);
+    }
+
     @Transactional
     public BankLoan openSettlementAccount(Long id, BigDecimal bigDecimal, String chosenCurrencyType) {
         return createBankLoanForUser(id, bigDecimal, chosenCurrencyType);
@@ -64,6 +71,7 @@ public class BankLoanService {
         if (isValidLoanRange(loanAmount)) {
             BankLoan loan = createBankLoan(loanAmount, chosenCurrencyType);
             user.setBankLoan(loan);
+            loan.setUserLoan(user);
             userRepository.save(user);
             return loan;
         } else {
@@ -79,6 +87,7 @@ public class BankLoanService {
         if (isValidLoanRange(loanAmount)) {
             BankLoan loan = createBankLoan(loanAmount, chosenCurrencyType);
             card.setCardLoan(loan);
+            loan.setCardLoan(card);
             cardRepository.save(card);
             return loan;
         } else {

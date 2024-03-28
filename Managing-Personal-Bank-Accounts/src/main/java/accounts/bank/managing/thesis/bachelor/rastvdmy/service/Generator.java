@@ -59,4 +59,19 @@ public class Generator {
         }
         return swift.toString();
     }
+
+    public String generateAccountNumber() {
+        Random random = new Random();
+        StringBuilder accountNumber = new StringBuilder();
+        // Generate 10 random digits for the account number
+        for (int i = 0; i < 10; i++) {
+            accountNumber.append(random.nextInt(10));
+        }
+        accountNumber.append("/");
+        // Generate 4 random digits for the bank code
+        for (int i = 0; i < 4; i++) {
+            accountNumber.append(random.nextInt(10));
+        }
+        return accountNumber.toString();
+    }
 }

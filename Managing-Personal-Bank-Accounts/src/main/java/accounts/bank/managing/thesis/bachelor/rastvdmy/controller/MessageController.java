@@ -42,6 +42,13 @@ public class MessageController {
         return ResponseEntity.ok(messageService.getMessageById(messageId));
     }
 
+    @GetMapping(path = "/{content}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<List<Message>> getMessagesByContent(@PathVariable(value = "content") String content) {
+        LOG.debug("Getting messages by content: {} ...", content);
+        return ResponseEntity.ok(messageService.getMessagesByContent(content));
+    }
+
     @GetMapping(path = "/{id}/")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Message>> getSortedMessages(
