@@ -42,6 +42,13 @@ public class CardController {
         return ResponseEntity.ok(cardService.getCardById(cardId));
     }
 
+    @GetMapping(path = "/card")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Card> getCardByCardNumber(@RequestBody String cardNumber) {
+        LOG.debug("Getting card by card number {} ...", cardNumber);
+        return ResponseEntity.ok(cardService.getCardByCardNumber(cardNumber));
+    }
+
     @PostMapping(path = "/{id}") // Both admin and user
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Card> createCard(@PathVariable(value = "id") Long userId,

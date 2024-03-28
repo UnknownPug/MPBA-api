@@ -23,8 +23,7 @@ public class TransferService {
     private final CurrencyDataRepository currencyRepository;
 
     @Autowired
-    public TransferService(TransferRepository transferRepository, CardRepository cardRepository,
-                           CurrencyDataRepository currencyRepository) {
+    public TransferService(TransferRepository transferRepository, CardRepository cardRepository, CurrencyDataRepository currencyRepository) {
         this.transferRepository = transferRepository;
         this.cardRepository = cardRepository;
         this.currencyRepository = currencyRepository;
@@ -40,6 +39,13 @@ public class TransferService {
         );
     }
 
+    public Transfer getTransferByReferenceNumber(String referenceNumber) {
+        if (referenceNumber.isEmpty()) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Transfer is not found.");
+        }
+        return transferRepository.findByReferenceNumber(referenceNumber);
+    }
+
     public Transfer createTransfer(Long senderId, String receiverCardNumber, BigDecimal amount, String description) {
         Transfer transfer = new Transfer();
 
@@ -50,12 +56,13 @@ public class TransferService {
         if (senderCard.getBalance().compareTo(amount) < 0) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Insufficient funds");
         }
+        senderCard.setSenderTransferTransaction(transfer);
 
         Card receiverCard = cardRepository.findByCardNumber(receiverCardNumber);
         if (receiverCard == null) {
             throw new ApplicationException(HttpStatus.NOT_FOUND, "Receiver card not found");
         }
-
+        receiverCard.setReceiverTransferTransaction(transfer);
         if (Objects.equals(receiverCard.getStatus(), CardStatus.STATUS_CARD_BLOCKED)) {
             setDefaultTransferData(
                     "DENIED: Receiver card is not found or blocked.", transfer, senderCard, receiverCard);
@@ -69,36 +76,7 @@ public class TransferService {
 
         if (!senderCard.getCurrencyType().equals(receiverCard.getCurrencyType())) {
             if (senderCard.getUser().equals(receiverCard.getUser())) { // If sender and receiver have the same user
-                switch (senderCard.getCurrencyType()) {
-                    case USD:
-                        transfer.setAmount(amount.multiply(
-                                BigDecimal.valueOf(
-                                        currencyRepository.findByCurrency(Currency.USD.toString()).getRate())
-                        ));
-                        break;
-                    case EUR:
-                        transfer.setAmount(amount.multiply(
-                                BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.EUR.toString()).getRate())
-                        ));
-                        break;
-                    case UAH:
-                        transfer.setAmount(amount.multiply(
-                                BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.UAH.toString()).getRate())
-                        ));
-                        break;
-                    case CZK:
-                        transfer.setAmount(amount.multiply(
-                                BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.CZK.toString()).getRate())
-                        ));
-                        break;
-                    case PLN:
-                        transfer.setAmount(amount.multiply(
-                                BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.PLN.toString()).getRate())
-                        ));
-                        break;
-                    default:
-                        throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency type is not supported ...");
-                }
+                transferCurrency(amount, senderCard, transfer);
             } else {
                 throw new ApplicationException(HttpStatus.BAD_REQUEST, "Different currency types ...");
             }
@@ -118,11 +96,46 @@ public class TransferService {
         return transferRepository.save(transfer);
     }
 
+    private void transferCurrency(BigDecimal amount, Card senderCard, Transfer transfer) {
+        switch (senderCard.getCurrencyType()) {
+            case USD:
+                transfer.setAmount(amount.multiply(
+                        BigDecimal.valueOf(
+                                currencyRepository.findByCurrency(Currency.USD.toString()).getRate())
+                ));
+                break;
+            case EUR:
+                transfer.setAmount(amount.multiply(
+                        BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.EUR.toString()).getRate())
+                ));
+                break;
+            case UAH:
+                transfer.setAmount(amount.multiply(
+                        BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.UAH.toString()).getRate())
+                ));
+                break;
+            case CZK:
+                transfer.setAmount(amount.multiply(
+                        BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.CZK.toString()).getRate())
+                ));
+                break;
+            case PLN:
+                transfer.setAmount(amount.multiply(
+                        BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.PLN.toString()).getRate())
+                ));
+                break;
+            default:
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency type is not supported ...");
+        }
+    }
+
     private static void setDefaultTransferData(String description, Transfer transfer,
                                                Card senderCard, Card receiverCard) {
+        Generator generator = new Generator();
         transfer.setSenderCard(senderCard);
         transfer.setReceiverCard(receiverCard);
         transfer.setDateTime(LocalDateTime.now());
+        transfer.setReferenceNumber(generator.generateReferenceNumber());
         transfer.setDescription(description);
     }
 }

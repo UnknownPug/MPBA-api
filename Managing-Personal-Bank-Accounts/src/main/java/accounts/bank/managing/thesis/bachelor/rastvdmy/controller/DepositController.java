@@ -42,9 +42,9 @@ public class DepositController {
 
     @PostMapping(path = "/")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Deposit> createDeposit(@RequestBody DepositRequest request) {
+    public ResponseEntity<Deposit> openDeposit(@RequestBody DepositRequest request) {
         LOG.debug("Creating deposit ...");
-        return ResponseEntity.ok(depositService.createDeposit(request.description()));
+        return ResponseEntity.ok(depositService.openDeposit(request.cardNumber(), request.depositAmount(), request.description(), request.currency()));
     }
 
     @PutMapping(path = "/{id}")
@@ -53,7 +53,7 @@ public class DepositController {
             @PathVariable(value = "id") Long depositId,
             @RequestBody DepositRequest request) {
         LOG.debug("Updating deposit ...");
-        depositService.updateDeposit(depositId, request.description());
+        depositService.updateDeposit(depositId, request.cardNumber(), request.description(), request.depositAmount(), request.currency());
     }
 
     @DeleteMapping(path = "/{id}")

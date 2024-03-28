@@ -67,9 +67,8 @@ public class User {
     @Pattern(regexp = "^(\\+\\d{1,3})?\\d{9,15}$", message = "Phone number should be in international format")
     private String phoneNumber;
 
-    @JsonIgnore
-    @OneToOne(mappedBy = "userCurrency", cascade = CascadeType.ALL)
-    @ToString.Exclude
+    @ManyToOne
+    @JoinColumn(name = "currency_data_id")
     private CurrencyData currencyData;
 
     @JsonIgnore

@@ -39,6 +39,13 @@ public class TransferController {
         return ResponseEntity.ok(transferService.getTransferById(transferId));
     }
 
+    @GetMapping(path = "/reference")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Transfer> getTransferByReferenceNumber(String referenceNumber) {
+        LOG.debug("Getting transfer by reference: {} ...", referenceNumber);
+        return ResponseEntity.ok(transferService.getTransferByReferenceNumber(referenceNumber));
+    }
+
     @PostMapping(path = "/")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Transfer> createTransfer(@RequestBody TransferRequest transfer) {

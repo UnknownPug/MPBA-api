@@ -2,8 +2,10 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Currency;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.CurrencyData;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.User;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -20,11 +22,13 @@ import java.util.Map;
 @Service
 public class CurrencyDataService {
     private final CurrencyDataRepository currencyDataRepository;
+    private final UserRepository userRepository;
     private final RestTemplate restTemplate;
 
     @Autowired
-    public CurrencyDataService(CurrencyDataRepository currencyDataRepository, RestTemplate restTemplate) {
+    public CurrencyDataService(CurrencyDataRepository currencyDataRepository, UserRepository userRepository, RestTemplate restTemplate) {
         this.currencyDataRepository = currencyDataRepository;
+        this.userRepository = userRepository;
         this.restTemplate = restTemplate;
     }
 
@@ -46,6 +50,12 @@ public class CurrencyDataService {
                     CurrencyData currencyData = new CurrencyData();
                     currencyData.setCurrency(currency);
                     currencyData.setRate(rate);
+
+                    userRepository.updateCurrencyDataForAllUsers(currencyData);
+
+                    List<User> users = userRepository.findAllByCurrencyData(currencyData);
+                    currencyData.setUsers(users);
+
                     currencyDataRepository.save(currencyData);
                 } else {
                     throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update currency data.");
@@ -58,7 +68,7 @@ public class CurrencyDataService {
 
     public CurrencyData findByCurrency(String currencyType) {
         if (currencyType.isEmpty()) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Specify currency type.");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Specify currency type.");
         }
         if (currencyExists(currencyType)) {
             return currencyDataRepository.findByCurrency(currencyType);
