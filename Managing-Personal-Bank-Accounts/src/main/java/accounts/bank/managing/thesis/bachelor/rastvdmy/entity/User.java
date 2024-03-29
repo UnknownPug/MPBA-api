@@ -67,9 +67,9 @@ public class User {
     @Pattern(regexp = "^(\\+\\d{1,3})?\\d{9,15}$", message = "Phone number should be in international format")
     private String phoneNumber;
 
-    @ManyToOne
-    @JoinColumn(name = "currency_data_id")
-    private CurrencyData currencyData;
+    @ManyToMany
+    @ToString.Exclude
+    private List<CurrencyData> currencyData;
 
     @JsonIgnore
     @OneToOne(mappedBy = "userLoan", cascade = CascadeType.ALL)
@@ -91,16 +91,6 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<Card> cards;
-
-    @JsonIgnore
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_deposit",
-            joinColumns = @JoinColumn(name = "user_id", nullable = false),
-            inverseJoinColumns = @JoinColumn(name = "deposit_id")
-    )
-    @ToString.Exclude
-    private List<Deposit> deposits;
 
     // Default Constructor for user
     public User() {
