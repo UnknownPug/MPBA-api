@@ -74,32 +74,39 @@ public class UserController {
         userService.uploadUserAvatar(userId, userAvatar);
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/email")
     public void updateUserEmailById(@PathVariable(value = "id") Long userId, @RequestBody String email) {
         LOG.debug("Updating user email id: {} ...", userId);
         userService.updateUserEmailById(userId, email);
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/password")
     public void updateUserPasswordById(@PathVariable(value = "id") Long userId, @RequestBody String password) {
         LOG.debug("Updating user password id: {} ...", userId);
         userService.updateUserPasswordById(userId, password);
     }
 
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/role")
     public void updateUserRoleById(@PathVariable(value = "id") Long userId, @RequestBody String role) {
         LOG.debug("Updating user role id: {} ...", userId);
         userService.updateUserRoleById(userId, role);
     }
 
-    @ResponseStatus(HttpStatus.OK)
-    @PatchMapping(path = "/{id}/status")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PatchMapping(path = "/{id}/visibility")
     public void updateUserStatusById(@PathVariable(value = "id") Long userId, @RequestBody String status) {
         LOG.debug("Updating user state id: {} ...", userId);
-        userService.updateUserStateById(userId, status);
+        userService.updateUserStatusById(userId, status);
+    }
+
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PatchMapping(path = "/{id}/status")
+    public void updateUserStatusById(@PathVariable(value = "id") Long userId) {
+        LOG.debug("Updating user status id: {} ...", userId);
+        userService.updateUserVisibilityById(userId);
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)

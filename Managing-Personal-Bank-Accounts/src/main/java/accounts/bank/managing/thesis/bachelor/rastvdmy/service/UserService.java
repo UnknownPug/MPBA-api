@@ -2,6 +2,7 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.*;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,16 +21,16 @@ import java.util.Objects;
 public class UserService {
 
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
-
+    private final CurrencyDataRepository currencyDataRepository;
     private final CardService cardService;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CardService cardService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CurrencyDataRepository currencyDataRepository, CardService cardService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.currencyDataRepository = currencyDataRepository;
         this.cardService = cardService;
     }
 
@@ -71,6 +72,9 @@ public class UserService {
         user.setPhoneNumber(phoneNumber);
         user.setUserRole(UserRole.ROLE_USER);
         user.setStatus(UserStatus.STATUS_ONLINE);
+
+        List<CurrencyData> currencyData = currencyDataRepository.findAll();
+        user.setCurrencyData(currencyData);
         // Save the user and get the saved instance. Then create a card for the user
         User savedUser = userRepository.save(user);
         Card card = cardService.createCard(savedUser.getId(), Currency.CZK.toString(), CardType.VISA.toString());
@@ -105,6 +109,7 @@ public class UserService {
         if (Objects.equals(password, user.getPassword())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered password is the same as the old one");
         }
+
         user.setEmail(email);
         user.setPassword(password);
         user.encodePassword(passwordEncoder);
@@ -141,7 +146,7 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
         );
-        if (password == null) {
+        if (password.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Password must be filled");
         }
         if (Objects.equals(password, user.getPassword())) {
@@ -156,33 +161,47 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
         );
-        UserRole newRole;
-        try {
-            newRole = UserRole.valueOf(role.toUpperCase());
-        } catch (Exception e) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Role " + role + " does not exist");
+        switch(role.toLowerCase()) {
+            case "admin":
+                user.setUserRole(UserRole.ROLE_ADMIN);
+                break;
+            case "moderator":
+                user.setUserRole(UserRole.ROLE_MODERATOR);
+                break;
+            default:
+                user.setUserRole(UserRole.ROLE_USER);
+                break;
         }
-        if (user.getUserRole().equals(newRole)) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered role is the same as the old one");
-        }
-        user.setUserRole(newRole);
         userRepository.save(user);
     }
 
-    public void updateUserStateById(Long userId, String status) {
+    public void updateUserStatusById(Long userId, String status) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
         );
-        UserStatus newStatus;
-        try {
-            newStatus = UserStatus.valueOf(status.toUpperCase());
-        } catch (Exception e) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Status " + status + " does not exist");
+        switch (status.toLowerCase()) {
+            case "unblocked":
+                user.setStatus(UserStatus.STATUS_BLOCKED);
+                break;
+            case "blocked":
+                user.setStatus(UserStatus.STATUS_UNBLOCKED);
+                break;
         }
-        if (user.getStatus().equals(newStatus)) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered status is the same as the old one");
+        userRepository.save(user);
+    }
+
+    public void updateUserVisibilityById(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+        );
+        switch (user.getStatus()) {
+            case STATUS_ONLINE:
+                user.setStatus(UserStatus.STATUS_OFFLINE);
+                break;
+            case STATUS_OFFLINE:
+                user.setStatus(UserStatus.STATUS_ONLINE);
+                break;
         }
-        user.setStatus(newStatus);
         userRepository.save(user);
     }
 
