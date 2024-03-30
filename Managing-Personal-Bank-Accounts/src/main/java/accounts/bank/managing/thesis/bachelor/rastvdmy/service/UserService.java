@@ -5,6 +5,9 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationExce
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -36,20 +39,24 @@ public class UserService {
         this.cardService = cardService;
     }
 
+    @Cacheable(value = "users")
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
+    @Cacheable(value = "users")
     public Page<User> filterAndSortUsers(Pageable pageable) {
         return userRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "users", key = "#userId")
     public User getUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
         );
     }
 
+    @CachePut(value = "users", key = "#result.id")
     public User createUser(String name, String surname, LocalDate dateOfBirth, String countryOfOrigin,
                            String email, String password, String phoneNumber) {
         if (name.isEmpty() || surname.isEmpty() || countryOfOrigin.isEmpty() ||
@@ -99,6 +106,7 @@ public class UserService {
         }
     }
 
+    @CachePut(value = "users", key = "#userId")
     public void updateUserById(Long userId, String email, String password, String phoneNumber) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
@@ -123,6 +131,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @CachePut(value = "users", key = "#userId")
     public void uploadUserAvatar(Long userId, MultipartFile userAvatar) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
@@ -131,6 +140,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @CachePut(value = "users", key = "#userId")
     public void updateUserEmailById(Long userId, String email) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
@@ -148,6 +158,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @CachePut(value = "users", key = "#userId")
     public void updateUserPasswordById(Long userId, String password) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
@@ -163,6 +174,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @CachePut(value = "users", key = "#userId")
     public void updateUserRoleById(Long userId, String role) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
@@ -181,6 +193,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @CachePut(value = "users", key = "#userId")
     public void updateUserStatusById(Long userId, String status) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
@@ -196,6 +209,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @CachePut(value = "users", key = "#userId")
     public void updateUserVisibilityById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
@@ -211,6 +225,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @CachePut(value = "users", key = "#userId")
     public void updateUserPhoneNumberById(Long userId, String phoneNumber) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new IllegalArgumentException("User with id: " + userId + " not found")
@@ -225,6 +240,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @CacheEvict(value = "users", key = "#userId")
     public void deleteUserById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new IllegalArgumentException("User with id " + userId + " not found.")

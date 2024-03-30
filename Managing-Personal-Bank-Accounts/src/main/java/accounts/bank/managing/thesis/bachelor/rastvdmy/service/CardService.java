@@ -6,6 +6,9 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationExce
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -31,20 +34,24 @@ public class CardService {
         this.generator = generator;
     }
 
+    @Cacheable(value = "cards")
     public List<Card> getAllCards() {
         return cardRepository.findAll();
     }
 
+    @Cacheable(value = "cards")
     public Page<Card> filterAndSortCards(Pageable pageable) {
         return cardRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "cards", key = "#cardId")
     public Card getCardById(Long cardId) {
         return cardRepository.findById(cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Card with id: " + cardId + " not found")
         );
     }
 
+    @Cacheable(value = "cards", key = "#cardNumber")
     public Card getCardByCardNumber(String cardNumber) {
         if (cardNumber.isEmpty()) {
             throw new ApplicationException(HttpStatus.NOT_FOUND, "Card with number: " + cardNumber + " not found");
@@ -52,6 +59,7 @@ public class CardService {
         return cardRepository.findByCardNumber(cardNumber);
     }
 
+    @CachePut(value = "cards", key = "#result.id")
     public Card createCard(Long userId, String chosenCurrency, String type) {
         long minCardLimit = 1_000_000_000_000_000L;
         long maxCardLimit = 9_999_999_999_999_999L;
@@ -110,6 +118,7 @@ public class CardService {
         card.setCardType(cardType);
     }
 
+    @CachePut(value = "cards", key = "#cardId")
     public void cardRefill(Long cardId, Integer pin, BigDecimal balance) {
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found")
@@ -123,6 +132,7 @@ public class CardService {
         }
     }
 
+    @CachePut(value = "cards", key = "#cardId")
     public void changeCardStatus(Long cardId, String cardStatus) {
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found")
@@ -140,6 +150,7 @@ public class CardService {
         cardRepository.save(card);
     }
 
+    @CachePut(value = "cards", key = "#cardId")
     public void changeCardType(Long cardId, String cardType) {
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found")
@@ -148,6 +159,7 @@ public class CardService {
         cardRepository.save(card);
     }
 
+    @CacheEvict(value = "cards", key = "#cardId")
     public void deleteCard(Long cardId, Long userId) {
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found")

@@ -11,6 +11,9 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -39,20 +42,24 @@ public class BankLoanService {
         this.generator = generator;
     }
 
+    @Cacheable(value = "loans")
     public List<BankLoan> getAllLoans() {
         return loanRepository.findAll();
     }
 
+    @Cacheable(value = "loans")
     public Page<BankLoan> filterAndSortLoans(Pageable pageable) {
         return loanRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "loans", key = "#loanId")
     public BankLoan getLoanById(Long loanId) {
         return loanRepository.findById(loanId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan is not found.")
         );
     }
 
+    @Cacheable(value = "loans", key = "#referenceNumber")
     public BankLoan getLoanByReferenceNumber(String referenceNumber) {
         if (referenceNumber.isEmpty()) {
             throw new ApplicationException(HttpStatus.NOT_FOUND, "Card with reference number " + referenceNumber + " not found.");
@@ -61,16 +68,18 @@ public class BankLoanService {
     }
 
     @Transactional
+    @CachePut(value = "loans", key = "#result.id")
     public BankLoan openSettlementAccount(Long id, BigDecimal bigDecimal, String chosenCurrencyType) {
         return createBankLoanForUser(id, bigDecimal, chosenCurrencyType);
     }
 
     @Transactional
+    @CachePut(value = "loans", key = "#result.id")
     public BankLoan addLoanToCard(Long id, BigDecimal bigDecimal, String chosenCurrencyType) {
         return createBankLoanForCard(id, bigDecimal, chosenCurrencyType);
     }
 
-    public BankLoan createBankLoanForUser(Long userId, BigDecimal loanAmount, String chosenCurrencyType) {
+    private BankLoan createBankLoanForUser(Long userId, BigDecimal loanAmount, String chosenCurrencyType) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
         );
@@ -86,7 +95,7 @@ public class BankLoanService {
         }
     }
 
-    public BankLoan createBankLoanForCard(Long cardId, BigDecimal loanAmount, String chosenCurrencyType) {
+    private BankLoan createBankLoanForCard(Long cardId, BigDecimal loanAmount, String chosenCurrencyType) {
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Card not found.")
         );
@@ -128,6 +137,7 @@ public class BankLoanService {
         return loanRepository.save(loan);
     }
 
+    @CachePut(value = "loans", key = "#loanId")
     public void repayLoan(Long loanId, BigDecimal bigDecimal, String currencyType) {
         BigDecimal rate = BigDecimal.valueOf(currencyDataService.findByCurrency(currencyType).getRate());
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
@@ -153,6 +163,7 @@ public class BankLoanService {
         loanRepository.save(loan);
     }
 
+    @CachePut(value = "loans", key = "#loanId")
     public void updateLoanDate(Long loanId, LocalDateTime localDateTime, LocalDateTime localDateTime1) {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan is not found.")
@@ -168,6 +179,7 @@ public class BankLoanService {
         loanRepository.save(loan);
     }
 
+    @CacheEvict(value = "loans", key = "#loanId")
     public void deleteCardLoan(Long loanId) {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan is not found.")

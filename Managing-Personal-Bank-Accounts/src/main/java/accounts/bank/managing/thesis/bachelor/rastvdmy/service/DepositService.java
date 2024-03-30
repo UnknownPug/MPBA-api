@@ -10,6 +10,9 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRe
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.DepositRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -34,14 +37,17 @@ public class DepositService {
         this.cardRepository = cardRepository;
     }
 
+    @Cacheable(value = "deposits")
     public List<Deposit> getAllDeposits() {
         return depositRepository.findAll();
     }
 
+    @Cacheable(value = "deposits")
     public Page<Deposit> filterAndSortDeposits(Pageable pageable) {
         return depositRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "deposits", key = "#id")
     public Deposit getAllDepositById(Long id) {
         return depositRepository.findById(id).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not found")
@@ -49,6 +55,7 @@ public class DepositService {
     }
 
     @Transactional
+    @CachePut(value = "deposits", key = "#result.id")
     public Deposit openDeposit(String cardNumber, BigDecimal depositAmount, String description, Currency currency) {
         Deposit deposit = new Deposit();
         Card card = cardRepository.findByCardNumber(cardNumber);
@@ -99,6 +106,7 @@ public class DepositService {
     // The deposit cannot be renewed before the end of the deposit period
     // (with the condition of not improving/deteriorating).
     @Transactional
+    @CachePut(value = "deposits", key = "#depositId")
     public void updateDeposit(Long depositId, String cardNumber, String description, BigDecimal bigDecimal, Currency currency) {
         Deposit deposit = depositRepository.findById(depositId).orElseThrow(
                 () -> new IllegalArgumentException("Deposit is not valid")
@@ -124,6 +132,7 @@ public class DepositService {
         }
     }
 
+    @CacheEvict(value = "deposits", key = "#depositId")
     public void deleteDeposit(Long depositId) {
         depositRepository.findById(depositId).orElseThrow(
                 () -> new IllegalArgumentException("Deposit is not valid")
