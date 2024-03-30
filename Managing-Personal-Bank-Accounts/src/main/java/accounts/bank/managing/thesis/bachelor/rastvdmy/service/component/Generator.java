@@ -1,4 +1,4 @@
-package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
+package accounts.bank.managing.thesis.bachelor.rastvdmy.service.component;
 
 import org.springframework.stereotype.Component;
 

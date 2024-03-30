@@ -1,5 +1,6 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
+import accounts.bank.managing.thesis.bachelor.rastvdmy.service.component.Generator;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.BankLoan;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Currency;

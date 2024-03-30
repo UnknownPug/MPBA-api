@@ -13,7 +13,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,7 +44,7 @@ public class UserService {
         );
     }
 
-    public User createUser(String name, String surname, Date dateOfBirth, String countryOfOrigin,
+    public User createUser(String name, String surname, LocalDate dateOfBirth, String countryOfOrigin,
                            String email, String password, String phoneNumber) {
         if (name.isEmpty() || surname.isEmpty() || countryOfOrigin.isEmpty() ||
                 email.isEmpty() || password.isEmpty() || phoneNumber.isEmpty()) {

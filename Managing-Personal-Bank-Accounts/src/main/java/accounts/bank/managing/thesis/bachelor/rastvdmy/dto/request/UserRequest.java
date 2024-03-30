@@ -2,13 +2,13 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public record UserRequest(
         String name,
         String surname,
         @JsonProperty("date_of_birth")
-        Date dateOfBirth,
+        LocalDate dateOfBirth,
         String countryOfOrigin,
         String email,
         String password,
