@@ -49,7 +49,7 @@ public class MessageController {
         return ResponseEntity.ok(messageService.getMessagesByContent(content));
     }
 
-    @GetMapping(path = "/{id}/")
+    @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Message>> getSortedMessages(
             @PathVariable(value = "id") Long userId,

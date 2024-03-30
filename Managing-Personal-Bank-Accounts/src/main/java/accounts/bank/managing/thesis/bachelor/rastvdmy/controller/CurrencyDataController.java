@@ -27,16 +27,17 @@ public class CurrencyDataController {
 
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
-    public List<CurrencyData> updateAndFetchAllCurrencies() {
+    public ResponseEntity<List<CurrencyData>> updateAndFetchAllCurrencies() {
         LOG.debug("Updating currency data ...");
         currencyDataService.updateCurrencyData();
-        return currencyDataService.findAllCurrencies();
+        return ResponseEntity.ok(currencyDataService.findAllCurrencies());
     }
 
     @GetMapping(path = "/{currency}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<CurrencyData> findByCurrency(@PathVariable(value = "currency") String currencyType) {
         LOG.debug("Getting currency {} ...", currencyType);
+        currencyDataService.updateCurrencyData();
         return ResponseEntity.ok(currencyDataService.findByCurrency(currencyType));
     }
 }

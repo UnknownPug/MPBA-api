@@ -10,6 +10,8 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRe
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.DepositRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +36,10 @@ public class DepositService {
 
     public List<Deposit> getAllDeposits() {
         return depositRepository.findAll();
+    }
+
+    public Page<Deposit> filterAndSortDeposits(Pageable pageable) {
+        return depositRepository.findAll(pageable);
     }
 
     public Deposit getAllDepositById(Long id) {

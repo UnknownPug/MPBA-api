@@ -7,6 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +34,26 @@ public class TransferController {
     public ResponseEntity<List<Transfer>> getTransfers() {
         LOG.debug("Getting all transfers ...");
         return ResponseEntity.ok(transferService.getTransfers());
+    }
+
+    @GetMapping(path = "/filter")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Page<Transfer>> filterTransfers(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sort", defaultValue = "asc") String sort) {
+        LOG.debug("Filtering transfers ...");
+        if (sort.equalsIgnoreCase("asc")) {
+            LOG.debug("Sorting transfers by amount in ascending order ...");
+            Pageable pageable = PageRequest.of(page, size, Sort.by("dateTime").ascending());
+            return ResponseEntity.ok(transferService.filterAndSortTransfers(pageable));
+        } else if (sort.equalsIgnoreCase("desc")) {
+            LOG.debug("Sorting transfers by amount in descending order ...");
+            Pageable pageable = PageRequest.of(page, size, Sort.by("dateTime").descending());
+            return ResponseEntity.ok(transferService.filterAndSortTransfers(pageable));
+        } else {
+            throw new IllegalArgumentException("Invalid sort option. Use 'asc' or 'desc'");
+        }
     }
 
     @GetMapping(path = "/{id}")

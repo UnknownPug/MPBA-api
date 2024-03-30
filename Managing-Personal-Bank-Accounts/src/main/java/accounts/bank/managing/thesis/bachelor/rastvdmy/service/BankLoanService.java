@@ -11,6 +11,8 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +41,10 @@ public class BankLoanService {
 
     public List<BankLoan> getAllLoans() {
         return loanRepository.findAll();
+    }
+
+    public Page<BankLoan> filterAndSortLoans(Pageable pageable) {
+        return loanRepository.findAll(pageable);
     }
 
     public BankLoan getLoanById(Long loanId) {

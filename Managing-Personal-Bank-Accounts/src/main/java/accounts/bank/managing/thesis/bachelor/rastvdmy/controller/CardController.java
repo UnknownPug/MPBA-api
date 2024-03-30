@@ -9,6 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +37,26 @@ public class CardController {
     public ResponseEntity<List<Card>> getCards() {
         LOG.debug("Getting all cards ...");
         return ResponseEntity.ok(cardService.getAllCards());
+    }
+
+    @GetMapping(path = "/filter")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Page<Card>> filterCards(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sort", defaultValue = "asc") String sort) {
+        LOG.debug("Filtering cards ...");
+        if (sort.equalsIgnoreCase("asc")) {
+            LOG.debug("Sorting cards by balance in ascending order ...");
+            Pageable pageable = PageRequest.of(page, size, Sort.by("balance").ascending());
+            return ResponseEntity.ok(cardService.filterAndSortCards(pageable));
+        } else if (sort.equalsIgnoreCase("desc")) {
+            LOG.debug("Sorting cards by balance in descending order ...");
+            Pageable pageable = PageRequest.of(page, size, Sort.by("balance").descending());
+            return ResponseEntity.ok(cardService.filterAndSortCards(pageable));
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping(path = "/{id}")

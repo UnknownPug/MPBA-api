@@ -2,11 +2,16 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.DepositRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Deposit;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.DepositService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +36,26 @@ public class DepositController {
     public ResponseEntity<List<Deposit>> getAllDeposits() {
         LOG.debug("Getting all deposits ...");
         return ResponseEntity.ok(depositService.getAllDeposits());
+    }
+
+    @GetMapping(path = "/filter")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Page<Deposit>> filterDesposits(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sort", defaultValue = "asc") String sort) {
+        LOG.debug("Filtering deposits ...");
+        if (sort.equalsIgnoreCase("asc")) {
+            LOG.debug("Sorting deposits by amount in ascending order ...");
+            Pageable pageable = PageRequest.of(page, size, Sort.by("depositAmount").ascending());
+            return ResponseEntity.ok(depositService.filterAndSortDeposits(pageable));
+        } else if (sort.equalsIgnoreCase("desc")) {
+            LOG.debug("Sorting deposits by amount in descending order ...");
+            Pageable pageable = PageRequest.of(page, size, Sort.by("depositAmount").descending());
+            return ResponseEntity.ok(depositService.filterAndSortDeposits(pageable));
+        } else {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'");
+        }
     }
 
     @GetMapping(path = "/{id}")

@@ -3,11 +3,16 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.UserRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.User;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +38,26 @@ public class UserController {
     public ResponseEntity<List<User>> getUsers() {
         LOG.debug("Getting all users ...");
         return ResponseEntity.ok(userService.getUsers());
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/filter")
+    public ResponseEntity<Page<User>> filterUsers(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sort", defaultValue = "asc") String sort) {
+        LOG.debug("Filtering users ...");
+        if (sort.equalsIgnoreCase("asc")) {
+            LOG.debug("Sorting users by name in ascending order ...");
+            Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+            return ResponseEntity.ok(userService.filterAndSortUsers(pageable));
+        } else if (sort.equalsIgnoreCase("desc")) {
+            LOG.debug("Sorting users by name in descending order ...");
+            Pageable pageable = PageRequest.of(page, size, Sort.by("name").descending());
+            return ResponseEntity.ok(userService.filterAndSortUsers(pageable));
+        } else {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'");
+        }
     }
 
     @ResponseStatus(HttpStatus.OK)

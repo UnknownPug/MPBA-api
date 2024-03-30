@@ -7,6 +7,8 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.TransferRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +34,10 @@ public class TransferService {
 
     public List<Transfer> getTransfers() {
         return transferRepository.findAll();
+    }
+
+    public Page<Transfer> filterAndSortTransfers(Pageable pageable) {
+        return transferRepository.findAll(pageable);
     }
 
     public Transfer getTransferById(Long transferId) {

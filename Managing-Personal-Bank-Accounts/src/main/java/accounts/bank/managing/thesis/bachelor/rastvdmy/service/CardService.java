@@ -6,6 +6,8 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationExce
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,10 @@ public class CardService {
 
     public List<Card> getAllCards() {
         return cardRepository.findAll();
+    }
+
+    public Page<Card> filterAndSortCards(Pageable pageable) {
+        return cardRepository.findAll(pageable);
     }
 
     public Card getCardById(Long cardId) {
