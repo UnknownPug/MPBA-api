@@ -7,6 +7,8 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.TransferRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -32,20 +34,24 @@ public class TransferService {
         this.currencyRepository = currencyRepository;
     }
 
+    @Cacheable(value = "transfers")
     public List<Transfer> getTransfers() {
         return transferRepository.findAll();
     }
 
+    @Cacheable(value = "transfers")
     public Page<Transfer> filterAndSortTransfers(Pageable pageable) {
         return transferRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "transfers", key = "#transferId")
     public Transfer getTransferById(Long transferId) {
         return transferRepository.findById(transferId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Transfer not found")
         );
     }
 
+    @Cacheable(value = "transfers", key = "#referenceNumber")
     public Transfer getTransferByReferenceNumber(String referenceNumber) {
         if (referenceNumber.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Transfer is not found.");
@@ -53,6 +59,7 @@ public class TransferService {
         return transferRepository.findByReferenceNumber(referenceNumber);
     }
 
+    @CachePut(value = "transfers", key = "#result.id")
     public Transfer createTransfer(Long senderId, String receiverCardNumber, BigDecimal amount, String description) {
         Transfer transfer = new Transfer();
 

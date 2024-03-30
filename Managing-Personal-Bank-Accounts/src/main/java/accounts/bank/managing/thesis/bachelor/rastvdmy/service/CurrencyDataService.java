@@ -7,6 +7,8 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationExce
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,24 @@ public class CurrencyDataService {
         this.restTemplate = restTemplate;
     }
 
+    @Cacheable(value = "currencies")
+    public List<CurrencyData> findAllCurrencies() {
+        return currencyDataRepository.findAll();
+    }
+
+    @Cacheable(value = "currencies", key = "#currencyType")
+    public CurrencyData findByCurrency(String currencyType) {
+        if (currencyType.isEmpty()) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Specify currency type.");
+        }
+        if (currencyExists(currencyType)) {
+            return currencyDataRepository.findByCurrency(currencyType);
+        } else {
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Currency " + currencyType + " is not found.");
+        }
+    }
+
+    @CacheEvict(value = "currencies", allEntries = true)
     @Scheduled(fixedRate = 180000) // Update every 3 minutes
     public void updateCurrencyData() {
         String apiUrl = "https://api.exchangeratesapi.io/latest?symbols="
@@ -66,17 +86,6 @@ public class CurrencyDataService {
         }
     }
 
-    public CurrencyData findByCurrency(String currencyType) {
-        if (currencyType.isEmpty()) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Specify currency type.");
-        }
-        if (currencyExists(currencyType)) {
-            return currencyDataRepository.findByCurrency(currencyType);
-        } else {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Currency " + currencyType + " is not found.");
-        }
-    }
-
     private boolean currencyExists(String currencyType) {
         final String url = "https://api.exchangeratesapi.io/latest?symbols=" + currencyType;
         try {
@@ -86,9 +95,5 @@ public class CurrencyDataService {
         } catch (RestClientException e) {
             return false;
         }
-    }
-
-    public List<CurrencyData> findAllCurrencies() {
-        return currencyDataRepository.findAll();
     }
 }
