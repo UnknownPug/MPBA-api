@@ -4,6 +4,7 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.CardRefillRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.CardRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.CardService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -46,16 +47,17 @@ public class CardController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "asc") String sort) {
         LOG.debug("Filtering cards ...");
-        if (sort.equalsIgnoreCase("asc")) {
-            LOG.debug("Sorting cards by balance in ascending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("balance").ascending());
-            return ResponseEntity.ok(cardService.filterAndSortCards(pageable));
-        } else if (sort.equalsIgnoreCase("desc")) {
-            LOG.debug("Sorting cards by balance in descending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("balance").descending());
-            return ResponseEntity.ok(cardService.filterAndSortCards(pageable));
-        } else {
-            return ResponseEntity.badRequest().build();
+        switch (sort.toLowerCase()) {
+            case "asc":
+                LOG.debug("Sorting cards by balance in ascending order ...");
+                Pageable pageableAsc = PageRequest.of(page, size, Sort.by("balance").ascending());
+                return ResponseEntity.ok(cardService.filterAndSortCards(pageableAsc));
+            case "desc":
+                LOG.debug("Sorting cards by balance in descending order ...");
+                Pageable pageableDesc = PageRequest.of(page, size, Sort.by("balance").descending());
+                return ResponseEntity.ok(cardService.filterAndSortCards(pageableDesc));
+            default:
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'.");
         }
     }
 

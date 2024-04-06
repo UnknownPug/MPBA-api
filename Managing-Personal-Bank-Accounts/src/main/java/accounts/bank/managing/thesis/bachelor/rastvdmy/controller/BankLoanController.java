@@ -45,16 +45,17 @@ public class BankLoanController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "asc") String sort) {
         LOG.debug("Filtering loans ...");
-        if (sort.equalsIgnoreCase("asc")) {
-            LOG.debug("Sorting loans by amount in ascending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("loanAmount").ascending());
-            return ResponseEntity.ok(bankLoanService.filterAndSortLoans(pageable));
-        } else if (sort.equalsIgnoreCase("desc")) {
-            LOG.debug("Sorting loans by amount in descending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("loanAmount").descending());
-            return ResponseEntity.ok(bankLoanService.filterAndSortLoans(pageable));
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'");
+        switch (sort.toLowerCase()) {
+            case "asc":
+                LOG.debug("Sorting loans by amount in ascending order ...");
+                Pageable pageableAsc = PageRequest.of(page, size, Sort.by("loanAmount").ascending());
+                return ResponseEntity.ok(bankLoanService.filterAndSortLoans(pageableAsc));
+            case "desc":
+                LOG.debug("Sorting loans by amount in descending order ...");
+                Pageable pageableDesc = PageRequest.of(page, size, Sort.by("loanAmount").descending());
+                return ResponseEntity.ok(bankLoanService.filterAndSortLoans(pageableDesc));
+            default:
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'.");
         }
     }
 
@@ -77,17 +78,19 @@ public class BankLoanController {
     public ResponseEntity<BankLoan> openLoan(@PathVariable(value = "id") Long id,
                                              @RequestParam(value = "option") String option,
                                              @RequestBody BankLoanRequest loanRequest) {
-        if (option.equals("settlement-account")) {
-            LOG.debug("Opening settlement account for loan for user {} ...", id);
-            return ResponseEntity.ok(bankLoanService.openSettlementAccount(
-                    id, loanRequest.loanAmount(), loanRequest.currencyType()));
-        } else if (option.equals("card")) {
-            LOG.debug("Opening card for loan for user with card {} ...", id);
-            return ResponseEntity.ok(bankLoanService.addLoanToCard(
-                    id, loanRequest.loanAmount(), loanRequest.currencyType()));
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid type. Use 'settlement-account' or 'card'");
-        }
+        return switch (option.toLowerCase()) {
+            case "user" -> {
+                LOG.debug("Opening settlement account for loan for user {} ...", id);
+                yield ResponseEntity.ok(bankLoanService.openSettlementAccount(
+                        id, loanRequest.loanAmount(), loanRequest.currencyType()));
+            }
+            case "card" -> {
+                LOG.debug("Opening card for loan for user with card {} ...", id);
+                yield ResponseEntity.ok(bankLoanService.addLoanToCard(
+                        id, loanRequest.loanAmount(), loanRequest.currencyType()));
+            }
+            default -> throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid type. Use 'user' or 'card.'");
+        };
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)

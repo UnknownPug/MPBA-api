@@ -44,6 +44,11 @@ public class TransferService {
         return transferRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "transfers", key = "#keyword")
+    public Page<Transfer> getFilteredTransfersByKeyword(String keyword) {
+        return transferRepository.findAllByDescriptionContainingIgnoreCase(keyword, Pageable.unpaged());
+    }
+
     @Cacheable(value = "transfers", key = "#transferId")
     public Transfer getTransferById(Long transferId) {
         return transferRepository.findById(transferId).orElseThrow(

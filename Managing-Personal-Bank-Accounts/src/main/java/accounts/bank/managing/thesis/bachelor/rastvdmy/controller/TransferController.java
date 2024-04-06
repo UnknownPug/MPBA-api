@@ -44,16 +44,17 @@ public class TransferController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "asc") String sort) {
         LOG.debug("Filtering transfers ...");
-        if (sort.equalsIgnoreCase("asc")) {
-            LOG.debug("Sorting transfers by amount in ascending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("dateTime").ascending());
-            return ResponseEntity.ok(transferService.filterAndSortTransfers(pageable));
-        } else if (sort.equalsIgnoreCase("desc")) {
-            LOG.debug("Sorting transfers by amount in descending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("dateTime").descending());
-            return ResponseEntity.ok(transferService.filterAndSortTransfers(pageable));
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'");
+        switch (sort.toLowerCase()) {
+            case "asc":
+                LOG.debug("Sorting transfers by amount in ascending order ...");
+                Pageable pageableAsc = PageRequest.of(page, size, Sort.by("dateTime").ascending());
+                return ResponseEntity.ok(transferService.filterAndSortTransfers(pageableAsc));
+            case "desc":
+                LOG.debug("Sorting transfers by amount in descending order ...");
+                Pageable pageableDesc = PageRequest.of(page, size, Sort.by("dateTime").descending());
+                return ResponseEntity.ok(transferService.filterAndSortTransfers(pageableDesc));
+            default:
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'.");
         }
     }
 
