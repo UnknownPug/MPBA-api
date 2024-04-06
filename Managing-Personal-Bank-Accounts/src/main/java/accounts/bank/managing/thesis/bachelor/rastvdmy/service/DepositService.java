@@ -1,5 +1,6 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.CardStatus;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.component.Generator;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Currency;
@@ -50,7 +51,7 @@ public class DepositService {
     @Cacheable(value = "deposits", key = "#id")
     public Deposit getAllDepositById(Long id) {
         return depositRepository.findById(id).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not found.")
         );
     }
 
@@ -60,11 +61,14 @@ public class DepositService {
         Deposit deposit = new Deposit();
         Card card = cardRepository.findByCardNumber(cardNumber);
         if (card == null) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card is not found");
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card is not found.");
+        }
+        if (card.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. Card is blocked.");
         }
         deposit.setCurrency(currency);
         if (card.getBalance().compareTo(depositAmount) < 0) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Not enough money on the card");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Not enough money on the card.");
         }
 
         deposit.setDepositCard(generator.generateAccountNumber());
@@ -109,11 +113,14 @@ public class DepositService {
     @CachePut(value = "deposits", key = "#depositId")
     public void updateDeposit(Long depositId, String cardNumber, String description, BigDecimal bigDecimal, Currency currency) {
         Deposit deposit = depositRepository.findById(depositId).orElseThrow(
-                () -> new IllegalArgumentException("Deposit is not valid")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not valid.")
         );
         Card card = cardRepository.findByCardNumber(cardNumber);
         if (card == null) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card is not found");
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card is not found.");
+        }
+        if (card.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. Card is blocked.");
         }
         if (deposit.getCardDeposit().equals(card)) {
             if (deposit.getExpirationDate().isBefore(LocalDateTime.now())) {
@@ -128,14 +135,14 @@ public class DepositService {
                 openDeposit(cardNumber, bigDecimal, description, currency);
             }
         } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card must be the same as the card that was used for the deposit");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card must be the same as the card that was used for the deposit.");
         }
     }
 
     @CacheEvict(value = "deposits", key = "#depositId")
     public void deleteDeposit(Long depositId) {
         depositRepository.findById(depositId).orElseThrow(
-                () -> new IllegalArgumentException("Deposit is not valid")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not valid.")
         );
         depositRepository.deleteById(depositId);
     }

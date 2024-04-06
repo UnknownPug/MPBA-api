@@ -122,15 +122,15 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/visibility")
-    public void updateUserStatusById(@PathVariable(value = "id") Long userId, @RequestBody String status) {
+    public void updateUserStatusById(@PathVariable(value = "id") Long userId) {
         LOG.debug("Updating user state id: {} ...", userId);
-        userService.updateUserStatusById(userId, status);
+        userService.updateUserStatusById(userId);
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/status")
-    public void updateUserStatusById(@PathVariable(value = "id") Long userId) {
-        LOG.debug("Updating user status id: {} ...", userId);
+    public void updateUserVisibilityById(@PathVariable(value = "id") Long userId) {
+        LOG.debug("Updating user visibility id: {} ...", userId);
         userService.updateUserVisibilityById(userId);
     }
 

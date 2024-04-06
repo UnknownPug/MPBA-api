@@ -2,6 +2,7 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.TransferRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Transfer;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.TransferService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ public class TransferController {
             Pageable pageable = PageRequest.of(page, size, Sort.by("dateTime").descending());
             return ResponseEntity.ok(transferService.filterAndSortTransfers(pageable));
         } else {
-            throw new IllegalArgumentException("Invalid sort option. Use 'asc' or 'desc'");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'");
         }
     }
 

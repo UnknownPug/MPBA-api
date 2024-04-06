@@ -28,14 +28,14 @@ public class MessageService {
     @Cacheable(value = "messages", key = "#messageId")
     public Message getMessageById(Long messageId) {
         return messageRepository.findById(messageId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Message with id " + messageId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Message with id " + messageId + " not found.")
         );
     }
 
     @Cacheable(value = "messages", key = "#content")
     public List<Message> getMessagesByContent(String content) {
         if (content.isEmpty()) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Message " + content + " not found");
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Message " + content + " not found.");
         }
         return messageRepository.findByContent(content);
     }

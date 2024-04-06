@@ -73,6 +73,13 @@ public class CardController {
         return ResponseEntity.ok(cardService.getCardByCardNumber(cardNumber));
     }
 
+    @GetMapping(path = "/{id}/status")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateUserCardStatus(@PathVariable(value = "id") Long id) {
+        LOG.debug("Getting card status ...");
+        cardService.updateCardStatus(id);
+    }
+
     @PostMapping(path = "/{id}") // Both admin and user
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Card> createCard(@PathVariable(value = "id") Long userId,
@@ -94,13 +101,6 @@ public class CardController {
             (@PathVariable(value = "id") Long cardId, @RequestBody String cardType) {
         LOG.debug("Changing card type ...");
         cardService.changeCardType(cardId, cardType);
-    }
-
-    @PatchMapping(path = "/{id}/card-status")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public void changeCardStatus(@PathVariable(value = "id") Long cardId, @RequestBody String cardStatus) {
-        LOG.debug("Changing card status ...");
-        cardService.changeCardStatus(cardId, cardStatus);
     }
 
     @DeleteMapping(path = "/{id}/from/{uid}") // Only admin
