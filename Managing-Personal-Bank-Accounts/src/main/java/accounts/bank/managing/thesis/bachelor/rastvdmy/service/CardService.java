@@ -47,20 +47,26 @@ public class CardService {
     @Cacheable(value = "cards", key = "#cardId")
     public Card getCardById(Long cardId) {
         return cardRepository.findById(cardId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Card with id: " + cardId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Card with id: " + cardId + " not found.")
         );
     }
 
     @Cacheable(value = "cards", key = "#cardNumber")
     public Card getCardByCardNumber(String cardNumber) {
         if (cardNumber.isEmpty()) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card with number: " + cardNumber + " not found");
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card with number: " + cardNumber + " not found.");
         }
         return cardRepository.findByCardNumber(cardNumber);
     }
 
     @CachePut(value = "cards", key = "#result.id")
     public Card createCard(Long userId, String chosenCurrency, String type) {
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
+        );
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Creating card is unavailable for blocked user.");
+        }
         long minCardLimit = 1_000_000_000_000_000L;
         long maxCardLimit = 9_999_999_999_999_999L;
         int minCvvLimit = 100;
@@ -81,39 +87,35 @@ public class CardService {
         card.setPin(generatePin);
 
         card.setBalance(BigDecimal.ZERO);
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
-        );
         card.setUser(user);
         card.setHolderName(user.getName() + " " + user.getSurname());
         card.setIban(generator.generateIban());
         card.setSwift(generator.generateSwift());
         if (chosenCurrency.isEmpty()) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency must be filled");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency must be filled.");
         }
         Currency currencyType;
         try {
             currencyType = Currency.valueOf(chosenCurrency.toUpperCase());
         } catch (Exception e) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency " + chosenCurrency + " does not exist");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency " + chosenCurrency + " does not exist.");
         }
         card.setAccountNumber(generator.generateAccountNumber());
         card.setCurrencyType(currencyType);
         cardTypeCheck(type, card);
-        card.setStatus(CardStatus.STATUS_CARD_UNBLOCKED);
         card.setCardExpirationDate(LocalDateTime.now().plusYears(5));
         return cardRepository.save(card);
     }
 
     private void cardTypeCheck(String type, Card card) {
         if (type.isEmpty()) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card type must be filled");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card type must be filled.");
         }
         CardType cardType;
         try {
             cardType = CardType.valueOf(type.toUpperCase());
         } catch (Exception e) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card type " + type + " does not exist");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card type " + type + " does not exist.");
         }
         card.setCardType(cardType);
     }
@@ -121,40 +123,40 @@ public class CardService {
     @CachePut(value = "cards", key = "#cardId")
     public void cardRefill(Long cardId, Integer pin, BigDecimal balance) {
         Card card = cardRepository.findById(cardId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found")
+                () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found.")
         );
+        if (card.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable for blocked card.");
+        }
         if (card.getPin().equals(pin) && card.getStatus().equals(CardStatus.STATUS_CARD_UNBLOCKED)) {
             card.setBalance(card.getBalance().add(balance));
             card.setRecipientTime(LocalDateTime.now());
             cardRepository.save(card);
         } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid pin or card is blocked");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid pin or card is blocked.");
         }
     }
 
-    @CachePut(value = "cards", key = "#cardId")
-    public void changeCardStatus(Long cardId, String cardStatus) {
-        Card card = cardRepository.findById(cardId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found")
+    @CachePut(value = "cards", key = "#id")
+    public void updateCardStatus(Long id) {
+        Card card = cardRepository.findById(id).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Card with id: " + id + " not found.")
         );
-        if (cardStatus.isEmpty()) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card status must be filled");
+        switch (card.getStatus()) {
+            case STATUS_CARD_BLOCKED -> card.setStatus(CardStatus.STATUS_CARD_UNBLOCKED);
+            case STATUS_CARD_UNBLOCKED -> card.setStatus(CardStatus.STATUS_CARD_BLOCKED);
         }
-        CardStatus status;
-        try {
-            status = CardStatus.valueOf(cardStatus.toUpperCase());
-        } catch (Exception e) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card status " + cardStatus + " does not exist");
-        }
-        card.setStatus(status);
         cardRepository.save(card);
     }
 
     @CachePut(value = "cards", key = "#cardId")
     public void changeCardType(Long cardId, String cardType) {
         Card card = cardRepository.findById(cardId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found")
+                () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found.")
         );
+        if (card.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable for blocked card.");
+        }
         cardTypeCheck(cardType, card);
         cardRepository.save(card);
     }
@@ -162,16 +164,16 @@ public class CardService {
     @CacheEvict(value = "cards", key = "#cardId")
     public void deleteCard(Long cardId, Long userId) {
         Card card = cardRepository.findById(cardId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found")
+                () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found.")
         );
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NO_CONTENT, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NO_CONTENT, "User with id: " + userId + " not found.")
         );
         if (card.getBalance().equals(BigDecimal.ZERO) && user.getCards().contains(card)) {
             cardRepository.deleteById(cardId);
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
-                    "Card is not empty or user does not contain this card");
+                    "Card is not empty or user does not contain this card.");
         }
     }
 }

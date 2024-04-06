@@ -1,10 +1,7 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.*;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.component.Generator;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.BankLoan;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Currency;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.User;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.BankLoanRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository;
@@ -83,6 +80,9 @@ public class BankLoanService {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
         );
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable for blocked user.");
+        }
         checkUserLoan(user);
         if (isValidLoanRange(loanAmount)) {
             BankLoan loan = createBankLoan(loanAmount, chosenCurrencyType);
@@ -99,6 +99,9 @@ public class BankLoanService {
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Card not found.")
         );
+        if (card.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable for blocked card.");
+        }
         checkUserLoan(card.getUser());
         if (isValidLoanRange(loanAmount)) {
             BankLoan loan = createBankLoan(loanAmount, chosenCurrencyType);
@@ -131,7 +134,7 @@ public class BankLoanService {
         try {
             Currency currencyType = Currency.valueOf(chosenCurrencyType.toUpperCase());
             loan.setCurrency(currencyType);
-        } catch (IllegalArgumentException e) {
+        } catch (ApplicationException e) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid currency: " + chosenCurrencyType);
         }
         return loanRepository.save(loan);

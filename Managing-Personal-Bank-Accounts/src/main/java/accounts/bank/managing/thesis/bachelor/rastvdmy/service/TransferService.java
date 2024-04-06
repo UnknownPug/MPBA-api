@@ -47,7 +47,7 @@ public class TransferService {
     @Cacheable(value = "transfers", key = "#transferId")
     public Transfer getTransferById(Long transferId) {
         return transferRepository.findById(transferId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Transfer not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Transfer not found.")
         );
     }
 
@@ -64,17 +64,22 @@ public class TransferService {
         Transfer transfer = new Transfer();
 
         Card senderCard = cardRepository.findById(senderId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Sender card not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Sender card not found.")
         );
-
+        if (senderCard.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. Sender card is blocked.");
+        }
         if (senderCard.getBalance().compareTo(amount) < 0) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Insufficient funds");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Insufficient funds.");
         }
         senderCard.setSenderTransferTransaction(transfer);
 
         Card receiverCard = cardRepository.findByCardNumber(receiverCardNumber);
         if (receiverCard == null) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Receiver card not found");
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Receiver card not found.");
+        }
+        if (receiverCard.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. Receiver card is blocked.");
         }
         receiverCard.setReceiverTransferTransaction(transfer);
         if (Objects.equals(receiverCard.getStatus(), CardStatus.STATUS_CARD_BLOCKED)) {
@@ -83,7 +88,7 @@ public class TransferService {
             transfer.setAmount(amount);
             transfer.setStatus(FinancialStatus.DENIED);
             transferRepository.save(transfer);
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Receiver card is not found or blocked");
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Receiver card is not found or blocked.");
         }
 
         setDefaultTransferData(description, transfer, senderCard, receiverCard);

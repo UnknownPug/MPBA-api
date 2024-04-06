@@ -52,7 +52,7 @@ public class UserService {
     @Cacheable(value = "users", key = "#userId")
     public User getUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
     }
 
@@ -61,13 +61,13 @@ public class UserService {
                            String email, String password, String phoneNumber) {
         if (name.isEmpty() || surname.isEmpty() || countryOfOrigin.isEmpty() ||
                 email.isEmpty() || password.isEmpty() || phoneNumber.isEmpty()) {
-            throw new ApplicationException(HttpStatus.NO_CONTENT, "All user fields must be filled");
+            throw new ApplicationException(HttpStatus.NO_CONTENT, "All user fields must be filled.");
         }
         if (userRepository.existsByEmail(email)) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable.");
         }
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number " + phoneNumber + " is unavailable");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number " + phoneNumber + " is unavailable.");
         }
         // Creating user with default role and status
         User user = new User();
@@ -77,7 +77,7 @@ public class UserService {
         if (countryExists(countryOfOrigin)) {
             user.setCountryOrigin(countryOfOrigin);
         } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Country " + countryOfOrigin + " does not exist");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Country " + countryOfOrigin + " does not exist.");
         }
         user.setEmail(email);
         user.setPassword(password);
@@ -109,19 +109,22 @@ public class UserService {
     @CachePut(value = "users", key = "#userId")
     public void updateUserById(Long userId, String email, String password, String phoneNumber) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
         if (email == null || password == null || phoneNumber == null) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "All user fields must be filled");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "All user fields must be filled.");
         }
         if (userRepository.existsByEmail(email)) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable.");
         }
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number " + phoneNumber + " is unavailable");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number " + phoneNumber + " is unavailable.");
         }
         if (Objects.equals(password, user.getPassword())) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered password is the same as the old one");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered password is the same as the old one.");
         }
 
         user.setEmail(email);
@@ -134,8 +137,11 @@ public class UserService {
     @CachePut(value = "users", key = "#userId")
     public void uploadUserAvatar(Long userId, MultipartFile userAvatar) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
         user.setAvatar(userAvatar.getOriginalFilename());
         userRepository.save(user);
     }
@@ -143,16 +149,19 @@ public class UserService {
     @CachePut(value = "users", key = "#userId")
     public void updateUserEmailById(Long userId, String email) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
         if (email == null) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email must be filled");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email must be filled.");
         }
         if (Objects.equals(email, user.getEmail())) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered email is the same as the old one");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered email is the same as the old one.");
         }
         if (userRepository.existsByEmail(email)) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable.");
         }
         user.setEmail(email);
         userRepository.save(user);
@@ -161,13 +170,16 @@ public class UserService {
     @CachePut(value = "users", key = "#userId")
     public void updateUserPasswordById(Long userId, String password) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
         if (password.isEmpty()) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Password must be filled");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Password must be filled.");
         }
         if (Objects.equals(password, user.getPassword())) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered password is the same as the old one");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered password is the same as the old one.");
         }
         user.setPassword(password);
         user.encodePassword(passwordEncoder);
@@ -177,32 +189,29 @@ public class UserService {
     @CachePut(value = "users", key = "#userId")
     public void updateUserRoleById(Long userId, String role) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
-        switch(role.toLowerCase()) {
-            case "admin":
-                user.setUserRole(UserRole.ROLE_ADMIN);
-                break;
-            case "moderator":
-                user.setUserRole(UserRole.ROLE_MODERATOR);
-                break;
-            default:
-                user.setUserRole(UserRole.ROLE_USER);
-                break;
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
+        switch (role.toLowerCase()) {
+            case "admin" -> user.setUserRole(UserRole.ROLE_ADMIN);
+            case "moderator" -> user.setUserRole(UserRole.ROLE_MODERATOR);
+            default -> user.setUserRole(UserRole.ROLE_USER);
         }
         userRepository.save(user);
     }
 
     @CachePut(value = "users", key = "#userId")
-    public void updateUserStatusById(Long userId, String status) {
+    public void updateUserStatusById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
-        switch (status.toLowerCase()) {
-            case "unblocked":
+        switch (user.getStatus()) {
+            case UserStatus.STATUS_UNBLOCKED:
                 user.setStatus(UserStatus.STATUS_BLOCKED);
                 break;
-            case "blocked":
+            case UserStatus.STATUS_BLOCKED:
                 user.setStatus(UserStatus.STATUS_UNBLOCKED);
                 break;
         }
@@ -212,15 +221,14 @@ public class UserService {
     @CachePut(value = "users", key = "#userId")
     public void updateUserVisibilityById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
         switch (user.getStatus()) {
-            case STATUS_ONLINE:
-                user.setStatus(UserStatus.STATUS_OFFLINE);
-                break;
-            case STATUS_OFFLINE:
-                user.setStatus(UserStatus.STATUS_ONLINE);
-                break;
+            case STATUS_ONLINE -> user.setStatus(UserStatus.STATUS_OFFLINE);
+            case STATUS_OFFLINE -> user.setStatus(UserStatus.STATUS_ONLINE);
         }
         userRepository.save(user);
     }
@@ -228,13 +236,16 @@ public class UserService {
     @CachePut(value = "users", key = "#userId")
     public void updateUserPhoneNumberById(Long userId, String phoneNumber) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("User with id: " + userId + " not found")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
         if (phoneNumber == null || !Objects.equals(phoneNumber, user.getPhoneNumber())) {
-            throw new IllegalArgumentException("Phone number " + phoneNumber + " is unavailable");
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Phone number " + phoneNumber + " is unavailable.");
         }
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
-            throw new IllegalArgumentException("Phone number " + phoneNumber + " is unavailable");
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Phone number " + phoneNumber + " is unavailable.");
         }
         user.setPhoneNumber(phoneNumber);
         userRepository.save(user);
@@ -243,12 +254,12 @@ public class UserService {
     @CacheEvict(value = "users", key = "#userId")
     public void deleteUserById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("User with id " + userId + " not found.")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id " + userId + " not found.")
         );
         if (user.getCards().isEmpty()) {
             userRepository.delete(user);
         } else {
-            throw new IllegalArgumentException(
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "User with id " + userId + " has cards. Delete the cards to remove user.");
         }
     }
