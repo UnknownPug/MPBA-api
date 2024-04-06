@@ -68,7 +68,7 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/reference")
-    public ResponseEntity<BankLoan> getLoanByReferenceNumber(String referenceNumber) {
+    public ResponseEntity<BankLoan> getLoanByReferenceNumber(@RequestBody String referenceNumber) {
         LOG.debug("Getting loan by reference: {} ...", referenceNumber);
         return ResponseEntity.ok(bankLoanService.getLoanByReferenceNumber(referenceNumber));
     }
