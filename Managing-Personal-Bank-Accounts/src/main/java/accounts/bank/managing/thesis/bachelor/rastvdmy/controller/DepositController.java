@@ -40,21 +40,22 @@ public class DepositController {
 
     @GetMapping(path = "/filter")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Page<Deposit>> filterDesposits(
+    public ResponseEntity<Page<Deposit>> filterDeposits(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "asc") String sort) {
         LOG.debug("Filtering deposits ...");
-        if (sort.equalsIgnoreCase("asc")) {
-            LOG.debug("Sorting deposits by amount in ascending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("depositAmount").ascending());
-            return ResponseEntity.ok(depositService.filterAndSortDeposits(pageable));
-        } else if (sort.equalsIgnoreCase("desc")) {
-            LOG.debug("Sorting deposits by amount in descending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("depositAmount").descending());
-            return ResponseEntity.ok(depositService.filterAndSortDeposits(pageable));
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'");
+        switch (sort.toLowerCase()) {
+            case "asc":
+                LOG.debug("Sorting deposits by amount in ascending order ...");
+                Pageable pageableAsc = PageRequest.of(page, size, Sort.by("depositAmount").ascending());
+                return ResponseEntity.ok(depositService.filterAndSortDeposits(pageableAsc));
+            case "desc":
+                LOG.debug("Sorting deposits by amount in descending order ...");
+                Pageable pageableDesc = PageRequest.of(page, size, Sort.by("depositAmount").descending());
+                return ResponseEntity.ok(depositService.filterAndSortDeposits(pageableDesc));
+            default:
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'.");
         }
     }
 

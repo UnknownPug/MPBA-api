@@ -53,17 +53,30 @@ public class MessageController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Message>> getSortedMessages(
             @PathVariable(value = "id") Long userId,
-            @RequestParam(value = "sort") String sort) {
-        if (sort.equals("sender-id")) {
-            LOG.debug("Getting sorted messages by senderId: {} ...", userId);
-            return ResponseEntity.ok(messageService.getSortedMessagesBySenderId(userId));
-        } else if (sort.equals("receiver-id")) {
-            LOG.debug("Getting sorted messages by receiverId: {} ...", userId);
-            return ResponseEntity.ok(messageService.getSortedMessagesByReceiverId(userId));
-        } else {
-            throw new ApplicationException(
-                    HttpStatus.BAD_REQUEST, "Invalid type of sorting. Use 'sender-id' or 'receiver-id'");
-        }
+            @RequestParam(value = "sort") String sort,
+            @RequestParam(value = "order", defaultValue = "asc") String order) {
+        return switch (sort.toLowerCase() + "-" + order.toLowerCase()) {
+            case "sender-asc" -> {
+                LOG.debug("Getting sorted messages by senderId in ascending order: {} ...", userId);
+                yield ResponseEntity.ok(messageService.getSortedMessagesBySenderId(userId, "asc"));
+            }
+            case "sender-desc" -> {
+                LOG.debug("Getting sorted messages by senderId in descending order: {} ...", userId);
+                yield ResponseEntity.ok(messageService.getSortedMessagesBySenderId(userId, "desc"));
+            }
+            case "receiver-asc" -> {
+                LOG.debug("Getting sorted messages by receiverId in ascending order: {} ...", userId);
+                yield ResponseEntity.ok(messageService.getSortedMessagesByReceiverId(userId, "asc"));
+            }
+            case "receiver-desc" -> {
+                LOG.debug("Getting sorted messages by receiverId in descending order: {} ...", userId);
+                yield ResponseEntity.ok(messageService.getSortedMessagesByReceiverId(userId, "desc"));
+            }
+            default -> throw new ApplicationException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid type of sorting or order. Use 'sender' or 'receiver' for sorting" +
+                            " and 'asc' or 'desc' for order.");
+        };
     }
 
     @PostMapping(path = "/")

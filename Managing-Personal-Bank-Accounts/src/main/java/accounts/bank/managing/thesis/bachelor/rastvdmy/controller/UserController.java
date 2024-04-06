@@ -47,16 +47,17 @@ public class UserController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "asc") String sort) {
         LOG.debug("Filtering users ...");
-        if (sort.equalsIgnoreCase("asc")) {
-            LOG.debug("Sorting users by name in ascending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-            return ResponseEntity.ok(userService.filterAndSortUsers(pageable));
-        } else if (sort.equalsIgnoreCase("desc")) {
-            LOG.debug("Sorting users by name in descending order ...");
-            Pageable pageable = PageRequest.of(page, size, Sort.by("name").descending());
-            return ResponseEntity.ok(userService.filterAndSortUsers(pageable));
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'");
+        switch (sort.toLowerCase()) {
+            case "asc":
+                LOG.debug("Sorting users by name in ascending order ...");
+                Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+                return ResponseEntity.ok(userService.filterAndSortUsers(pageable));
+            case "desc":
+                LOG.debug("Sorting users by name in descending order ...");
+                Pageable pageable1 = PageRequest.of(page, size, Sort.by("name").descending());
+                return ResponseEntity.ok(userService.filterAndSortUsers(pageable1));
+            default:
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'.");
         }
     }
 

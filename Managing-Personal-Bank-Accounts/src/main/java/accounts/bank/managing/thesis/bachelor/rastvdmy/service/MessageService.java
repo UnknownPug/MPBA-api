@@ -9,7 +9,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class MessageService {
@@ -41,21 +44,30 @@ public class MessageService {
     }
 
     @Cacheable(value = "messages", key = "#senderId")
-    public List<Message> getSortedMessagesBySenderId(Long senderId) {
+    public List<Message> getSortedMessagesBySenderId(Long senderId, String order) {
         List<Message> messages = messageRepository.findAll();
-        return messages.stream()
-                .sorted()
-                .filter(message -> message.getSender().getId().equals(senderId))
-                .toList();
+        Stream<Message> sortedStream = messages.stream()
+                .filter(message -> message.getSender().getId().equals(senderId));
+        if (order.equalsIgnoreCase("desc")) {
+            sortedStream = sortedStream.sorted(Comparator.comparing(Message::getId).reversed());
+        } else {
+            sortedStream = sortedStream.sorted(Comparator.comparing(Message::getId));
+        }
+
+        return sortedStream.collect(Collectors.toList());
     }
 
     @Cacheable(value = "messages", key = "#receiverId")
-    public List<Message> getSortedMessagesByReceiverId(Long receiverId) {
+    public List<Message> getSortedMessagesByReceiverId(Long receiverId, String order) {
         List<Message> messages = messageRepository.findAll();
-        return messages.stream()
-                .sorted()
-                .filter(message -> message.getReceiver().getId().equals(receiverId))
-                .toList();
+        Stream<Message> sortedStream = messages.stream()
+                .filter(message -> message.getReceiver().getId().equals(receiverId));
+        if (order.equalsIgnoreCase("desc")) {
+            sortedStream = sortedStream.sorted(Comparator.comparing(Message::getId).reversed());
+        } else {
+            sortedStream = sortedStream.sorted(Comparator.comparing(Message::getId));
+        }
+        return sortedStream.collect(Collectors.toList());
     }
 
     @CachePut(value = "messages", key = "#result.id")
