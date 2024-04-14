@@ -84,7 +84,7 @@ public class UserController {
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @PutMapping(path = "/{id}")
+    @PatchMapping(path = "/{id}")
     public void updateUserById(@PathVariable(value = "id") Long userId, @RequestBody UserRequest user) {
         LOG.debug("Updating user id: {} ...", userId);
         userService.updateUserById(userId,
@@ -102,44 +102,44 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/email")
-    public void updateUserEmailById(@PathVariable(value = "id") Long userId, @RequestBody String email) {
+    public void updateUserEmailById(@PathVariable(value = "id") Long userId, @RequestBody UserRequest request) {
         LOG.debug("Updating user email id: {} ...", userId);
-        userService.updateUserEmailById(userId, email);
+        userService.updateUserEmailById(userId, request.email());
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/password")
-    public void updateUserPasswordById(@PathVariable(value = "id") Long userId, @RequestBody String password) {
+    public void updateUserPasswordById(@PathVariable(value = "id") Long userId, @RequestBody UserRequest request) {
         LOG.debug("Updating user password id: {} ...", userId);
-        userService.updateUserPasswordById(userId, password);
+        userService.updateUserPasswordById(userId, request.password());
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/role")
-    public void updateUserRoleById(@PathVariable(value = "id") Long userId, @RequestBody String role) {
+    public void updateUserRoleById(@PathVariable(value = "id") Long userId, @RequestBody UserRequest request) {
         LOG.debug("Updating user role id: {} ...", userId);
-        userService.updateUserRoleById(userId, role);
+        userService.updateUserRoleById(userId, request.userRole());
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @PatchMapping(path = "/{id}/visibility")
+    @PatchMapping(path = "/{id}/status")
     public void updateUserStatusById(@PathVariable(value = "id") Long userId) {
         LOG.debug("Updating user state id: {} ...", userId);
         userService.updateUserStatusById(userId);
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @PatchMapping(path = "/{id}/status")
+    @PatchMapping(path = "/{id}/visibility")
     public void updateUserVisibilityById(@PathVariable(value = "id") Long userId) {
         LOG.debug("Updating user visibility id: {} ...", userId);
         userService.updateUserVisibilityById(userId);
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @PatchMapping(path = "/{id}/phoneNumber")
-    public void updateUserPhoneNumberById(@PathVariable(value = "id") Long userId, @RequestBody String phoneNumber) {
+    @PatchMapping(path = "/{id}/phone-number")
+    public void updateUserPhoneNumberById(@PathVariable(value = "id") Long userId, @RequestBody UserRequest request) {
         LOG.debug("Updating user phone number id: {} ...", userId);
-        userService.updateUserPhoneNumberById(userId, phoneNumber);
+        userService.updateUserPhoneNumberById(userId, request.phoneNumber());
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

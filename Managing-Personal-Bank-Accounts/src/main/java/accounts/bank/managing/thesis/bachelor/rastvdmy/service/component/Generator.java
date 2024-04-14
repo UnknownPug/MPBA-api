@@ -8,13 +8,14 @@ import java.util.Random;
 public class Generator {
 
     public String generateReferenceNumber() {
+        String referenceNumber;
+        StringBuilder sb = new StringBuilder();
         Random random = new Random();
-        StringBuilder referenceNumber = new StringBuilder();
 
         // Generate 8 random uppercase letters
         for (int i = 0; i < 8; i++) {
             char randomChar = (char) (random.nextInt(26) + 'A');
-            referenceNumber.append(randomChar);
+            sb.append(randomChar);
         }
 
         // Determine the number of digits to append
@@ -23,10 +24,10 @@ public class Generator {
         // Generate the determined number of random digits
         for (int i = 0; i < numDigits; i++) {
             int randomDigit = random.nextInt(10);
-            referenceNumber.append(randomDigit);
+            sb.append(randomDigit);
         }
-
-        return referenceNumber.toString();
+        referenceNumber = sb.toString();
+        return referenceNumber;
     }
 
     public String generateIban() {
@@ -67,11 +68,7 @@ public class Generator {
         for (int i = 0; i < 10; i++) {
             accountNumber.append(random.nextInt(10));
         }
-        accountNumber.append("/");
-        // Generate 4 random digits for the bank code
-        for (int i = 0; i < 4; i++) {
-            accountNumber.append(random.nextInt(10));
-        }
+        accountNumber.append("/0800");
         return accountNumber.toString();
     }
 }

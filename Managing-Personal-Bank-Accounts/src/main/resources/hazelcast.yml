@@ -3,3 +3,5 @@ hazelcast:
     join:
       multicast:
         enabled: true
+  jet:
+    enabled: true

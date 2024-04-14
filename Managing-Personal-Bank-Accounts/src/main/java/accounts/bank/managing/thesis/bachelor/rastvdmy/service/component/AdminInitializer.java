@@ -1,9 +1,6 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service.component;
 
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.CurrencyData;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.User;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.UserRole;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.UserStatus;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.*;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import org.slf4j.Logger;
@@ -32,20 +29,21 @@ public class AdminInitializer {
         this.currencyDataRepository = currencyDataRepository;
     }
 
-    public AdminInitializer() {}
+    public AdminInitializer() {
+    }
 
     public void initializeAdmin() {
-        if (!repository.existsById(1L)) {
+        if (!repository.existsByUserRole(UserRole.ROLE_ADMIN)) {
             LOG.debug("Initializing admin...");
             User admin = new User();
             admin.setId(1L);
             admin.setUserRole(UserRole.ROLE_ADMIN);
-            admin.setStatus(UserStatus.STATUS_ONLINE);
+            admin.setVisibility(UserVisibility.STATUS_ONLINE);
             admin.setName("Admin");
             admin.setSurname("DR");
 
             admin.setDateOfBirth(LocalDate.of(2001, Calendar.SEPTEMBER, 1));
-            admin.setCountryOrigin("Czech Republic");
+            admin.setCountryOrigin("Czechia");
             admin.setEmail("adminbank@czechbank.com");
             admin.setPassword("Admin123");
             admin.encodePassword(passwordEncoder);

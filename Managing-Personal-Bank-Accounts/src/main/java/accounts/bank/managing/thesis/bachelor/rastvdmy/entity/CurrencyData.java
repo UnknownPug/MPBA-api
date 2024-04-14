@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
@@ -13,7 +14,7 @@ import java.util.List;
 @Setter
 @ToString
 @Table(name = "currency_data")
-public class CurrencyData {
+public class CurrencyData implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

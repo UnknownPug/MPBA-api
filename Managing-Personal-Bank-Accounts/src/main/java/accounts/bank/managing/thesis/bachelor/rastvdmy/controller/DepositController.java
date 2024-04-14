@@ -61,9 +61,9 @@ public class DepositController {
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Deposit> getAllDepositById(@PathVariable(value = "id") Long depositId) {
+    public ResponseEntity<Deposit> getDepositById(@PathVariable(value = "id") Long depositId) {
         LOG.debug("Getting deposit id: {} ...", depositId);
-        return ResponseEntity.ok(depositService.getAllDepositById(depositId));
+        return ResponseEntity.ok(depositService.getDepositById(depositId));
     }
 
     @PostMapping(path = "/")

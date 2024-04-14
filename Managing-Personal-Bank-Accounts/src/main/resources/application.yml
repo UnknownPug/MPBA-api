@@ -3,7 +3,6 @@ server:
   error:
     whitelabel:
       enabled: true
-
 spring:
   datasource:
       password: postgres
@@ -21,3 +20,5 @@ spring:
   mvc:
     servlet:
       path: /
+api:
+  key: 2d03edf7aa4c0318731708ae

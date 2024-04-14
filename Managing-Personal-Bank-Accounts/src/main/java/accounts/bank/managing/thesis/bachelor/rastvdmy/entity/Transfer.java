@@ -9,6 +9,7 @@ import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 @ToString
 @Entity
 @Table(name = "transfer")
-public class Transfer {
+public class Transfer implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -30,7 +31,7 @@ public class Transfer {
     @Enumerated(EnumType.STRING)
     private FinancialStatus status;
 
-    @Column(name = "reference_number", nullable = false, unique = true)
+    @Column(name = "reference_number", nullable = false)
     @Size(min = 1, max = 11)
     private String referenceNumber;
 
@@ -47,13 +48,13 @@ public class Transfer {
     private BigDecimal amount;
 
     @JsonIgnore
-    @OneToOne
+    @ManyToOne
     @ToString.Exclude
     @JoinColumn(name = "sender_card", nullable = false)
     private Card senderCard;
 
     @JsonIgnore
-    @OneToOne
+    @ManyToOne
     @ToString.Exclude
     @JoinColumn(name = "receiver_card", nullable = false)
     private Card receiverCard;

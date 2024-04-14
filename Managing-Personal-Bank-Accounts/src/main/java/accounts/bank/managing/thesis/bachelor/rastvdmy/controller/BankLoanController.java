@@ -1,7 +1,6 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.BankLoanRequest;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.TimeRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.BankLoan;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.BankLoanService;
@@ -68,9 +67,9 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/reference")
-    public ResponseEntity<BankLoan> getLoanByReferenceNumber(@RequestBody String referenceNumber) {
-        LOG.debug("Getting loan by reference: {} ...", referenceNumber);
-        return ResponseEntity.ok(bankLoanService.getLoanByReferenceNumber(referenceNumber));
+    public ResponseEntity<BankLoan> getLoanByReferenceNumber(@RequestBody BankLoanRequest request) {
+        LOG.debug("Getting loan by reference: {} ...", request.referenceNumber());
+        return ResponseEntity.ok(bankLoanService.getLoanByReferenceNumber(request.referenceNumber()));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -102,9 +101,9 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/date")
-    public void updateLoanDate(@PathVariable(value = "id") Long loanId, @RequestBody TimeRequest timeRequest) {
+    public void updateLoanDate(@PathVariable(value = "id") Long loanId, @RequestBody BankLoanRequest request) {
         LOG.debug("Updating settlement account loan {} ...", loanId);
-        bankLoanService.updateLoanDate(loanId, timeRequest.startDate(), timeRequest.expirationDate());
+        bankLoanService.updateLoanDate(loanId, request.startDate(), request.expirationDate());
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

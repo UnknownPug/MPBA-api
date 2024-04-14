@@ -29,7 +29,7 @@ public class CurrencyDataController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<CurrencyData>> updateAndFetchAllCurrencies() {
         LOG.debug("Updating currency data ...");
-        currencyDataService.updateCurrencyData();
+        currencyDataService.findAllExchangeRates();
         return ResponseEntity.ok(currencyDataService.findAllCurrencies());
     }
 
@@ -37,7 +37,7 @@ public class CurrencyDataController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<CurrencyData> findByCurrency(@PathVariable(value = "currency") String currencyType) {
         LOG.debug("Getting currency {} ...", currencyType);
-        currencyDataService.updateCurrencyData();
+        currencyDataService.findAllExchangeRates();
         return ResponseEntity.ok(currencyDataService.findByCurrency(currencyType));
     }
 }

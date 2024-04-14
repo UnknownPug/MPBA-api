@@ -7,7 +7,7 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.TransferRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,10 +21,8 @@ import java.util.Objects;
 
 @Service
 public class TransferService {
-
     private final TransferRepository transferRepository;
     private final CardRepository cardRepository;
-
     private final CurrencyDataRepository currencyRepository;
 
     @Autowired
@@ -44,11 +42,6 @@ public class TransferService {
         return transferRepository.findAll(pageable);
     }
 
-    @Cacheable(value = "transfers", key = "#keyword")
-    public Page<Transfer> getFilteredTransfersByKeyword(String keyword) {
-        return transferRepository.findAllByDescriptionContainingIgnoreCase(keyword, Pageable.unpaged());
-    }
-
     @Cacheable(value = "transfers", key = "#transferId")
     public Transfer getTransferById(Long transferId) {
         return transferRepository.findById(transferId).orElseThrow(
@@ -64,7 +57,7 @@ public class TransferService {
         return transferRepository.findByReferenceNumber(referenceNumber);
     }
 
-    @CachePut(value = "transfers", key = "#result.id")
+    @CacheEvict(value = {"transfers", "cards"}, allEntries = true)
     public Transfer createTransfer(Long senderId, String receiverCardNumber, BigDecimal amount, String description) {
         Transfer transfer = new Transfer();
 
@@ -77,7 +70,6 @@ public class TransferService {
         if (senderCard.getBalance().compareTo(amount) < 0) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Insufficient funds.");
         }
-        senderCard.setSenderTransferTransaction(transfer);
 
         Card receiverCard = cardRepository.findByCardNumber(receiverCardNumber);
         if (receiverCard == null) {
@@ -86,7 +78,6 @@ public class TransferService {
         if (receiverCard.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. Receiver card is blocked.");
         }
-        receiverCard.setReceiverTransferTransaction(transfer);
         if (Objects.equals(receiverCard.getStatus(), CardStatus.STATUS_CARD_BLOCKED)) {
             setDefaultTransferData(
                     "DENIED: Receiver card is not found or blocked.", transfer, senderCard, receiverCard);
@@ -105,6 +96,7 @@ public class TransferService {
                 throw new ApplicationException(HttpStatus.BAD_REQUEST, "Different currency types ...");
             }
         } else { // If sender and receiver have the same currency
+            transfer.setCurrency(senderCard.getCurrencyType());
             transfer.setAmount(amount);
         }
 
@@ -113,10 +105,9 @@ public class TransferService {
 
         // Updating receiver balance by adding amount
         receiverCard.setBalance(receiverCard.getBalance().add(transfer.getAmount()));
-
-        transfer.setStatus(FinancialStatus.RECEIVED);
         cardRepository.save(senderCard);
         cardRepository.save(receiverCard);
+        transfer.setStatus(FinancialStatus.RECEIVED);
         return transferRepository.save(transfer);
     }
 
@@ -127,39 +118,45 @@ public class TransferService {
                         BigDecimal.valueOf(
                                 currencyRepository.findByCurrency(Currency.USD.toString()).getRate())
                 ));
+                transfer.setCurrency(Currency.USD);
                 break;
             case EUR:
                 transfer.setAmount(amount.multiply(
                         BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.EUR.toString()).getRate())
                 ));
+                transfer.setCurrency(Currency.EUR);
                 break;
             case UAH:
                 transfer.setAmount(amount.multiply(
                         BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.UAH.toString()).getRate())
                 ));
+                transfer.setCurrency(Currency.UAH);
                 break;
             case CZK:
                 transfer.setAmount(amount.multiply(
                         BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.CZK.toString()).getRate())
                 ));
+                transfer.setCurrency(Currency.CZK);
                 break;
             case PLN:
                 transfer.setAmount(amount.multiply(
                         BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.PLN.toString()).getRate())
                 ));
+                transfer.setCurrency(Currency.PLN);
                 break;
-            default:
-                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency type is not supported ...");
         }
     }
 
-    private static void setDefaultTransferData(String description, Transfer transfer,
-                                               Card senderCard, Card receiverCard) {
+    private void setDefaultTransferData(String description, Transfer transfer, Card senderCard, Card receiverCard) {
         Generator generator = new Generator();
         transfer.setSenderCard(senderCard);
         transfer.setReceiverCard(receiverCard);
         transfer.setDateTime(LocalDateTime.now());
-        transfer.setReferenceNumber(generator.generateReferenceNumber());
+        String referenceNumber;
+        do {
+            referenceNumber = generator.generateReferenceNumber();
+        } while (transferRepository.existsByReferenceNumber(referenceNumber));
+        transfer.setReferenceNumber(referenceNumber);
         transfer.setDescription(description);
     }
 }

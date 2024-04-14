@@ -60,16 +60,16 @@ public class TransferController {
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Transfer> getTransferById(@PathVariable(value = "id") Long transferId) {
-        LOG.debug("Getting transfer id: {} ...", transferId);
-        return ResponseEntity.ok(transferService.getTransferById(transferId));
+    public ResponseEntity<Transfer> getTransferById(@PathVariable(value = "id") TransferRequest request) {
+        LOG.debug("Getting transfer id: {} ...", request.id());
+        return ResponseEntity.ok(transferService.getTransferById(request.id()));
     }
 
     @GetMapping(path = "/reference")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Transfer> getTransferByReferenceNumber(String referenceNumber) {
-        LOG.debug("Getting transfer by reference: {} ...", referenceNumber);
-        return ResponseEntity.ok(transferService.getTransferByReferenceNumber(referenceNumber));
+    public ResponseEntity<Transfer> getTransferByReferenceNumber(@RequestBody TransferRequest request) {
+        LOG.debug("Getting transfer by reference: {} ...", request.referenceNumber());
+        return ResponseEntity.ok(transferService.getTransferByReferenceNumber(request.referenceNumber()));
     }
 
     @PostMapping(path = "/")

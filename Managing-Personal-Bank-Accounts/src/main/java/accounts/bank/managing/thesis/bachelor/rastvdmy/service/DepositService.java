@@ -9,10 +9,8 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationExce
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.DepositRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,42 +47,35 @@ public class DepositService {
     }
 
     @Cacheable(value = "deposits", key = "#id")
-    public Deposit getAllDepositById(Long id) {
+    public Deposit getDepositById(Long id) {
         return depositRepository.findById(id).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not found.")
         );
     }
 
-    @Transactional
-    @CachePut(value = "deposits", key = "#result.id")
+    @CacheEvict(value = {"deposits", "cards"}, allEntries = true)
     public Deposit openDeposit(String cardNumber, BigDecimal depositAmount, String description, Currency currency) {
+        Card card = getUserCard(cardNumber, depositAmount);
+        if (depositRepository.existsByCardDeposit(card)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "A deposit for this card already exists.");
+        }
         Deposit deposit = new Deposit();
-        Card card = cardRepository.findByCardNumber(cardNumber);
-        if (card == null) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card is not found.");
-        }
-        if (card.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. Card is blocked.");
-        }
         deposit.setCurrency(currency);
-        if (card.getBalance().compareTo(depositAmount) < 0) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Not enough money on the card.");
-        }
-
         deposit.setDepositCard(generator.generateAccountNumber());
         deposit.setDepositAmount(convertCurrency(deposit, depositAmount));
         deposit.setCardDeposit(card);
         deposit.setDescription(description);
         deposit.setStartDate(LocalDateTime.now());
         deposit.setExpirationDate(deposit.getStartDate().plusYears(1));
-        deposit.setReferenceNumber(generator.generateReferenceNumber());
-        depositRepository.save(deposit);
-
-        card.setDepositTransaction(deposit);
+        String referenceNumber;
+        do {
+            referenceNumber = generator.generateReferenceNumber();
+        } while (depositRepository.existsByReferenceNumber(referenceNumber));
+        deposit.setReferenceNumber(referenceNumber);
         card.setBalance(card.getBalance().subtract(depositAmount));
         cardRepository.save(card);
 
-        return deposit;
+        return depositRepository.save(deposit);
     }
 
     private BigDecimal convertCurrency(Deposit deposit, BigDecimal depositAmount) {
@@ -109,12 +100,21 @@ public class DepositService {
 
     // The deposit cannot be renewed before the end of the deposit period
     // (with the condition of not improving/deteriorating).
-    @Transactional
-    @CachePut(value = "deposits", key = "#depositId")
-    public void updateDeposit(Long depositId, String cardNumber, String description, BigDecimal bigDecimal, Currency currency) {
+    @CacheEvict(value = {"deposits", "cards"}, allEntries = true)
+    public void updateDeposit(Long depositId, String cardNumber, String description, BigDecimal newAmount, Currency currency) {
         Deposit deposit = depositRepository.findById(depositId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not valid.")
         );
+        Card card = getUserCard(cardNumber, newAmount);
+        if (deposit.getCardDeposit().equals(card)) {
+            deleteDeposit(depositId); // Delete the deposit after the money has been returned to the card
+        } else {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card must be the same as the card that was used for the deposit.");
+        }
+        openDeposit(cardNumber, newAmount, description, currency); // Open a new deposit
+    }
+
+    private Card getUserCard(String cardNumber, BigDecimal newAmount) {
         Card card = cardRepository.findByCardNumber(cardNumber);
         if (card == null) {
             throw new ApplicationException(HttpStatus.NOT_FOUND, "Card is not found.");
@@ -122,28 +122,28 @@ public class DepositService {
         if (card.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. Card is blocked.");
         }
-        if (deposit.getCardDeposit().equals(card)) {
-            if (deposit.getExpirationDate().isBefore(LocalDateTime.now())) {
-                if (card.getCurrencyType().equals(deposit.getCurrency())) {
-                    card.setBalance(card.getBalance().add(deposit.getDepositAmount()));
-                } else {
-                    card.setBalance(card.getBalance().add(convertCurrency(deposit, deposit.getDepositAmount())));
-                }
-                cardRepository.save(card);
-                deleteDeposit(depositId);
-            } else if (deposit.getExpirationDate().isAfter(LocalDateTime.now()) || deposit.getExpirationDate().isEqual(LocalDateTime.now())) {
-                openDeposit(cardNumber, bigDecimal, description, currency);
-            }
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card must be the same as the card that was used for the deposit.");
+        if (card.getBalance().compareTo(newAmount) < 0) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Not enough money on the card.");
         }
+        return card;
     }
 
-    @CacheEvict(value = "deposits", key = "#depositId")
+    @CacheEvict(value = {"deposits", "cards"}, allEntries = true)
     public void deleteDeposit(Long depositId) {
-        depositRepository.findById(depositId).orElseThrow(
+        Deposit deposit = depositRepository.findById(depositId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not valid.")
         );
-        depositRepository.deleteById(depositId);
+        Card card = deposit.getCardDeposit();
+        if (deposit.getExpirationDate().isBefore(LocalDateTime.now())) {
+            card.setBalance(card.getBalance().add(deposit.getDepositAmount()));
+            card.setDepositTransaction(null);
+            cardRepository.save(card);
+        } else if (deposit.getExpirationDate().isAfter(LocalDateTime.now())) {
+            BigDecimal returnAmount = deposit.getDepositAmount().multiply(BigDecimal.valueOf(1.05)); // 5% bonus
+            card.setBalance(card.getBalance().add(returnAmount));
+            card.setDepositTransaction(null);
+            cardRepository.save(card);
+        }
+        depositRepository.delete(deposit);
     }
 }

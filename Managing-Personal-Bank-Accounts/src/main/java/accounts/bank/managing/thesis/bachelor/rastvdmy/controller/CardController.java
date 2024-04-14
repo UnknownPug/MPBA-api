@@ -1,7 +1,6 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
 
-import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.CardRefillRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.CardRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
@@ -50,11 +49,11 @@ public class CardController {
         switch (sort.toLowerCase()) {
             case "asc":
                 LOG.debug("Sorting cards by balance in ascending order ...");
-                Pageable pageableAsc = PageRequest.of(page, size, Sort.by("balance").ascending());
+                Pageable pageableAsc = PageRequest.of(page, size, Sort.by("cardNumber").ascending());
                 return ResponseEntity.ok(cardService.filterAndSortCards(pageableAsc));
             case "desc":
                 LOG.debug("Sorting cards by balance in descending order ...");
-                Pageable pageableDesc = PageRequest.of(page, size, Sort.by("balance").descending());
+                Pageable pageableDesc = PageRequest.of(page, size, Sort.by("cardNumber").descending());
                 return ResponseEntity.ok(cardService.filterAndSortCards(pageableDesc));
             default:
                 throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'asc' or 'desc'.");
@@ -68,14 +67,14 @@ public class CardController {
         return ResponseEntity.ok(cardService.getCardById(cardId));
     }
 
-    @GetMapping(path = "/card")
+    @GetMapping(path = "/number")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Card> getCardByCardNumber(@RequestBody String cardNumber) {
-        LOG.debug("Getting card by card number {} ...", cardNumber);
-        return ResponseEntity.ok(cardService.getCardByCardNumber(cardNumber));
+    public ResponseEntity<Card> getCardByCardNumber(@RequestBody CardRequest request) {
+        LOG.debug("Getting card by card number {} ...", request.cardNumber());
+        return ResponseEntity.ok(cardService.getCardByCardNumber(request.cardNumber()));
     }
 
-    @GetMapping(path = "/{id}/status")
+    @PatchMapping(path = "/{id}/status")
     @ResponseStatus(HttpStatus.OK)
     public void updateUserCardStatus(@PathVariable(value = "id") Long id) {
         LOG.debug("Getting card status ...");
@@ -92,17 +91,17 @@ public class CardController {
 
     @PatchMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public void cardRefill(@PathVariable(value = "id") Long cardId, @RequestBody CardRefillRequest cardRefillRequest) {
+    public void cardRefill(@PathVariable(value = "id") Long cardId, @RequestBody CardRequest request) {
         LOG.debug("Refilling card ...");
-        cardService.cardRefill(cardId, cardRefillRequest.pin(), cardRefillRequest.balance());
+        cardService.cardRefill(cardId, request.pin(), request.balance());
     }
 
     @PatchMapping(path = "/{id}/type")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void changeCardType
-            (@PathVariable(value = "id") Long cardId, @RequestBody String cardType) {
+            (@PathVariable(value = "id") Long cardId, @RequestBody CardRequest request) {
         LOG.debug("Changing card type ...");
-        cardService.changeCardType(cardId, cardType);
+        cardService.changeCardType(cardId, request.type());
     }
 
     @DeleteMapping(path = "/{id}/from/{uid}") // Only admin

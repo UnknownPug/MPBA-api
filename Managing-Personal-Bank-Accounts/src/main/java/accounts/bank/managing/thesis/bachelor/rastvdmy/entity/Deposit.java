@@ -10,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @Setter
 @ToString
 @Table(name = "deposit")
-public class Deposit {
+public class Deposit implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -49,7 +50,7 @@ public class Deposit {
     @Pattern(regexp = "^\\d{10}/\\d{4}$")
     private String depositCard;
 
-    @Column(name = "reference_number", nullable = false, unique = true)
+    @Column(name = "reference_number", nullable = false)
     @Size(min = 1, max = 11)
     private String referenceNumber;
 

@@ -12,7 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Setter
@@ -20,7 +22,7 @@ import java.util.List;
 @ToString
 @Entity
 @Table(name = "user_profile")
-public class User {
+public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -32,6 +34,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private UserStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private UserVisibility visibility;
 
     @Column(name = "name", nullable = false)
     @Size(min = 2, max = 10, message = "Name should be between 2 and 10 characters")
@@ -67,6 +72,7 @@ public class User {
     @Pattern(regexp = "^(\\+\\d{1,3})?\\d{9,15}$", message = "Phone number should be in international format")
     private String phoneNumber;
 
+    @JsonIgnore
     @ManyToMany
     @ToString.Exclude
     private List<CurrencyData> currencyData;
@@ -95,12 +101,15 @@ public class User {
     // Default Constructor for user
     public User() {
         this.userRole = UserRole.ROLE_USER;
-        this.status = UserStatus.STATUS_ONLINE;
+        this.visibility = UserVisibility.STATUS_ONLINE;
+        this.status = UserStatus.STATUS_DEFAULT;
+        this.avatar = "https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1";
+        this.cards = new ArrayList<>();
     }
 
     public User(UserRole role) {
         this.userRole = role;
-        this.status = UserStatus.STATUS_ONLINE;
+        this.visibility = UserVisibility.STATUS_ONLINE;
     }
 
     public void encodePassword(PasswordEncoder encoder) {

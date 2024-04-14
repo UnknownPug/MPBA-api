@@ -1,13 +1,11 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.entity;
 
-public enum CardStatus {
-    STATUS_CARD_DEFAULT("STATUS_CARD_DEFAULT"),
-    STATUS_CARD_BLOCKED("STATUS_CARD_BLOCKED"),
-    STATUS_CARD_UNBLOCKED("STATUS_CARD_UNBLOCKED");
+public enum UserVisibility {
+    STATUS_ONLINE("STATUS_ONLINE"), STATUS_OFFLINE("STATUS_OFFLINE");
 
     private final String status;
 
-    CardStatus(String status) {
+    UserVisibility(String status) {
         this.status = status;
     }
 

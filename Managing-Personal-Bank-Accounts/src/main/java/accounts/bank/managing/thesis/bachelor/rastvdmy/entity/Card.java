@@ -10,15 +10,18 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Setter
 @Getter
 @ToString
 @Table(name = "card")
-public class Card {
+public class Card implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -34,15 +37,15 @@ public class Card {
     @Enumerated(EnumType.STRING)
     private Currency currencyType;
 
-    @Column(name = "card_number", nullable = false, unique = true)
+    @Column(name = "card_number", nullable = false)
     @Size(min = 16, max = 16, message = "Card number must be 16 digits.")
     private String cardNumber;
 
-    @Column(name = "account_number", nullable = false, unique = true)
+    @Column(name = "account_number", nullable = false)
     @Pattern(regexp = "^\\d{10}/\\d{4}$")
     private String accountNumber;
 
-    @Column(name = "iban", nullable = false, unique = true)
+    @Column(name = "iban", nullable = false)
     @Size(min = 24, max = 24)
     private String iban;
 
@@ -62,12 +65,12 @@ public class Card {
     @Column(name = "balance", nullable = false)
     private BigDecimal balance;
 
-    @Column(name = "expiration_date", nullable = false)
-    @DateTimeFormat(pattern = "dd.MM.yyyy", iso = DateTimeFormat.ISO.DATE)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
-    private LocalDateTime cardExpirationDate;
+    @Column(name = "expiration_date")
+    @DateTimeFormat(pattern = "yyyy-MM-dd", iso = DateTimeFormat.ISO.DATE)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate cardExpirationDate;
 
-    @Column(name = "recipient_time", nullable = false)
+    @Column(name = "recipient_time")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm", iso = DateTimeFormat.ISO.DATE_TIME)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime recipientTime;
@@ -88,12 +91,16 @@ public class Card {
     private Deposit depositTransaction;
 
     @JsonIgnore
-    @OneToOne(mappedBy = "senderCard", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "senderCard", cascade = CascadeType.ALL)
     @ToString.Exclude
-    private Transfer senderTransferTransaction;
+    private List<Transfer> senderTransferTransaction;
 
     @JsonIgnore
-    @OneToOne(mappedBy = "receiverCard", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "receiverCard", cascade = CascadeType.ALL)
     @ToString.Exclude
-    private Transfer receiverTransferTransaction;
+    private List<Transfer> receiverTransferTransaction;
+
+    public Card() {
+        this.status = CardStatus.STATUS_CARD_DEFAULT;
+    }
 }

@@ -1,6 +1,7 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.*;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.component.Generator;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.BankLoanRepository;
@@ -9,7 +10,6 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,24 +17,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class BankLoanService {
     private final BankLoanRepository loanRepository;
     private final UserRepository userRepository;
-    private final CurrencyDataService currencyDataService;
+    private final CurrencyDataRepository currencyRepository;
     private final CardRepository cardRepository;
 
     private final Generator generator;
 
     @Autowired
     public BankLoanService(BankLoanRepository loanRepository, UserRepository userRepository,
-                           CurrencyDataService currencyDataService, CardRepository cardRepository, Generator generator) {
+                           CurrencyDataRepository currencyRepository, CardRepository cardRepository, Generator generator) {
         this.loanRepository = loanRepository;
         this.userRepository = userRepository;
-        this.currencyDataService = currencyDataService;
+        this.currencyRepository = currencyRepository;
         this.cardRepository = cardRepository;
         this.generator = generator;
     }
@@ -65,13 +65,13 @@ public class BankLoanService {
     }
 
     @Transactional
-    @CachePut(value = "loans", key = "#result.id")
+    @CacheEvict(value = {"loans", "users"}, allEntries = true)
     public BankLoan openSettlementAccount(Long id, BigDecimal bigDecimal, String chosenCurrencyType) {
         return createBankLoanForUser(id, bigDecimal, chosenCurrencyType);
     }
 
     @Transactional
-    @CachePut(value = "loans", key = "#result.id")
+    @CacheEvict(value = {"loans", "users"}, allEntries = true)
     public BankLoan addLoanToCard(Long id, BigDecimal bigDecimal, String chosenCurrencyType) {
         return createBankLoanForCard(id, bigDecimal, chosenCurrencyType);
     }
@@ -89,7 +89,7 @@ public class BankLoanService {
             user.setBankLoan(loan);
             loan.setUserLoan(user);
             userRepository.save(user);
-            return loan;
+            return loanRepository.save(loan);
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid loan amount.");
         }
@@ -108,7 +108,7 @@ public class BankLoanService {
             card.setCardLoan(loan);
             loan.setCardLoan(card);
             cardRepository.save(card);
-            return loan;
+            return loanRepository.save(loan);
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid loan amount.");
         }
@@ -121,15 +121,15 @@ public class BankLoanService {
     }
 
     private boolean isValidLoanRange(BigDecimal loanAmount) {
-        return loanAmount.compareTo(BigDecimal.ZERO) <= 0 && loanAmount.compareTo(BigDecimal.valueOf(1000000)) >= 0;
+        return loanAmount.compareTo(BigDecimal.ZERO) > 0 && loanAmount.compareTo(BigDecimal.valueOf(1000000)) < 0;
     }
 
     private BankLoan createBankLoan(BigDecimal loanAmount, String chosenCurrencyType) {
         BankLoan loan = new BankLoan();
         loan.setLoanAmount(loanAmount);
         loan.setRepaidLoan(BigDecimal.ZERO);
-        loan.setStartDate(LocalDateTime.now());
-        loan.setExpirationDate(LocalDateTime.now().plusYears(1));
+        loan.setStartDate(LocalDate.now());
+        loan.setExpirationDate(LocalDate.now().plusYears(1));
         loan.setReferenceNumber(generator.generateReferenceNumber());
         try {
             Currency currencyType = Currency.valueOf(chosenCurrencyType.toUpperCase());
@@ -140,57 +140,67 @@ public class BankLoanService {
         return loanRepository.save(loan);
     }
 
-    @CachePut(value = "loans", key = "#loanId")
-    public void repayLoan(Long loanId, BigDecimal bigDecimal, String currencyType) {
-        BigDecimal rate = BigDecimal.valueOf(currencyDataService.findByCurrency(currencyType).getRate());
+    @Transactional
+    @CacheEvict(value = "loans", allEntries = true)
+    public void repayLoan(Long loanId, BigDecimal loanRefund, String currencyType) {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan is not found.")
         );
-        if (loan.getLoanAmount().equals(BigDecimal.ZERO)) {
-            deleteCardLoan(loanId);
+        if (loan.getLoanAmount().compareTo(loanRefund) < 0) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid loan amount or loan was already repaid.");
         }
-        if (loan.getLoanAmount().compareTo(bigDecimal) < 0) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid loan amount.");
-        }
-        if (loan.getCurrency().toString().equals(currencyType)) {
-            loan.setRepaidLoan(loan.getRepaidLoan().subtract(bigDecimal));
-        } else {
-            switch (currencyType) {
-                case "CZK", "UAH", "EUR", "USD":
-                    loan.setLoanAmount(loan.getLoanAmount().subtract(rate.multiply(bigDecimal)));
-                    break;
-                default:
-                    throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid currency type.");
+        try {
+            Currency refundCurrency = Currency.valueOf(currencyType.toUpperCase());
+            Currency loanCurrency = loan.getCurrency();
+
+            if (refundCurrency != loanCurrency) {
+                BigDecimal convertedAmount = loanRefund.multiply(BigDecimal.valueOf(currencyRepository.findByCurrency(loanCurrency.toString()).getRate()));
+                loan.setRepaidLoan(loan.getRepaidLoan().add(convertedAmount));
+                loan.setLoanAmount(loan.getLoanAmount().subtract(convertedAmount));
+            } else { // if the currency is the same
+                loan.setRepaidLoan(loan.getRepaidLoan().add(loanRefund));
+                loan.setLoanAmount(loan.getLoanAmount().subtract(loanRefund));
             }
+            if (loan.getLoanAmount().compareTo(BigDecimal.ZERO) == 0) {
+                deleteCardLoan(loanId);
+                return;
+            }
+        } catch (IllegalArgumentException e) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid currency: " + currencyType);
         }
         loanRepository.save(loan);
     }
 
-    @CachePut(value = "loans", key = "#loanId")
-    public void updateLoanDate(Long loanId, LocalDateTime localDateTime, LocalDateTime localDateTime1) {
+    @CacheEvict(value = "loans", allEntries = true)
+    public void updateLoanDate(Long loanId, LocalDate startDate, LocalDate expirationDate) {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan is not found.")
         );
-        if (localDateTime.isAfter(localDateTime1) || localDateTime.isBefore(LocalDateTime.now()) ||
-                localDateTime1.isBefore(LocalDateTime.now()) || localDateTime1.isBefore(localDateTime) ||
-                localDateTime.isEqual(localDateTime1) ||
-                (localDateTime.isEqual(loan.getStartDate()) && localDateTime1.isEqual(loan.getExpirationDate()))) {
+        if (startDate.isAfter(expirationDate) || expirationDate.isBefore(startDate) ||
+                startDate.isBefore(LocalDate.now()) || expirationDate.isBefore(LocalDate.now())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid date range.");
         }
-        loan.setStartDate(localDateTime);
-        loan.setExpirationDate(localDateTime1);
+        loan.setStartDate(startDate);
+        loan.setExpirationDate(expirationDate);
         loanRepository.save(loan);
     }
 
-    @CacheEvict(value = "loans", key = "#loanId")
+    @Transactional
+    @CacheEvict(value = "loans", allEntries = true)
     public void deleteCardLoan(Long loanId) {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan is not found.")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan with id " + loanId + " is not found.")
         );
-        if (loan.getLoanAmount().equals(BigDecimal.ZERO)) {
-            loanRepository.delete(loan);
+        User user = userRepository.findByBankLoanId(loanId);
+        if (user == null) {
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "User with loan id " + loanId + " is not found.");
+        }
+        if (loan.getLoanAmount().compareTo(BigDecimal.ZERO) == 0) {
+            user.setBankLoan(null);
+            userRepository.save(user);
+            loanRepository.deleteById(loanId); // now you can safely delete the loan
         } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Loan is not repaid.");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Loan is not repaid and has " + loan.getLoanAmount() + " left.");
         }
     }
 }
