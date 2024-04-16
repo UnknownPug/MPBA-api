@@ -34,7 +34,7 @@ public class AdminInitializer {
 
     public void initializeAdmin() {
         if (!repository.existsByUserRole(UserRole.ROLE_ADMIN)) {
-            LOG.debug("Initializing admin...");
+            LOG.info("Initializing admin...");
             User admin = new User();
             admin.setId(1L);
             admin.setUserRole(UserRole.ROLE_ADMIN);
@@ -56,6 +56,6 @@ public class AdminInitializer {
             admin.setCards(null);
             repository.save(admin);
         }
-        LOG.debug("Admin has been already initialized");
+        LOG.info("Admin has been already initialized");
     }
 }

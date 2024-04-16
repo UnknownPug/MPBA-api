@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class CardController {
     }
 
     @GetMapping(path = "/")
+//    @PreAuthorize("hasRole('MODERATOR')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Card>> getCards() {
         LOG.debug("Getting all cards ...");
@@ -41,6 +43,7 @@ public class CardController {
 
     @GetMapping(path = "/filter")
     @ResponseStatus(HttpStatus.OK)
+//    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<Page<Card>> filterCards(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -62,6 +65,7 @@ public class CardController {
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
+//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
     public ResponseEntity<Card> getCardById(@PathVariable(value = "id") Long cardId) {
         LOG.debug("Getting card id {} ...", cardId);
         return ResponseEntity.ok(cardService.getCardById(cardId));
@@ -69,6 +73,7 @@ public class CardController {
 
     @GetMapping(path = "/number")
     @ResponseStatus(HttpStatus.OK)
+//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
     public ResponseEntity<Card> getCardByCardNumber(@RequestBody CardRequest request) {
         LOG.debug("Getting card by card number {} ...", request.cardNumber());
         return ResponseEntity.ok(cardService.getCardByCardNumber(request.cardNumber()));
@@ -76,13 +81,15 @@ public class CardController {
 
     @PatchMapping(path = "/{id}/status")
     @ResponseStatus(HttpStatus.OK)
+//    @PreAuthorize("hasRole('MODERATOR')")
     public void updateUserCardStatus(@PathVariable(value = "id") Long id) {
         LOG.debug("Getting card status ...");
         cardService.updateCardStatus(id);
     }
 
-    @PostMapping(path = "/{id}") // Both admin and user
+    @PostMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.CREATED)
+//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
     public ResponseEntity<Card> createCard(@PathVariable(value = "id") Long userId,
                                            @RequestBody CardRequest cardRequest) {
         LOG.debug("Creating card ...");
@@ -98,6 +105,7 @@ public class CardController {
 
     @PatchMapping(path = "/{id}/type")
     @ResponseStatus(HttpStatus.ACCEPTED)
+//    @PreAuthorize("hasRole('MODERATOR')")
     public void changeCardType
             (@PathVariable(value = "id") Long cardId, @RequestBody CardRequest request) {
         LOG.debug("Changing card type ...");
@@ -106,6 +114,7 @@ public class CardController {
 
     @DeleteMapping(path = "/{id}/from/{uid}") // Only admin
     @ResponseStatus(HttpStatus.NO_CONTENT)
+//    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')")
     public void deleteCard(@PathVariable(value = "id") Long cardId, @PathVariable(value = "uid") Long userId) {
         LOG.debug("Deleting card {} from user {}...", cardId, userId);
         cardService.deleteCard(cardId, userId);

@@ -9,9 +9,6 @@ import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -39,11 +36,9 @@ public class User implements Serializable {
     private UserVisibility visibility;
 
     @Column(name = "name", nullable = false)
-    @Size(min = 2, max = 10, message = "Name should be between 2 and 10 characters")
     private String name;
 
     @Column(name = "surname", nullable = false)
-    @Size(min = 2, max = 15, message = "Surname should be between 2 and 15 characters")
     private String surname;
 
     @Column(name = "date_of_birth", nullable = false)
@@ -55,21 +50,15 @@ public class User implements Serializable {
     private String countryOrigin;
 
     @Column(name = "email", nullable = false)
-    @Email(regexp = "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}",
-            flags = Pattern.Flag.CASE_INSENSITIVE, message = "Email must contain valid tags.")
     private String email;
 
     @Column(name = "password", nullable = false)
-    @Size(min = 8, max = 20, message = "Password should be between 8 and 20 characters")
-    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[0-9\\W]).{8,20}$",
-            message = "Password must contain at least one uppercase letter and one number or symbol")
     private String password;
 
     @Column(name = "avatar", nullable = false)
     private String avatar;
 
     @Column(name = "phone_number", nullable = false)
-    @Pattern(regexp = "^(\\+\\d{1,3})?\\d{9,15}$", message = "Phone number should be in international format")
     private String phoneNumber;
 
     @JsonIgnore

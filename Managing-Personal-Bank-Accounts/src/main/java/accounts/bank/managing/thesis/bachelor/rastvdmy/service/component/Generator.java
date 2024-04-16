@@ -43,8 +43,8 @@ public class Generator {
         for (int i = 0; i < 6; i++) {
             iban.append(random.nextInt(10));
         }
-        // Generate 8 random digits for the CZ account number
-        for (int i = 0; i < 8; i++) {
+        // Generate 10 random digits for the CZ account number
+        for (int i = 0; i < 10; i++) {
             iban.append(random.nextInt(10));
         }
         return iban.toString();
@@ -53,8 +53,7 @@ public class Generator {
     public String generateSwift() {
         Random random = new Random();
         StringBuilder swift = new StringBuilder("CVUTCZ");
-        // Generate 6 random uppercase letters for the location code
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 2; i++) {
             char randomChar = (char) (random.nextInt(26) + 'A');
             swift.append(randomChar);
         }

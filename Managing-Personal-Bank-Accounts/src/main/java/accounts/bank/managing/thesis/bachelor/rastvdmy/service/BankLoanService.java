@@ -31,7 +31,8 @@ public class BankLoanService {
 
     @Autowired
     public BankLoanService(BankLoanRepository loanRepository, UserRepository userRepository,
-                           CurrencyDataRepository currencyRepository, CardRepository cardRepository, Generator generator) {
+                           CurrencyDataRepository currencyRepository, CardRepository cardRepository,
+                           Generator generator) {
         this.loanRepository = loanRepository;
         this.userRepository = userRepository;
         this.currencyRepository = currencyRepository;
@@ -59,7 +60,8 @@ public class BankLoanService {
     @Cacheable(value = "loans", key = "#referenceNumber")
     public BankLoan getLoanByReferenceNumber(String referenceNumber) {
         if (referenceNumber.isEmpty()) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card with reference number " + referenceNumber + " not found.");
+            throw new ApplicationException(HttpStatus.NOT_FOUND,
+                    "Card with reference number " + referenceNumber + " not found.");
         }
         return loanRepository.findByReferenceNumber(referenceNumber);
     }
@@ -85,13 +87,13 @@ public class BankLoanService {
         }
         checkUserLoan(user);
         if (isValidLoanRange(loanAmount)) {
-            BankLoan loan = createBankLoan(loanAmount, chosenCurrencyType);
+            BankLoan loan = createBankLoan(loanAmount, chosenCurrencyType, generator.generateReferenceNumber());
             user.setBankLoan(loan);
             loan.setUserLoan(user);
             userRepository.save(user);
             return loanRepository.save(loan);
         } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid loan amount.");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Loan range is invalid.");
         }
     }
 
@@ -104,13 +106,13 @@ public class BankLoanService {
         }
         checkUserLoan(card.getUser());
         if (isValidLoanRange(loanAmount)) {
-            BankLoan loan = createBankLoan(loanAmount, chosenCurrencyType);
+            BankLoan loan = createBankLoan(loanAmount, chosenCurrencyType, generator.generateReferenceNumber());
             card.setCardLoan(loan);
             loan.setCardLoan(card);
             cardRepository.save(card);
             return loanRepository.save(loan);
         } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid loan amount.");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Loan range is invalid.");
         }
     }
 
@@ -124,13 +126,17 @@ public class BankLoanService {
         return loanAmount.compareTo(BigDecimal.ZERO) > 0 && loanAmount.compareTo(BigDecimal.valueOf(1000000)) < 0;
     }
 
-    private BankLoan createBankLoan(BigDecimal loanAmount, String chosenCurrencyType) {
+    private BankLoan createBankLoan(BigDecimal loanAmount, String chosenCurrencyType, String referenceNumber) {
         BankLoan loan = new BankLoan();
         loan.setLoanAmount(loanAmount);
         loan.setRepaidLoan(BigDecimal.ZERO);
         loan.setStartDate(LocalDate.now());
         loan.setExpirationDate(LocalDate.now().plusYears(1));
-        loan.setReferenceNumber(generator.generateReferenceNumber());
+        if (!isValidReferenceNumber(referenceNumber)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    "Invalid reference number. Size must be less or equal to 11.");
+        }
+        loan.setReferenceNumber(referenceNumber);
         try {
             Currency currencyType = Currency.valueOf(chosenCurrencyType.toUpperCase());
             loan.setCurrency(currencyType);
@@ -138,6 +144,10 @@ public class BankLoanService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid currency: " + chosenCurrencyType);
         }
         return loanRepository.save(loan);
+    }
+
+    private boolean isValidReferenceNumber(String referenceNumber) {
+        return referenceNumber != null && !referenceNumber.isEmpty() && referenceNumber.length() <= 11;
     }
 
     @Transactional
@@ -154,7 +164,8 @@ public class BankLoanService {
             Currency loanCurrency = loan.getCurrency();
 
             if (refundCurrency != loanCurrency) {
-                BigDecimal convertedAmount = loanRefund.multiply(BigDecimal.valueOf(currencyRepository.findByCurrency(loanCurrency.toString()).getRate()));
+                BigDecimal convertedAmount = loanRefund.multiply(
+                        BigDecimal.valueOf(currencyRepository.findByCurrency(loanCurrency.toString()).getRate()));
                 loan.setRepaidLoan(loan.getRepaidLoan().add(convertedAmount));
                 loan.setLoanAmount(loan.getLoanAmount().subtract(convertedAmount));
             } else { // if the currency is the same
@@ -187,11 +198,25 @@ public class BankLoanService {
 
     @Transactional
     @CacheEvict(value = "loans", allEntries = true)
-    public void deleteCardLoan(Long loanId) {
+    public void deleteBankLoan(Long loanId) {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan with id " + loanId + " is not found.")
         );
         User user = userRepository.findByBankLoanId(loanId);
+        deleteLoan(loanId, loan, user);
+    }
+
+    @Transactional
+    @CacheEvict(value = "loans", allEntries = true)
+    public void deleteCardLoan(Long loanId) {
+        BankLoan loan = loanRepository.findById(loanId).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan with id " + loanId + " is not found.")
+        );
+        User user = userRepository.findByCardLoanId(loanId);
+        deleteLoan(loanId, loan, user);
+    }
+
+    private void deleteLoan(Long loanId, BankLoan loan, User user) {
         if (user == null) {
             throw new ApplicationException(HttpStatus.NOT_FOUND, "User with loan id " + loanId + " is not found.");
         }
@@ -200,7 +225,8 @@ public class BankLoanService {
             userRepository.save(user);
             loanRepository.deleteById(loanId); // now you can safely delete the loan
         } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Loan is not repaid and has " + loan.getLoanAmount() + " left.");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    "Loan is not repaid and has " + loan.getLoanAmount() + " " + loan.getCurrency() + " left.");
         }
     }
 }

@@ -8,8 +8,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,15 +36,12 @@ public class Card implements Serializable {
     private Currency currencyType;
 
     @Column(name = "card_number", nullable = false)
-    @Size(min = 16, max = 16, message = "Card number must be 16 digits.")
     private String cardNumber;
 
     @Column(name = "account_number", nullable = false)
-    @Pattern(regexp = "^\\d{10}/\\d{4}$")
     private String accountNumber;
 
     @Column(name = "iban", nullable = false)
-    @Size(min = 24, max = 24)
     private String iban;
 
     @Column(name = "cvv", nullable = false)
@@ -59,7 +54,6 @@ public class Card implements Serializable {
     private String holderName;
 
     @Column(name = "swift", nullable = false)
-    @Size(min = 8, max = 8)
     private String swift;
 
     @Column(name = "balance", nullable = false)

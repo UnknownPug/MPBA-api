@@ -30,7 +30,8 @@ public class CardService {
     private final Generator generator;
 
     @Autowired
-    public CardService(CardRepository cardRepository, UserRepository userRepository, CurrencyDataService currencyDataService, Generator generator) {
+    public CardService(CardRepository cardRepository, UserRepository userRepository,
+                       CurrencyDataService currencyDataService, Generator generator) {
         this.cardRepository = cardRepository;
         this.userRepository = userRepository;
         this.currencyDataService = currencyDataService;
@@ -82,7 +83,11 @@ public class CardService {
         Random random = new Random();
 
         long generatedCardNumber = minCardLimit + ((long) (random.nextDouble() * (maxCardLimit - minCardLimit)));
-        card.setCardNumber(String.valueOf(generatedCardNumber));
+        String cardNumber = String.valueOf(generatedCardNumber);
+        if (!isValidCardNumber(cardNumber)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card number must be 16 digits.");
+        }
+        card.setCardNumber(cardNumber);
 
         int generateCvv = random.nextInt(maxCvvLimit - minCvvLimit + 1) + minCvvLimit;
         card.setCvv(generateCvv);
@@ -93,8 +98,15 @@ public class CardService {
         card.setBalance(BigDecimal.ZERO);
         card.setUser(user);
         card.setHolderName(user.getName() + " " + user.getSurname());
+        if (!isValidIban(generator.generateIban())) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid IBAN.");
+        }
         card.setIban(generator.generateIban());
-        card.setSwift(generator.generateSwift());
+        String generatedSwift = generator.generateSwift();
+        if (!isValidSwift(generatedSwift)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid SWIFT.");
+        }
+        card.setSwift(generatedSwift);
         if (chosenCurrency.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency must be filled.");
         }
@@ -104,11 +116,33 @@ public class CardService {
         } catch (Exception e) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency " + chosenCurrency + " does not exist.");
         }
-        card.setAccountNumber(generator.generateAccountNumber());
+        String generatedAccountNumber = generator.generateAccountNumber();
+        if (!isValidAccountNumber(generatedAccountNumber)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid account number.");
+        }
+        card.setAccountNumber(generatedAccountNumber);
         card.setCurrencyType(currencyType);
         cardTypeCheck(type, card);
         card.setCardExpirationDate(LocalDate.now().plusYears(5));
         return cardRepository.save(card);
+    }
+
+    private boolean isValidIban(String ibanCode) {
+        return ibanCode != null && ibanCode.length() == 24;
+    }
+
+    private boolean isValidCardNumber(String cardNumber) {
+        return cardNumber != null && cardNumber.length() == 16;
+    }
+
+    private boolean isValidSwift(String swift) {
+        return swift != null && swift.length() == 8;
+    }
+
+    private boolean isValidAccountNumber(String accountNumber) {
+        // Regular expression to match 10 digits followed by a forward slash and 4 digits
+        String regex = "^\\d{10}/\\d{4}$";
+        return accountNumber != null && accountNumber.matches(regex);
     }
 
     private void cardTypeCheck(String type, Card card) {
@@ -137,6 +171,9 @@ public class CardService {
         }
         if (card.getPin().equals(pin) && (card.getStatus().equals(CardStatus.STATUS_CARD_UNBLOCKED) ||
                 card.getStatus().equals(CardStatus.STATUS_CARD_DEFAULT))) {
+            if (balance.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Money amount must be greater than 0.");
+            }
             conversationToCardCurrency(card, balance);
             card.setRecipientTime(LocalDateTime.now());
             cardRepository.save(card);

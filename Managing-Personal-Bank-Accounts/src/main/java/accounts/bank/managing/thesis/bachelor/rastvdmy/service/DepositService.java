@@ -21,6 +21,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Currency.*;
+
 @Service
 public class DepositService {
     private final DepositRepository depositRepository;
@@ -29,7 +31,8 @@ public class DepositService {
     private final CardRepository cardRepository;
 
     @Autowired
-    public DepositService(DepositRepository depositRepository, Generator generator, CurrencyDataRepository currencyRepository, CardRepository cardRepository) {
+    public DepositService(DepositRepository depositRepository, Generator generator,
+                          CurrencyDataRepository currencyRepository, CardRepository cardRepository) {
         this.depositRepository = depositRepository;
         this.generator = generator;
         this.currencyRepository = currencyRepository;
@@ -61,15 +64,29 @@ public class DepositService {
         }
         Deposit deposit = new Deposit();
         deposit.setCurrency(currency);
-        deposit.setDepositCard(generator.generateAccountNumber());
+        String depositCard = generator.generateAccountNumber();
+        if (!isValidDepositCard(depositCard)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid deposit card.");
+        }
+        deposit.setDepositCard(depositCard);
+        if (depositAmount.compareTo(BigDecimal.valueOf(0)) <= 0) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Deposit amount must be greater than 0.");
+        }
         deposit.setDepositAmount(convertCurrency(deposit, depositAmount));
         deposit.setCardDeposit(card);
+        if (!isValidDescription(description)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    "The length of the description must be between 1 and 100 characters.");
+        }
         deposit.setDescription(description);
         deposit.setStartDate(LocalDateTime.now());
         deposit.setExpirationDate(deposit.getStartDate().plusYears(1));
         String referenceNumber;
         do {
             referenceNumber = generator.generateReferenceNumber();
+            if (!isValidReferenceNumber(referenceNumber)) {
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid reference number.");
+            }
         } while (depositRepository.existsByReferenceNumber(referenceNumber));
         deposit.setReferenceNumber(referenceNumber);
         card.setBalance(card.getBalance().subtract(depositAmount));
@@ -78,30 +95,30 @@ public class DepositService {
         return depositRepository.save(deposit);
     }
 
+    private boolean isValidDepositCard(String depositCard) {
+        // Regular expression to match 10 digits followed by a forward slash and 4 digits
+        String regex = "^\\d{10}/\\d{4}$";
+        return depositCard != null && depositCard.matches(regex);
+    }
+
+    private boolean isValidReferenceNumber(String referenceNumber) {
+        return referenceNumber != null && !referenceNumber.isEmpty() && referenceNumber.length() <= 11;
+    }
+
+    private boolean isValidDescription(String description) {
+        return description != null && !description.isEmpty() && description.length() <= 100;
+    }
+
     private BigDecimal convertCurrency(Deposit deposit, BigDecimal depositAmount) {
-        return switch (deposit.getCurrency()) {
-            case USD -> depositAmount.multiply(
-                    BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.USD.toString()).getRate())
-            );
-            case EUR -> depositAmount.multiply(
-                    BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.EUR.toString()).getRate())
-            );
-            case CZK -> depositAmount.multiply(
-                    BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.CZK.toString()).getRate())
-            );
-            case UAH -> depositAmount.multiply(
-                    BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.UAH.toString()).getRate())
-            );
-            case PLN -> depositAmount.multiply(
-                    BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.PLN.toString()).getRate())
-            );
-        };
+        Currency depositCurrency = deposit.getCurrency();
+        return convertCurrencyCase(depositCurrency, depositAmount);
     }
 
     // The deposit cannot be renewed before the end of the deposit period
     // (with the condition of not improving/deteriorating).
     @CacheEvict(value = {"deposits", "cards"}, allEntries = true)
-    public void updateDeposit(Long depositId, String cardNumber, String description, BigDecimal newAmount, Currency currency) {
+    public void updateDeposit(Long depositId, String cardNumber, String description,
+                              BigDecimal newAmount, Currency currency) {
         Deposit deposit = depositRepository.findById(depositId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not valid.")
         );
@@ -109,7 +126,8 @@ public class DepositService {
         if (deposit.getCardDeposit().equals(card)) {
             deleteDeposit(depositId); // Delete the deposit after the money has been returned to the card
         } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card must be the same as the card that was used for the deposit.");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    "Card must be the same as the card that was used for the deposit.");
         }
         openDeposit(cardNumber, newAmount, description, currency); // Open a new deposit
     }
@@ -135,15 +153,51 @@ public class DepositService {
         );
         Card card = deposit.getCardDeposit();
         if (deposit.getExpirationDate().isBefore(LocalDateTime.now())) {
-            card.setBalance(card.getBalance().add(deposit.getDepositAmount()));
+            BigDecimal returnAmount;
+            if (card.getCurrencyType().equals(deposit.getCurrency())) {
+                returnAmount = deposit.getDepositAmount();
+            } else {
+                returnAmount = convertToCardCurrency(card, deposit.getDepositAmount());
+            }
+            card.setBalance(card.getBalance().add(returnAmount));
             card.setDepositTransaction(null);
             cardRepository.save(card);
         } else if (deposit.getExpirationDate().isAfter(LocalDateTime.now())) {
             BigDecimal returnAmount = deposit.getDepositAmount().multiply(BigDecimal.valueOf(1.05)); // 5% bonus
+            if (card.getCurrencyType().equals(deposit.getCurrency())) {
+                returnAmount = deposit.getDepositAmount();
+            } else {
+                returnAmount = convertToCardCurrency(card, returnAmount);
+            }
             card.setBalance(card.getBalance().add(returnAmount));
             card.setDepositTransaction(null);
             cardRepository.save(card);
         }
         depositRepository.delete(deposit);
+    }
+
+    private BigDecimal convertToCardCurrency(Card card, BigDecimal amount) {
+        Currency cardCurrency = card.getCurrencyType();
+        return convertCurrencyCase(cardCurrency, amount);
+    }
+
+    private BigDecimal convertCurrencyCase(Currency currency, BigDecimal amount) {
+        return switch (currency) {
+            case USD -> amount.multiply(
+                    BigDecimal.valueOf(currencyRepository.findByCurrency(USD.toString()).getRate())
+            );
+            case EUR -> amount.multiply(
+                    BigDecimal.valueOf(currencyRepository.findByCurrency(EUR.toString()).getRate())
+            );
+            case CZK -> amount.multiply(
+                    BigDecimal.valueOf(currencyRepository.findByCurrency(CZK.toString()).getRate())
+            );
+            case UAH -> amount.multiply(
+                    BigDecimal.valueOf(currencyRepository.findByCurrency(UAH.toString()).getRate())
+            );
+            case PLN -> amount.multiply(
+                    BigDecimal.valueOf(currencyRepository.findByCurrency(PLN.toString()).getRate())
+            );
+        };
     }
 }

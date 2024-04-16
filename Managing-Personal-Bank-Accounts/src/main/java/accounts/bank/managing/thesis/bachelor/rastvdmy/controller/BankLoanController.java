@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/")
+//    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<List<BankLoan>> getAllLoans() {
         LOG.debug("Getting all loans ...");
         return ResponseEntity.ok(bankLoanService.getAllLoans());
@@ -39,6 +41,7 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/filter")
+//    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<Page<BankLoan>> filterLoans(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -60,6 +63,7 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{id}")
+//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
     public ResponseEntity<BankLoan> getLoanById(@PathVariable(value = "id") Long loanId) {
         LOG.debug("Getting loan id: {} ...", loanId);
         return ResponseEntity.ok(bankLoanService.getLoanById(loanId));
@@ -67,6 +71,7 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/reference")
+//    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<BankLoan> getLoanByReferenceNumber(@RequestBody BankLoanRequest request) {
         LOG.debug("Getting loan by reference: {} ...", request.referenceNumber());
         return ResponseEntity.ok(bankLoanService.getLoanByReferenceNumber(request.referenceNumber()));
@@ -74,6 +79,7 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/{id}")
+//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
     public ResponseEntity<BankLoan> openLoan(@PathVariable(value = "id") Long id,
                                              @RequestParam(value = "option") String option,
                                              @RequestBody BankLoanRequest loanRequest) {
@@ -94,6 +100,7 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}")
+//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
     public void loanRepayment(@PathVariable(value = "id") Long loanId, @RequestBody BankLoanRequest loanRequest) {
         LOG.debug("Repaying settlement account loan {} ...", loanId);
         bankLoanService.repayLoan(loanId, loanRequest.loanAmount(), loanRequest.currencyType());
@@ -101,6 +108,7 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/date")
+//    @PreAuthorize("hasRole('MODERATOR')")
     public void updateLoanDate(@PathVariable(value = "id") Long loanId, @RequestBody BankLoanRequest request) {
         LOG.debug("Updating settlement account loan {} ...", loanId);
         bankLoanService.updateLoanDate(loanId, request.startDate(), request.expirationDate());
@@ -108,8 +116,13 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(path = "/{id}")
-    public void deleteLoan(@PathVariable(value = "id") Long loanId) {
+//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
+    public void deleteLoan(@RequestParam String sort, @PathVariable(value = "id") Long loanId) {
         LOG.debug("Deleting settlement account loan for user {} ...", loanId);
-        bankLoanService.deleteCardLoan(loanId);
+        switch (sort.toLowerCase()) {
+            case "user" -> bankLoanService.deleteBankLoan(loanId);
+            case "card" -> bankLoanService.deleteCardLoan(loanId);
+            default -> throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'user' or 'card'.");
+        }
     }
 }

@@ -8,7 +8,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -32,7 +31,6 @@ public class Transfer implements Serializable {
     private FinancialStatus status;
 
     @Column(name = "reference_number", nullable = false)
-    @Size(min = 1, max = 11)
     private String referenceNumber;
 
     @Column(name = "date_time", nullable = false)
@@ -41,7 +39,6 @@ public class Transfer implements Serializable {
     private LocalDateTime dateTime;
 
     @Column(name = "description", nullable = false)
-    @Size(min = 1, max = 100, message = "Description must be between 1 and 100 characters")
     private String description;
 
     @Column(name = "amount", nullable = false)

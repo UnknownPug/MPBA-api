@@ -6,7 +6,9 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRe
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
+@CacheConfig(cacheNames = {"users"})
 public class UserService {
 
     private final UserRepository userRepository;
@@ -41,24 +44,24 @@ public class UserService {
         this.cardService = cardService;
     }
 
-    @Cacheable(value = "users")
+    @Cacheable
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
-    @Cacheable(value = "users")
+    @Cacheable
     public Page<User> filterAndSortUsers(Pageable pageable) {
         return userRepository.findAll(pageable);
     }
 
-    @Cacheable(value = "users", key = "#userId")
+    @Cacheable(key = "#userId")
     public User getUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(allEntries = true)
     public User createUser(String name, String surname, LocalDate dateOfBirth, String countryOfOrigin,
                            String email, String password, String phoneNumber) {
         if (name.isEmpty() || surname.isEmpty() || countryOfOrigin.isEmpty() ||
@@ -73,7 +76,13 @@ public class UserService {
         }
         // Creating user with default role and status
         User user = new User();
+        if (!isValidName(name)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Name should be between 2 and 10 characters.");
+        }
         user.setName(name);
+        if (!isValidSurname(surname)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Surname should be between 2 and 15 characters.");
+        }
         user.setSurname(surname);
         if (dateOfBirth.isAfter(LocalDate.of(LocalDate.now().getYear() - 18,
                 LocalDate.MAX.getMonth(),
@@ -89,10 +98,7 @@ public class UserService {
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Country " + countryOfOrigin + " does not exist.");
         }
-        user.setEmail(email);
-        user.setPassword(password);
-        user.encodePassword(passwordEncoder);
-        user.setPhoneNumber(phoneNumber);
+        validateUserData(email, password, phoneNumber, user);
         List<CurrencyData> currencyData = currencyDataRepository.findAll();
         user.setCurrencyData(currencyData);
         // Save the user and get the saved instance. Then create a card for the user
@@ -127,7 +133,7 @@ public class UserService {
         return false;
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(allEntries = true)
     public void updateUserById(Long userId, String email, String password, String phoneNumber) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
@@ -147,15 +153,28 @@ public class UserService {
         if (Objects.equals(password, user.getPassword())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered password is the same as the old one.");
         }
-
-        user.setEmail(email);
-        user.setPassword(password);
-        user.encodePassword(passwordEncoder);
-        user.setPhoneNumber(phoneNumber);
+        validateUserData(email, password, phoneNumber, user);
         userRepository.save(user);
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    private void validateUserData(String email, String password, String phoneNumber, User user) {
+        if (isInvalidEmail(email)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email must contain valid tags.");
+        }
+        user.setEmail(email);
+        if (isInvalidPassword(password)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    "Password must contain at least one uppercase letter and one number or symbol.");
+        }
+        user.setPassword(password);
+        user.encodePassword(passwordEncoder);
+        if (isInvalidPhoneNumber(phoneNumber)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number should be in international format.");
+        }
+        user.setPhoneNumber(phoneNumber);
+    }
+
+    @CacheEvict(allEntries = true)
     public void uploadUserAvatar(Long userId, MultipartFile userAvatar) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
@@ -170,7 +189,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(allEntries = true)
     public void updateUserEmailById(Long userId, String email) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
@@ -187,11 +206,14 @@ public class UserService {
         if (userRepository.existsByEmail(email)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email " + email + " is unavailable.");
         }
+        if (isInvalidEmail(email)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email must contain valid tags.");
+        }
         user.setEmail(email);
         userRepository.save(user);
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(allEntries = true)
     public void updateUserPasswordById(Long userId, String password) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
@@ -205,12 +227,16 @@ public class UserService {
         if (Objects.equals(password, user.getPassword())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Entered password is the same as the old one.");
         }
+        if (isInvalidPassword(password)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    "Password must contain at least one uppercase letter and one number or symbol.");
+        }
         user.setPassword(password);
         user.encodePassword(passwordEncoder);
         userRepository.save(user);
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(allEntries = true)
     public void updateUserRoleById(Long userId, String role) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
@@ -226,7 +252,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(allEntries = true)
     public void updateUserStatusById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
@@ -243,7 +269,7 @@ public class UserService {
         }
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(allEntries = true)
     public void updateUserVisibilityById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
@@ -264,7 +290,7 @@ public class UserService {
 
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(allEntries = true)
     public void updateUserPhoneNumberById(Long userId, String phoneNumber) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
@@ -278,11 +304,14 @@ public class UserService {
         if (userRepository.existsByPhoneNumber(phoneNumber)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Phone number " + phoneNumber + " is unavailable.");
         }
+        if (isInvalidPhoneNumber(phoneNumber)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number should be in international format.");
+        }
         user.setPhoneNumber(phoneNumber);
         userRepository.save(user);
     }
 
-    @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(allEntries = true)
     public void deleteUserById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id " + userId + " not found.")
@@ -294,6 +323,26 @@ public class UserService {
                     "User with id " + userId + " has cards. Delete the cards to remove user.");
         }
     }
+
+    private boolean isValidName(String name) {
+        return name != null && name.length() >= 2 && name.length() <= 10;
+    }
+
+    private boolean isValidSurname(String surname) {
+        return surname != null && surname.length() >= 2 && surname.length() <= 15;
+    }
+
+    private boolean isInvalidEmail(String email) {
+        return !EmailValidator.getInstance().isValid(email);
+    }
+
+    private boolean isInvalidPassword(String password) {
+        // Password validation logic
+        return password == null || !password.matches("^(?=.*[A-Z])(?=.*[0-9\\W]).{8,20}$");
+    }
+
+    private boolean isInvalidPhoneNumber(String phoneNumber) {
+        // Phone number validation logic
+        return phoneNumber == null || !phoneNumber.matches("^(\\+\\d{1,3})?\\d{9,15}$");
+    }
 }
-
-

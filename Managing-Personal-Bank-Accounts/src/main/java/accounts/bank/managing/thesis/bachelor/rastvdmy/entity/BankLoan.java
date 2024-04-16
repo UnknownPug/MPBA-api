@@ -8,7 +8,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -45,7 +44,6 @@ public class BankLoan implements Serializable {
     private LocalDate expirationDate;
 
     @Column(name = "reference_number", nullable = false)
-    @Size(min = 1, max = 11)
     private String referenceNumber;
 
     @JsonIgnore

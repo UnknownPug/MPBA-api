@@ -26,7 +26,8 @@ public class TransferService {
     private final CurrencyDataRepository currencyRepository;
 
     @Autowired
-    public TransferService(TransferRepository transferRepository, CardRepository cardRepository, CurrencyDataRepository currencyRepository) {
+    public TransferService(TransferRepository transferRepository, CardRepository cardRepository,
+                           CurrencyDataRepository currencyRepository) {
         this.transferRepository = transferRepository;
         this.cardRepository = cardRepository;
         this.currencyRepository = currencyRepository;
@@ -70,13 +71,16 @@ public class TransferService {
         if (senderCard.getBalance().compareTo(amount) < 0) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Insufficient funds.");
         }
-
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Transfer amount cannot be negative.");
+        }
         Card receiverCard = cardRepository.findByCardNumber(receiverCardNumber);
         if (receiverCard == null) {
             throw new ApplicationException(HttpStatus.NOT_FOUND, "Receiver card not found.");
         }
         if (receiverCard.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. Receiver card is blocked.");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    "Operation is unavailable. Receiver card is blocked.");
         }
         if (Objects.equals(receiverCard.getStatus(), CardStatus.STATUS_CARD_BLOCKED)) {
             setDefaultTransferData(
@@ -155,8 +159,23 @@ public class TransferService {
         String referenceNumber;
         do {
             referenceNumber = generator.generateReferenceNumber();
+            if (!isValidReferenceNumber(referenceNumber)) {
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid reference number.");
+            }
         } while (transferRepository.existsByReferenceNumber(referenceNumber));
         transfer.setReferenceNumber(referenceNumber);
+        if (!isValidDescription(description)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    "Description must be between 1 and 100 characters.");
+        }
         transfer.setDescription(description);
+    }
+
+    private boolean isValidReferenceNumber(String referenceNumber) {
+        return referenceNumber != null && !referenceNumber.isEmpty() && referenceNumber.length() <= 11;
+    }
+
+    private boolean isValidDescription(String description) {
+        return description != null && !description.isEmpty() && description.length() <= 100;
     }
 }

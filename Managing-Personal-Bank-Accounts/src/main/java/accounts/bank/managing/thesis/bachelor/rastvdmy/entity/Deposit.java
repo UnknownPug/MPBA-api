@@ -8,8 +8,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -40,18 +38,15 @@ public class Deposit implements Serializable {
     private LocalDateTime expirationDate;
 
     @Column(name = "description", nullable = false)
-    @Size(min = 1, max = 100, message = "The length of the description must be between 1 and 100 characters")
     private String description;
 
     @Column(name = "deposit_amount", nullable = false)
     private BigDecimal depositAmount;
 
     @Column(name = "deposit_card")
-    @Pattern(regexp = "^\\d{10}/\\d{4}$")
     private String depositCard;
 
     @Column(name = "reference_number", nullable = false)
-    @Size(min = 1, max = 11)
     private String referenceNumber;
 
     @JsonIgnore
