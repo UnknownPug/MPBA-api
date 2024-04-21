@@ -122,7 +122,8 @@ public class BankLoanController {
         switch (sort.toLowerCase()) {
             case "user" -> bankLoanService.deleteUserLoan(loanId);
             case "card" -> bankLoanService.deleteCardLoan(loanId);
-            default -> throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'user' or 'card'.");
+            default ->
+                    throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'user' or 'card'.");
         }
     }
 }
