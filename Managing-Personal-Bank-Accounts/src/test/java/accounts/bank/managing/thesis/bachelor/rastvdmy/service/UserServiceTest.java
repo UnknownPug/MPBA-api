@@ -28,6 +28,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * This class is used to test the functionality of the UserService class.
+ * It uses the Mockito framework for mocking dependencies and JUnit for running the tests.
+ */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
@@ -42,6 +46,9 @@ class UserServiceTest {
     @Mock
     private UserService userService;
 
+    /**
+     * This method is used to set up the test environment before each test.
+     */
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
@@ -51,6 +58,10 @@ class UserServiceTest {
         userService = new UserService(userRepository, passwordEncoder, currencyDataRepository, cardService);
     }
 
+    /**
+     * This method tests the functionality of the getUsers method in the UserService class.
+     * It verifies that the method returns all users in the repository.
+     */
     @Test
     void testGetUsers() {
         // Mocking data
@@ -65,6 +76,11 @@ class UserServiceTest {
         assert result.size() == 1; // Ensure one user is returned
     }
 
+    /**
+     * This method tests the functionality of the filterAndSortUsers method in the UserService class.
+     * It verifies that the method returns a page of users sorted and filtered
+     * according to the provided Pageable object.
+     */
     @Test
     void testFilterAndSortUsers() {
         // Mocking data
@@ -81,6 +97,10 @@ class UserServiceTest {
         assert result.getTotalElements() == 1; // Ensure one user is returned
     }
 
+    /**
+     * This method tests the functionality of the getUserById method in the UserService class.
+     * It verifies that the method returns the correct user when a valid ID is provided.
+     */
     @Test
     void testGetUserById_ExistingId() {
         // Mocking data
@@ -96,6 +116,10 @@ class UserServiceTest {
         assert result.getId().equals(userId); // Ensure the correct user is returned
     }
 
+    /**
+     * This method tests the functionality of the getUserById method in the UserService class.
+     * It verifies that the method throws an exception when an invalid ID is provided.
+     */
     @Test
     void testGetUserById_NonExistingId() {
         // Mocking data
@@ -111,43 +135,75 @@ class UserServiceTest {
         }
     }
 
+    /**
+     * This method tests the functionality of the createUser method in the UserService class.
+     * It verifies that the method throws an exception when all fields are empty.
+     */
     @Test
     public void testCreateUser_AllFieldsEmpty() {
         assertThrows(ApplicationException.class, () -> userService.createUser("", "", null, "", "", "", ""));
     }
 
+    /**
+     * This method tests the functionality of the createUser method in the UserService class.
+     * It verifies that the method throws an exception when the email already exists.
+     */
     @Test
     public void testCreateUser_EmailExists() {
         when(userRepository.existsByEmail(anyString())).thenReturn(true);
         assertThrows(ApplicationException.class, () -> userService.createUser("John", "Doe", LocalDate.of(1990, 1, 1), "USA", "john.doe@example.com", "password123", "+1234567890"));
     }
 
+    /**
+     * This method tests the functionality of the createUser method in the UserService class.
+     * It verifies that the method throws an exception when the phone number already exists.
+     */
     @Test
     public void testCreateUser_PhoneNumberExists() {
         when(userRepository.existsByPhoneNumber(anyString())).thenReturn(true);
         assertThrows(ApplicationException.class, () -> userService.createUser("John", "Doe", LocalDate.of(1990, 1, 1), "USA", "john.doe@example.com", "password123", "+1234567890"));
     }
 
+    /**
+     * This method tests the functionality of the createUser method in the UserService class.
+     * It verifies that the method throws an exception when the name is invalid.
+     */
     @Test
     public void testCreateUser_InvalidName() {
         assertThrows(ApplicationException.class, () -> userService.createUser("J", "Doe", LocalDate.of(1990, 1, 1), "USA", "john.doe@example.com", "password123", "+1234567890"));
     }
 
+    /**
+     * This method tests the functionality of the createUser method in the UserService class.
+     * It verifies that the method throws an exception when the surname is invalid.
+     */
     @Test
     public void testCreateUser_InvalidSurname() {
         assertThrows(ApplicationException.class, () -> userService.createUser("John", "D", LocalDate.of(1990, 1, 1), "USA", "john.doe@example.com", "password123", "+1234567890"));
     }
 
+    /**
+     * This method tests the functionality of the createUser method in the UserService class.
+     * It verifies that the method throws an exception when the date of birth is invalid.
+     */
     @Test
     public void testCreateUser_InvalidDateOfBirth() {
         assertThrows(ApplicationException.class, () -> userService.createUser("John", "Doe", LocalDate.of(2022, 1, 1), "USA", "john.doe@example.com", "password123", "+1234567890"));
     }
 
+    /**
+     * This method tests the functionality of the createUser method in the UserService class.
+     * It verifies that the method throws an exception when the country does not exist.
+     */
     @Test
     public void testCreateUser_CountryDoesNotExist() {
         assertThrows(ApplicationException.class, () -> userService.createUser("John", "Doe", LocalDate.of(1990, 1, 1), "USA", "john.doe@example.com", "password123", "+1234567890"));
     }
 
+    /**
+     * This method tests the functionality of the updateUserById method in the UserService class.
+     * It verifies that the method updates the user when valid user ID, email, password, and phone number are provided.
+     */
     @Test
     void testUpdateUserById_ValidInput() {
         // Mocking data
@@ -170,6 +226,10 @@ class UserServiceTest {
         verify(userRepository).save(any(User.class));
     }
 
+    /**
+     * This method tests the functionality of the updateUserById method in the UserService class.
+     * It verifies that the method throws an exception when the user is not found.
+     */
     @Test
     void testUpdateUserById_UserNotFound() {
         // Mocking data
@@ -188,6 +248,10 @@ class UserServiceTest {
         }
     }
 
+    /**
+     * This method tests the functionality of the uploadUserAvatar method in the UserService class.
+     * It verifies that the method throws an exception when the user is not found.
+     */
     @Test
     public void testUploadUserAvatar_UserNotFound() {
         Long userId = 1L;
@@ -198,6 +262,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.uploadUserAvatar(userId, userAvatar));
     }
 
+    /**
+     * This method tests the functionality of the uploadUserAvatar method in the UserService class.
+     * It verifies that the method throws an exception when the user is blocked.
+     */
     @Test
     public void testUploadUserAvatar_UserBlocked() {
         Long userId = 1L;
@@ -210,6 +278,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.uploadUserAvatar(userId, userAvatar));
     }
 
+    /**
+     * This method tests the functionality of the uploadUserAvatar method in the UserService class.
+     * It verifies that the method throws an exception when the uploaded file is not an image.
+     */
     @Test
     public void testUploadUserAvatar_NotAnImage() {
         Long userId = 1L;
@@ -223,6 +295,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.uploadUserAvatar(userId, userAvatar));
     }
 
+    /**
+     * This method tests the functionality of the uploadUserAvatar method in the UserService class.
+     * It verifies that the method uploads the avatar when valid user ID and image file are provided.
+     */
     @Test
     public void testUploadUserAvatar_ValidInputs() {
         Long userId = 1L;
@@ -240,6 +316,10 @@ class UserServiceTest {
         verify(userRepository, times(1)).save(user);
     }
 
+    /**
+     * This method tests the functionality of the updateUserEmailById method in the UserService class.
+     * It verifies that the method throws an exception when the user is not found.
+     */
     @Test
     public void testUpdateUserEmailById_UserNotFound() {
         Long userId = 1L;
@@ -250,6 +330,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.updateUserEmailById(userId, email));
     }
 
+    /**
+     * This method tests the functionality of the updateUserEmailById method in the UserService class.
+     * It verifies that the method throws an exception when the user is blocked.
+     */
     @Test
     public void testUpdateUserEmailById_UserBlocked() {
         Long userId = 1L;
@@ -262,6 +346,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.updateUserEmailById(userId, email));
     }
 
+    /**
+     * This method tests the functionality of the updateUserEmailById method in the UserService class.
+     * It verifies that the method throws an exception when the email is null.
+     */
     @Test
     public void testUpdateUserEmailById_EmailNull() {
         Long userId = 1L;
@@ -273,6 +361,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.updateUserEmailById(userId, null));
     }
 
+    /**
+     * This method tests the functionality of the updateUserEmailById method in the UserService class.
+     * It verifies that the method throws an exception when the new email is the same as the old one.
+     */
     @Test
     public void testUpdateUserEmailById_EmailSameAsOld() {
         Long userId = 1L;
@@ -286,6 +378,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.updateUserEmailById(userId, email));
     }
 
+    /**
+     * This method tests the functionality of the updateUserEmailById method in the UserService class.
+     * It verifies that the method throws an exception when the email already exists.
+     */
     @Test
     public void testUpdateUserEmailById_EmailExists() {
         Long userId = 1L;
@@ -299,6 +395,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.updateUserEmailById(userId, email));
     }
 
+    /**
+     * This method tests the functionality of the updateUserEmailById method in the UserService class.
+     * It verifies that the method throws an exception when the email is invalid.
+     */
     @Test
     public void testUpdateUserEmailById_InvalidEmail() {
         Long userId = 1L;
@@ -311,6 +411,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.updateUserEmailById(userId, email));
     }
 
+    /**
+     * This method tests the functionality of the updateUserEmailById method in the UserService class.
+     * It verifies that the method updates the email when valid user ID and email are provided.
+     */
     @Test
     public void testUpdateUserEmailById_ValidInputs() {
         Long userId = 1L;
@@ -327,6 +431,10 @@ class UserServiceTest {
         verify(userRepository, times(1)).save(user);
     }
 
+    /**
+     * This method tests the functionality of the updateUserPasswordById method in the UserService class.
+     * It verifies that the method updates the password when valid user ID and password are provided.
+     */
     @Test
     void testUpdateUserPasswordById_ValidInput() {
         // Mocking data
@@ -345,6 +453,10 @@ class UserServiceTest {
         verify(userRepository).save(any(User.class));
     }
 
+    /**
+     * This method tests the functionality of the updateUserPasswordById method in the UserService class.
+     * It verifies that the method throws an exception when the user is not found.
+     */
     @Test
     void testUpdateUserPasswordById_UserNotFound() {
         // Mocking data
@@ -361,6 +473,10 @@ class UserServiceTest {
         }
     }
 
+    /**
+     * This method tests the functionality of the updateUserStatusById method in the UserService class.
+     * It verifies that the method throws an exception when the user is not found.
+     */
     @Test
     public void testUpdateUserStatusById_UserNotFound() {
         Long userId = 1L;
@@ -370,6 +486,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.updateUserStatusById(userId));
     }
 
+    /**
+     * This method tests the functionality of the updateUserStatusById method in the UserService class.
+     * It verifies that the method updates the user status when the user is unblocked.
+     */
     @Test
     public void testUpdateUserStatusById_UserUnblocked() {
         Long userId = 1L;
@@ -384,6 +504,10 @@ class UserServiceTest {
         verify(userRepository, times(1)).save(user);
     }
 
+    /**
+     * This method tests the functionality of the updateUserStatusById method in the UserService class.
+     * It verifies that the method updates the user status when the user is blocked.
+     */
     @Test
     public void testUpdateUserStatusById_UserBlocked() {
         Long userId = 1L;
@@ -398,6 +522,10 @@ class UserServiceTest {
         verify(userRepository, times(1)).save(user);
     }
 
+    /**
+     * This method tests the functionality of the updateUserVisibilityById method in the UserService class.
+     * It verifies that the method throws an exception when the user is not found.
+     */
     @Test
     public void testUpdateUserVisibilityById_UserNotFound() {
         Long userId = 1L;
@@ -407,6 +535,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.updateUserVisibilityById(userId));
     }
 
+    /**
+     * This method tests the functionality of the updateUserVisibilityById method in the UserService class.
+     * It verifies that the method throws an exception when the user is blocked.
+     */
     @Test
     public void testUpdateUserVisibilityById_UserBlocked() {
         Long userId = 1L;
@@ -418,6 +550,10 @@ class UserServiceTest {
         assertThrows(ApplicationException.class, () -> userService.updateUserVisibilityById(userId));
     }
 
+    /**
+     * This method tests the functionality of the updateUserVisibilityById method in the UserService class.
+     * It verifies that the method updates the user visibility when the user is online.
+     */
     @Test
     public void testUpdateUserVisibilityById_UserOnline() {
         Long userId = 1L;
@@ -433,6 +569,10 @@ class UserServiceTest {
         verify(userRepository, times(1)).save(user);
     }
 
+    /**
+     * This method tests the functionality of the updateUserVisibilityById method in the UserService class.
+     * It verifies that the method updates the user visibility when the user is offline.
+     */
     @Test
     public void testUpdateUserVisibilityById_UserOffline() {
         Long userId = 1L;
@@ -448,6 +588,10 @@ class UserServiceTest {
         verify(userRepository, times(1)).save(user);
     }
 
+    /**
+     * This method tests the functionality of the updateUserPhoneNumberById method in the UserService class.
+     * It verifies that the method updates the phone number when valid user ID and phone number are provided.
+     */
     @Test
     void testUpdateUserPhoneNumberById_ValidInput() {
         // Mocking data
@@ -466,6 +610,10 @@ class UserServiceTest {
         verify(userRepository).save(any(User.class));
     }
 
+    /**
+     * This method tests the functionality of the updateUserPhoneNumberById method in the UserService class.
+     * It verifies that the method throws an exception when the user is not found.
+     */
     @Test
     void testUpdateUserPhoneNumberById_UserNotFound() {
         // Mocking data

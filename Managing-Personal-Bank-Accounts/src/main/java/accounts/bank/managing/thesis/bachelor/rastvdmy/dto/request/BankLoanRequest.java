@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * This class represents a request for a bank loan.
+ * It contains the loan amount, currency type, reference number, start date, and expiration date of the loan.
+ */
 public record BankLoanRequest(
         @JsonProperty("loan_amount")
         BigDecimal loanAmount,

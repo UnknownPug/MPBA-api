@@ -21,6 +21,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * This class is responsible for managing bank loans.
+ * It is annotated with @Service to indicate that it's a Spring managed service.
+ * It uses BankLoanRepository, UserRepository, CurrencyDataRepository, and CardRepository to interact with the database.
+ * It also uses a Generator to generate reference numbers.
+ */
 @Service
 public class BankLoanService {
     private final BankLoanRepository loanRepository;
@@ -30,6 +36,15 @@ public class BankLoanService {
 
     private final Generator generator;
 
+    /**
+     * Constructs a new BankLoanService with the given repositories and generator.
+     *
+     * @param loanRepository The BankLoanRepository to use.
+     * @param userRepository The UserRepository to use.
+     * @param currencyRepository The CurrencyDataRepository to use.
+     * @param cardRepository The CardRepository to use.
+     * @param generator The Generator to use.
+     */
     @Autowired
     public BankLoanService(BankLoanRepository loanRepository, UserRepository userRepository,
                            CurrencyDataRepository currencyRepository, CardRepository cardRepository,
@@ -41,16 +56,33 @@ public class BankLoanService {
         this.generator = generator;
     }
 
+    /**
+     * Retrieves all loans.
+     *
+     * @return A list of all loans.
+     */
     @Cacheable(value = "loans")
     public List<BankLoan> getAllLoans() {
         return loanRepository.findAll();
     }
 
+    /**
+     * Retrieves loans with filtering and sorting.
+     *
+     * @param pageable The pagination information.
+     * @return A page of loans.
+     */
     @Cacheable(value = "loans")
     public Page<BankLoan> filterAndSortLoans(Pageable pageable) {
         return loanRepository.findAll(pageable);
     }
 
+    /**
+     * Retrieves a loan by its ID.
+     *
+     * @param loanId The ID of the loan to retrieve.
+     * @return The retrieved loan.
+     */
     @Cacheable(value = "loans", key = "#loanId")
     public BankLoan getLoanById(Long loanId) {
         return loanRepository.findById(loanId).orElseThrow(
@@ -58,6 +90,12 @@ public class BankLoanService {
         );
     }
 
+    /**
+     * Retrieves a loan by its reference number.
+     *
+     * @param referenceNumber The reference number of the loan to retrieve.
+     * @return The retrieved loan.
+     */
     @Cacheable(value = "loans", key = "#referenceNumber")
     public BankLoan getLoanByReferenceNumber(String referenceNumber) {
         if (referenceNumber.isEmpty()) {
@@ -67,18 +105,43 @@ public class BankLoanService {
         return loanRepository.findByReferenceNumber(referenceNumber);
     }
 
+    /**
+     * Opens a settlement account for a user.
+     *
+     * @param id The ID of the user.
+     * @param bigDecimal The amount of the loan.
+     * @param chosenCurrencyType The currency type of the loan.
+     * @return The created loan.
+     */
     @Transactional
     @CacheEvict(value = {"loans", "users"}, allEntries = true)
     public BankLoan openSettlementAccount(Long id, BigDecimal bigDecimal, String chosenCurrencyType) {
         return createBankLoanForUser(id, bigDecimal, chosenCurrencyType);
     }
 
+    /**
+     * Adds a loan to a card.
+     *
+     * @param id The ID of the card.
+     * @param bigDecimal The amount of the loan.
+     * @param chosenCurrencyType The currency type of the loan.
+     * @return The created loan.
+     */
     @Transactional
     @CacheEvict(value = {"loans", "users"}, allEntries = true)
     public BankLoan addLoanToCard(Long id, BigDecimal bigDecimal, String chosenCurrencyType) {
         return createBankLoanForCard(id, bigDecimal, chosenCurrencyType);
     }
 
+    /**
+     * Creates a bank loan for a user.
+     *
+     * @param userId The ID of the user.
+     * @param loanAmount The amount of the loan.
+     * @param chosenCurrencyType The currency type of the loan.
+     * @return The created loan.
+     * @throws ApplicationException if the user is not found, is blocked, already has a loan, or the loan range is invalid.
+     */
     private BankLoan createBankLoanForUser(Long userId, BigDecimal loanAmount, String chosenCurrencyType) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
@@ -98,6 +161,15 @@ public class BankLoanService {
         }
     }
 
+    /**
+     * Creates a bank loan for a card.
+     *
+     * @param cardId The ID of the card.
+     * @param loanAmount The amount of the loan.
+     * @param chosenCurrencyType The currency type of the loan.
+     * @return The created loan.
+     * @throws ApplicationException if the card is not found, is blocked, the user already has a loan, or the loan range is invalid.
+     */
     private BankLoan createBankLoanForCard(Long cardId, BigDecimal loanAmount, String chosenCurrencyType) {
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Card not found.")
@@ -117,16 +189,37 @@ public class BankLoanService {
         }
     }
 
+    /**
+     * Checks if the user already has a loan.
+     *
+     * @param user The user to check.
+     * @throws ApplicationException if the user already has a loan.
+     */
     private void checkUserLoan(User user) {
         if (user.getBankLoan() != null || user.getCards().stream().anyMatch(card -> card.getCardLoan() != null)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "User already has a loan.");
         }
     }
 
+    /**
+     * Checks if the loan amount is within the valid range.
+     *
+     * @param loanAmount The amount of the loan.
+     * @return True if the loan amount is greater than 0 and less than 1,000,000, false otherwise.
+     */
     private boolean isValidLoanRange(BigDecimal loanAmount) {
         return loanAmount.compareTo(BigDecimal.ZERO) > 0 && loanAmount.compareTo(BigDecimal.valueOf(1000000)) < 0;
     }
 
+    /**
+     * Creates a bank loan.
+     *
+     * @param loanAmount The amount of the loan.
+     * @param chosenCurrencyType The currency type of the loan.
+     * @param referenceNumber The reference number of the loan.
+     * @return The created loan.
+     * @throws ApplicationException if the reference number is invalid or the currency is invalid.
+     */
     private BankLoan createBankLoan(BigDecimal loanAmount, String chosenCurrencyType, String referenceNumber) {
         BankLoan loan = new BankLoan();
         loan.setLoanAmount(loanAmount);
@@ -147,10 +240,23 @@ public class BankLoanService {
         return loanRepository.save(loan);
     }
 
+    /**
+     * Checks if the reference number is valid.
+     *
+     * @param referenceNumber The reference number to check.
+     * @return True if the reference number is not null, not empty, and its length is less than or equal to 11, false otherwise.
+     */
     private boolean isValidReferenceNumber(String referenceNumber) {
         return referenceNumber != null && !referenceNumber.isEmpty() && referenceNumber.length() <= 11;
     }
 
+    /**
+     * Repays a loan.
+     *
+     * @param loanId The ID of the loan to repay.
+     * @param loanRefund The amount to repay.
+     * @param currencyType The currency type of the repayment.
+     */
     @Transactional
     @CacheEvict(value = "loans", allEntries = true)
     public void repayLoan(Long loanId, BigDecimal loanRefund, String currencyType) {
@@ -190,6 +296,13 @@ public class BankLoanService {
         loanRepository.save(loan);
     }
 
+    /**
+     * Updates the date of a loan.
+     *
+     * @param loanId The ID of the loan to update.
+     * @param startDate The new start date.
+     * @param expirationDate The new expiration date.
+     */
     @CacheEvict(value = "loans", allEntries = true)
     public void updateLoanDate(Long loanId, LocalDate startDate, LocalDate expirationDate) {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
@@ -204,6 +317,11 @@ public class BankLoanService {
         loanRepository.save(loan);
     }
 
+    /**
+     * Deletes a user's loan.
+     *
+     * @param loanId The ID of the loan to delete.
+     */
     @Transactional
     @CacheEvict(value = "loans", allEntries = true)
     public void deleteUserLoan(Long loanId) {
@@ -225,6 +343,11 @@ public class BankLoanService {
         }
     }
 
+    /**
+     * Deletes a card's loan.
+     *
+     * @param loanId The ID of the loan to delete.
+     */
     @Transactional
     @CacheEvict(value = "loans", allEntries = true)
     public void deleteCardLoan(Long loanId) {

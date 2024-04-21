@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * This class is responsible for handling currency data related requests.
+ * It provides endpoints for updating and fetching all currencies and finding a currency by its type.
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/currency-data")
@@ -21,13 +25,23 @@ public class CurrencyDataController {
 
     private final CurrencyDataService currencyDataService;
 
+    /**
+     * Constructor for the CurrencyDataController.
+     *
+     * @param currencyDataService The service to handle currency data operations.
+     */
     @Autowired
     public CurrencyDataController(CurrencyDataService currencyDataService) {
         this.currencyDataService = currencyDataService;
     }
 
-    @GetMapping(path = "/")
+    /**
+     * This method is used to update and fetch all currencies.
+     *
+     * @return A list of all currency data.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_MODERATOR')")
     public ResponseEntity<List<CurrencyData>> updateAndFetchAllCurrencies() {
         LOG.info("Updating currency data ...");
@@ -35,8 +49,14 @@ public class CurrencyDataController {
         return ResponseEntity.ok(currencyDataService.findAllCurrencies());
     }
 
-    @GetMapping(path = "/{currency}")
+    /**
+     * This method is used to find a currency by its type.
+     *
+     * @param currencyType The type of the currency.
+     * @return The currency data of the given type.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/{currency}")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_MODERATOR')")
     public ResponseEntity<CurrencyData> findByCurrency(@PathVariable(value = "currency") String currencyType) {
         LOG.info("Getting currency {} ...", currencyType);

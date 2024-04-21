@@ -7,8 +7,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+/**
+ * This class is responsible for handling errors in the application.
+ * It implements the ErrorController interface and overrides its method to perform specific actions.
+ * The whitelabelError method is used to handle different HTTP status codes and return the corresponding error page.
+ */
 @Controller
 public class ErrorHandler implements ErrorController {
+    /**
+     * This method is used to handle different HTTP status codes.
+     * It retrieves the status code from the request attributes and returns the corresponding error page.
+     *
+     * @param request The HTTP request.
+     * @return The name of the error page.
+     */
     @RequestMapping("/error")
     public String whitelabelError(HttpServletRequest request) {
         Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);

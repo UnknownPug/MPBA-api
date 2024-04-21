@@ -23,6 +23,10 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * This class is used to test the functionality of the CardService class.
+ * It uses the Mockito framework for mocking dependencies and JUnit for running the tests.
+ */
 @ExtendWith(MockitoExtension.class)
 public class CardServiceTest {
 
@@ -41,6 +45,9 @@ public class CardServiceTest {
     private Card testCard;
     private User testUser;
 
+    /**
+     * This method is used to set up the initial state for the tests.
+     */
     @BeforeEach
     public void setUp() {
         testCard = new Card(); // Initialize with appropriate values
@@ -58,7 +65,10 @@ public class CardServiceTest {
         cardService = new CardService(cardRepository, userRepository, currencyDataService, generator);
     }
 
-    // Testing getAllCards
+    /**
+     * This method tests the functionality of the getAllCards method in the CardService class.
+     * It verifies that the method returns all cards in the repository.
+     */
     @Test
     public void testGetAllCards() {
         List<Card> cards = Collections.singletonList(testCard);
@@ -70,7 +80,11 @@ public class CardServiceTest {
         verify(cardRepository, times(1)).findAll();
     }
 
-    // Testing filterAndSortCards
+    /**
+     * This method tests the functionality of the filterAndSortCards method in the CardService class.
+     * It verifies that the method returns a page of cards sorted and filtered
+     * according to the provided Pageable object.
+     */
     @Test
     public void testFilterAndSortCards() {
         Pageable pageable = mock(Pageable.class);
@@ -84,7 +98,10 @@ public class CardServiceTest {
         verify(cardRepository, times(1)).findAll(pageable);
     }
 
-    // Testing getCardById for valid card
+    /**
+     * This method tests the functionality of the getCardById method in the CardService class.
+     * It verifies that the method returns the correct card when a valid ID is provided.
+     */
     @Test
     public void testGetCardById_ValidCard() {
         Long cardId = 1L;
@@ -96,7 +113,10 @@ public class CardServiceTest {
         verify(cardRepository, times(1)).findById(cardId);
     }
 
-    // Testing getCardById for invalid card
+    /**
+     * This method tests the functionality of the getCardById method in the CardService class.
+     * It verifies that the method throws an exception when an invalid ID is provided.
+     */
     @Test
     public void testGetCardById_InvalidCard() {
         Long cardId = 2L;
@@ -107,7 +127,10 @@ public class CardServiceTest {
         verify(cardRepository, times(1)).findById(cardId);
     }
 
-    // Testing getCardByCardNumber for valid card
+    /**
+     * This method tests the functionality of the getCardByCardNumber method in the CardService class.
+     * It verifies that the method returns the correct card when a valid card number is provided.
+     */
     @Test
     public void testGetCardByCardNumber_ValidCard() {
         String cardNumber = "1234567890123456";
@@ -122,7 +145,10 @@ public class CardServiceTest {
         verify(cardRepository, times(2)).findByCardNumber(cardNumber);
     }
 
-    // Testing getCardByCardNumber for invalid card
+    /**
+     * This method tests the functionality of the getCardByCardNumber method in the CardService class.
+     * It verifies that the method throws an exception when an invalid card number is provided.
+     */
     @Test
     public void testGetCardByCardNumber_InvalidCard() {
         String cardNumber = "1111222233334444"; // Assuming card number not found
@@ -133,12 +159,15 @@ public class CardServiceTest {
         verify(cardRepository, times(1)).findByCardNumber(cardNumber);
     }
 
-    // Testing createCard for valid user and currency
+    /**
+     * This method tests the functionality of the createCard method in the CardService class.
+     * It verifies that the method creates a card for a valid user and currency.
+     */
     @Test
     public void testCreateCard_ValidUserAndCurrency() {
         Long userId = 1L;
         String chosenCurrency = "USD";
-        String type = "VISA"; // Assuming card type is always "Debit" for simplicity
+        String type = "VISA"; // Assuming a card type is always "Debit" for simplicity
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
         when(generator.generateIban()).thenReturn("CZ12CVUT3456781234567890");
@@ -150,6 +179,10 @@ public class CardServiceTest {
         verify(cardRepository, times(1)).save(result);
     }
 
+    /**
+     * This method tests the functionality of the createCard method in the CardService class.
+     * It verifies that the method throws an exception when the user is blocked.
+     */
     @Test
     public void testCardRefill_BlockedCard() {
         Long cardId = 1L;
@@ -162,6 +195,10 @@ public class CardServiceTest {
         assertThrows(ApplicationException.class, () -> cardService.cardRefill(cardId, pin, balance));
     }
 
+    /**
+     * This method tests the functionality of the cardRefill method in the CardService class.
+     * It verifies that the method throws an exception when the card is blocked.
+     */
     @Test
     public void testCardRefill_ExpiredCard() {
         Long cardId = 1L;
@@ -174,6 +211,10 @@ public class CardServiceTest {
         assertThrows(ApplicationException.class, () -> cardService.cardRefill(cardId, pin, balance));
     }
 
+    /**
+     * This method tests the functionality of the cardRefill method in the CardService class.
+     * It verifies that the method throws an exception when the card is expired.
+     */
     @Test
     public void testCardRefill_InvalidPin() {
         Long cardId = 1L;
@@ -185,6 +226,10 @@ public class CardServiceTest {
         assertThrows(NullPointerException.class, () -> cardService.cardRefill(cardId, pin, balance));
     }
 
+    /**
+     * This method tests the functionality of the cardRefill method in the CardService class.
+     * It verifies that the method throws an exception when an invalid pin is provided.
+     */
     @Test
     public void testCardRefill_NegativeBalance() {
         Long cardId = 1L;
@@ -196,7 +241,10 @@ public class CardServiceTest {
         assertThrows(NullPointerException.class, () -> cardService.cardRefill(cardId, pin, balance));
     }
 
-    // Testing createCard for blocked user
+    /**
+     * This method tests the functionality of the cardRefill method in the CardService class.
+     * It verifies that the method throws an exception when a negative balance is provided.
+     */
     @Test
     public void testCreateCard_BlockedUser() {
         Long userId = 1L;
@@ -215,6 +263,10 @@ public class CardServiceTest {
         verify(cardRepository, never()).save(any());
     }
 
+    /**
+     * This method tests the functionality of the updateCardStatus method in the CardService class.
+     * It verifies that the method throws an exception when the card is expired.
+     */
     @Test
     public void testUpdateCardStatus_ExpiredCard() {
         Long cardId = 1L;
@@ -224,6 +276,10 @@ public class CardServiceTest {
         assertThrows(ApplicationException.class, () -> cardService.updateCardStatus(cardId));
     }
 
+    /**
+     * This method tests the functionality of the changeCardType method in the CardService class.
+     * It verifies that the method throws an exception when the card is expired.
+     */
     @Test
     public void testChangeCardType_ExpiredCard() {
         Long cardId = 1L;
@@ -233,6 +289,10 @@ public class CardServiceTest {
         assertThrows(ApplicationException.class, () -> cardService.changeCardType(cardId));
     }
 
+    /**
+     * This method tests the functionality of the deleteCard method in the CardService class.
+     * It verifies that the method throws an exception when the card is not found.
+     */
     @Test
     public void testDeleteCard_CardNotFound() {
         Long cardId = 1L;
@@ -243,6 +303,10 @@ public class CardServiceTest {
         assertThrows(ApplicationException.class, () -> cardService.deleteCard(cardId, userId));
     }
 
+    /**
+     * This method tests the functionality of the deleteCard method in the CardService class.
+     * It verifies that the method throws an exception when the user is not found.
+     */
     @Test
     public void testDeleteCard_UserNotFound() {
         Long cardId = 1L;

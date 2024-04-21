@@ -19,6 +19,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * This class is responsible for handling transfer related requests.
+ * It provides endpoints for getting all transfers, filtering transfers, getting a transfer by id or reference number,
+ * and creating a transfer.
+ */
 @Slf4j
 @RestController
 @RequestMapping(path = "/transfer")
@@ -26,21 +31,39 @@ public class TransferController {
     private final static Logger LOG = LoggerFactory.getLogger(TransferController.class);
     private final TransferService transferService;
 
+    /**
+     * Constructor for the TransferController.
+     *
+     * @param transferService The service to handle transfer operations.
+     */
     @Autowired
     public TransferController(TransferService transferService) {
         this.transferService = transferService;
     }
 
-    @GetMapping(path = "/")
+    /**
+     * This method is used to get all transfers.
+     *
+     * @return A list of all transfers.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/")
     @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<List<Transfer>> getTransfers() {
         LOG.info("Getting all transfers ...");
         return ResponseEntity.ok(transferService.getTransfers());
     }
 
-    @GetMapping(path = "/filter")
+    /**
+     * This method is used to filter transfers.
+     *
+     * @param page The page number.
+     * @param size The size of the page.
+     * @param sort The sort order.
+     * @return A page of filtered transfers.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/filter")
     @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<Page<Transfer>> filterTransfers(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -61,24 +84,42 @@ public class TransferController {
         }
     }
 
-    @GetMapping(path = "/{id}")
+    /**
+     * This method is used to get a transfer by id.
+     *
+     * @param id The id of the transfer.
+     * @return The transfer with the given id.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/{id}")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Transfer> getTransferById(@PathVariable(value = "id") Long id) {
         LOG.info("Getting transfer id: {} ...", id);
         return ResponseEntity.ok(transferService.getTransferById(id));
     }
 
-    @GetMapping(path = "/reference")
+    /**
+     * This method is used to get a transfer by reference number.
+     *
+     * @param request The request containing the reference number.
+     * @return The transfer with the given reference number.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/reference")
     @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<Transfer> getTransferByReferenceNumber(@RequestBody TransferRequest request) {
         LOG.info("Getting transfer by reference: {} ...", request.referenceNumber());
         return ResponseEntity.ok(transferService.getTransferByReferenceNumber(request.referenceNumber()));
     }
 
-    @PostMapping(path = "/")
+    /**
+     * This method is used to create a transfer.
+     *
+     * @param transfer The request containing the sender id, receiver card number, amount, and description.
+     * @return The created transfer.
+     */
     @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping(path = "/")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Transfer> createTransfer(@RequestBody TransferRequest transfer) {
         LOG.info("Creating transfer ...");

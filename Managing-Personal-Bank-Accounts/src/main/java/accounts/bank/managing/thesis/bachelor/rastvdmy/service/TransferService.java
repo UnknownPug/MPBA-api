@@ -20,12 +20,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class is responsible for managing transfers.
+ * It is annotated with @Service to indicate that it's a Spring managed service.
+ * It uses TransferRepository, CardRepository, and CurrencyDataRepository to interact with the database.
+ */
 @Service
 public class TransferService {
     private final TransferRepository transferRepository;
     private final CardRepository cardRepository;
     private final CurrencyDataRepository currencyRepository;
 
+    /**
+     * Constructs a new TransferService with the given repositories.
+     *
+     * @param transferRepository The TransferRepository to use.
+     * @param cardRepository     The CardRepository to use.
+     * @param currencyRepository The CurrencyDataRepository to use.
+     */
     @Autowired
     public TransferService(TransferRepository transferRepository, CardRepository cardRepository,
                            CurrencyDataRepository currencyRepository) {
@@ -34,16 +46,33 @@ public class TransferService {
         this.currencyRepository = currencyRepository;
     }
 
+    /**
+     * Retrieves all transfers.
+     *
+     * @return A list of all transfers.
+     */
     @Cacheable(value = "transfers")
     public List<Transfer> getTransfers() {
         return transferRepository.findAll();
     }
 
+    /**
+     * Retrieves transfers with filtering and sorting.
+     *
+     * @param pageable The pagination information.
+     * @return A page of transfers.
+     */
     @Cacheable(value = "transfers")
     public Page<Transfer> filterAndSortTransfers(Pageable pageable) {
         return transferRepository.findAll(pageable);
     }
 
+    /**
+     * Retrieves a transfer by its ID.
+     *
+     * @param transferId The ID of the transfer to retrieve.
+     * @return The retrieved transfer.
+     */
     @Cacheable(value = "transfers", key = "#transferId")
     public Transfer getTransferById(Long transferId) {
         return transferRepository.findById(transferId).orElseThrow(
@@ -51,6 +80,12 @@ public class TransferService {
         );
     }
 
+    /**
+     * Retrieves a transfer by its reference number.
+     *
+     * @param referenceNumber The reference number of the transfer to retrieve.
+     * @return The retrieved transfer.
+     */
     @Cacheable(value = "transfers", key = "#referenceNumber")
     public Transfer getTransferByReferenceNumber(String referenceNumber) {
         if (referenceNumber.isEmpty()) {
@@ -59,6 +94,15 @@ public class TransferService {
         return transferRepository.findByReferenceNumber(referenceNumber);
     }
 
+    /**
+     * Creates a transfer from one card to another.
+     *
+     * @param senderId           The ID of the sender's card.
+     * @param receiverCardNumber The card number of the receiver.
+     * @param amount             The amount to transfer.
+     * @param description        The description of the transfer.
+     * @return The created transfer.
+     */
     @CacheEvict(value = {"transfers", "cards"}, allEntries = true)
     public Transfer createTransfer(Long senderId, String receiverCardNumber, BigDecimal amount, String description) {
         Transfer transfer = new Transfer();
@@ -116,6 +160,13 @@ public class TransferService {
         return transferRepository.save(transfer);
     }
 
+    /**
+     * Transfers currency from one card to another.
+     *
+     * @param amount     The amount to transfer.
+     * @param senderCard The sender's card.
+     * @param transfer   The transfer to perform.
+     */
     private void transferCurrency(BigDecimal amount, Card senderCard, Transfer transfer) {
         switch (senderCard.getCurrencyType()) {
             case USD:
@@ -152,6 +203,14 @@ public class TransferService {
         }
     }
 
+    /**
+     * Sets the default data for a transfer.
+     *
+     * @param description  The description of the transfer.
+     * @param transfer     The transfer to set the data for.
+     * @param senderCard   The sender's card.
+     * @param receiverCard The receiver's card.
+     */
     private void setDefaultTransferData(String description, Transfer transfer, Card senderCard, Card receiverCard) {
         Generator generator = new Generator();
         transfer.setSenderCard(senderCard);
@@ -172,10 +231,22 @@ public class TransferService {
         transfer.setDescription(HtmlUtils.htmlEscape(description));
     }
 
+    /**
+     * Checks if a reference number is valid.
+     *
+     * @param referenceNumber The reference number to check.
+     * @return True if the reference number is valid, false otherwise.
+     */
     private boolean isValidReferenceNumber(String referenceNumber) {
         return referenceNumber != null && !referenceNumber.isEmpty() && referenceNumber.length() <= 11;
     }
 
+    /**
+     * Checks if a description is valid.
+     *
+     * @param description The description to check.
+     * @return True if the description is valid, false otherwise.
+     */
     private boolean isValidDescription(String description) {
         return description != null && !description.isEmpty() && description.length() <= 100;
     }

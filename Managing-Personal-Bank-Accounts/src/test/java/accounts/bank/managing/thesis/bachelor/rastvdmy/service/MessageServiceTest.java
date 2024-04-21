@@ -21,6 +21,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
+/**
+ * This class is used to test the functionality of the MessageService class.
+ * It uses the Mockito framework for mocking dependencies and JUnit for running the tests.
+ */
 @ExtendWith(MockitoExtension.class)
 class MessageServiceTest {
 
@@ -31,6 +35,9 @@ class MessageServiceTest {
     @Mock
     private MessageService messageService;
 
+    /**
+     * This method is used to set up the test environment before each test.
+     */
     @BeforeEach
     void setUp() {
         messageRepository = mock(MessageRepository.class);
@@ -38,6 +45,10 @@ class MessageServiceTest {
         messageService = new MessageService(messageRepository, userRepository);
     }
 
+    /**
+     * This method tests the functionality of the getMessageById method in the MessageService class.
+     * It verifies that the method returns the list of messages.
+     */
     @Test
     void testGetMessages() {
         // Mocking data
@@ -52,6 +63,10 @@ class MessageServiceTest {
         assert result.size() == 1; // Ensure one message is returned
     }
 
+    /**
+     * This method tests the functionality of the getMessageById method in the MessageService class.
+     * It verifies that the method returns the correct message when a valid ID is provided.
+     */
     @Test
     void testGetMessageById_ExistingId() {
         // Mocking data
@@ -67,6 +82,10 @@ class MessageServiceTest {
         assert result.getId().equals(messageId); // Ensure the correct message is returned
     }
 
+    /**
+     * This method tests the functionality of the getMessageById method in the MessageService class.
+     * It verifies that the method throws an exception when an invalid ID is provided.
+     */
     @Test
     void testGetMessageById_NonExistingId() {
         // Mocking data
@@ -82,6 +101,10 @@ class MessageServiceTest {
         }
     }
 
+    /**
+     * This method tests the functionality of the getMessagesByContent method in the MessageService class.
+     * It verifies that the method returns all messages with the provided content.
+     */
     @Test
     void testGetMessagesByContent_NonEmptyContent() {
         // Mocking data
@@ -97,6 +120,10 @@ class MessageServiceTest {
         assert result.size() == 1; // Ensure one message is returned
     }
 
+    /**
+     * This method tests the functionality of the getMessagesByContent method in the MessageService class.
+     * It verifies that the method throws an exception when an empty content is provided.
+     */
     @Test
     void testGetMessagesByContent_EmptyContent() {
         // Mocking data
@@ -111,6 +138,10 @@ class MessageServiceTest {
         }
     }
 
+    /**
+     * This method tests the functionality of the getSortedMessagesBySenderId method in the MessageService class.
+     * It verifies that the method throws an exception when the sender is not found.
+     */
     @Test
     public void testGetSortedMessagesBySenderId_SenderNotFound() {
         Long senderId = 1L;
@@ -121,6 +152,10 @@ class MessageServiceTest {
         assertThrows(ApplicationException.class, () -> messageService.getSortedMessagesBySenderId(senderId, order));
     }
 
+    /**
+     * This method tests the functionality of the getSortedMessagesByReceiverId method in the MessageService class.
+     * It verifies that the method throws an exception when the receiver is not found.
+     */
     @Test
     public void testGetSortedMessagesByReceiverId_ReceiverNotFound() {
         Long receiverId = 1L;
@@ -131,6 +166,10 @@ class MessageServiceTest {
         assertThrows(ApplicationException.class, () -> messageService.getSortedMessagesByReceiverId(receiverId, order));
     }
 
+    /**
+     * This method tests the functionality of the getSortedMessagesBySenderId method in the MessageService class.
+     * It verifies that the method throws an exception when the sender does not exist.
+     */
     @Test
     public void testGetSortedMessagesBySenderId_SenderDoesNotExist() {
         Long senderId = 1L;
@@ -141,6 +180,10 @@ class MessageServiceTest {
         assertThrows(ApplicationException.class, () -> messageService.getSortedMessagesBySenderId(senderId, order));
     }
 
+    /**
+     * This method tests the functionality of the getSortedMessagesByReceiverId method in the MessageService class.
+     * It verifies that the method throws an exception when the receiver does not exist.
+     */
     @Test
     public void testGetSortedMessagesByReceiverId_ReceiverDoesNotExist() {
         Long receiverId = 1L;
@@ -151,6 +194,10 @@ class MessageServiceTest {
         assertThrows(ApplicationException.class, () -> messageService.getSortedMessagesByReceiverId(receiverId, order));
     }
 
+    /**
+     * This method tests the functionality of the sendMessage method in the MessageService class.
+     * It verifies that the method sends a message when valid sender, receiver, and content are provided.
+     */
     @Test
     void testSendMessage_ValidInput() {
         // Mocking data
@@ -177,6 +224,10 @@ class MessageServiceTest {
         verify(messageRepository).save(any());
     }
 
+    /**
+     * This method tests the functionality of the sendMessage method in the MessageService class.
+     * It verifies that the method throws an exception when an invalid sender or receiver is provided.
+     */
     @Test
     void testSendMessage_InvalidSenderOrReceiver() {
         // Mocking data

@@ -1,6 +1,5 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
-
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.CardRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
@@ -20,29 +19,51 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * This class is responsible for handling card related requests.
+ * It provides endpoints for getting all cards, filtering cards, getting a card by id or card number,
+ * updating a card status, creating a card, refilling a card, changing a card type, and deleting a card.
+ */
 @Slf4j
 @RestController
 @RequestMapping(path = "/card")
 public class CardController {
-
     private static final Logger LOG = LoggerFactory.getLogger(CardController.class);
     private final CardService cardService;
 
+    /**
+     * Constructor for the CardController.
+     *
+     * @param cardService The service to handle card operations.
+     */
     @Autowired
     public CardController(CardService cardService) {
         this.cardService = cardService;
     }
 
+    /**
+     * This method is used to get all cards.
+     *
+     * @return A list of all cards.
+     */
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MODERATOR')")
-    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Card>> getCards() {
         LOG.info("Getting all cards ...");
         return ResponseEntity.ok(cardService.getAllCards());
     }
 
-    @GetMapping(path = "/filter")
+    /**
+     * This method is used to filter cards.
+     *
+     * @param page The page number.
+     * @param size The size of the page.
+     * @param sort The sort order.
+     * @return A page of filtered cards.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/filter")
     @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<Page<Card>> filterCards(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -63,32 +84,56 @@ public class CardController {
         }
     }
 
-    @GetMapping(path = "/{id}")
+    /**
+     * This method is used to get a card by id.
+     *
+     * @param cardId The id of the card.
+     * @return The card with the given id.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/{id}")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Card> getCardById(@PathVariable(value = "id") Long cardId) {
         LOG.info("Getting card id {} ...", cardId);
         return ResponseEntity.ok(cardService.getCardById(cardId));
     }
 
-    @GetMapping(path = "/number")
+    /**
+     * This method is used to get a card by card number.
+     *
+     * @param request The request containing the card number.
+     * @return The card with the given card number.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/number")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Card> getCardByCardNumber(@RequestBody CardRequest request) {
         LOG.info("Getting card by card number {} ...", request.cardNumber());
         return ResponseEntity.ok(cardService.getCardByCardNumber(request.cardNumber()));
     }
 
-    @PatchMapping(path = "/{id}/status")
+    /**
+     * This method is used to update a card status.
+     *
+     * @param id The id of the card.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @PatchMapping(path = "/{id}/status")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MODERATOR')")
     public void updateUserCardStatus(@PathVariable(value = "id") Long id) {
         LOG.info("Getting card status ...");
         cardService.updateCardStatus(id);
     }
 
-    @PostMapping(path = "/{id}")
+    /**
+     * This method is used to create a card.
+     *
+     * @param userId      The id of the user.
+     * @param cardRequest The request containing the currency and type of the card.
+     * @return The created card.
+     */
     @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping(path = "/{id}")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Card> createCard(@PathVariable(value = "id") Long userId,
                                            @RequestBody CardRequest cardRequest) {
@@ -96,25 +141,41 @@ public class CardController {
         return ResponseEntity.ok(cardService.createCard(userId, cardRequest.currency(), cardRequest.type()));
     }
 
-    @PatchMapping(path = "/{id}")
+    /**
+     * This method is used to refill a card.
+     *
+     * @param cardId  The id of the card.
+     * @param request The request containing the pin and balance of the card.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
+    @PatchMapping(path = "/{id}")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public void cardRefill(@PathVariable(value = "id") Long cardId, @RequestBody CardRequest request) {
         LOG.info("Refilling card ...");
         cardService.cardRefill(cardId, request.pin(), request.balance());
     }
 
-    @PatchMapping(path = "/{id}/type")
+    /**
+     * This method is used to change a card type.
+     *
+     * @param cardId The id of the card.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
+    @PatchMapping(path = "/{id}/type")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MODERATOR')")
-    public void changeCardType
-            (@PathVariable(value = "id") Long cardId) {
+    public void changeCardType(@PathVariable(value = "id") Long cardId) {
         LOG.info("Changing card type ...");
         cardService.changeCardType(cardId);
     }
 
-    @DeleteMapping(path = "/{id}/from/{uid}") // Only admin
+    /**
+     * This method is used to delete a card.
+     *
+     * @param cardId The id of the card.
+     * @param userId The id of the user.
+     */
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping(path = "/{id}/from/{uid}") // Only admin
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void deleteCard(@PathVariable(value = "id") Long cardId, @PathVariable(value = "uid") Long userId) {
         LOG.info("Deleting card {} from user {}...", cardId, userId);

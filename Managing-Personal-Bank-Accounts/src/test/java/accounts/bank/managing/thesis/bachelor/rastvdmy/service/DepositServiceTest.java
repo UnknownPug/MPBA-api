@@ -27,7 +27,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
-
+/**
+ * This class is used to test the functionality of the DepositService class.
+ * It uses the Mockito framework for mocking dependencies and JUnit for running the tests.
+ */
 @ExtendWith(MockitoExtension.class)
 class DepositServiceTest {
 
@@ -42,6 +45,9 @@ class DepositServiceTest {
     @Mock
     private DepositService depositService;
 
+    /**
+     * This method is used to set up the necessary dependencies for the tests.
+     */
     @BeforeEach
     void setUp() {
         depositRepository = mock(DepositRepository.class);
@@ -51,6 +57,10 @@ class DepositServiceTest {
         depositService = new DepositService(depositRepository, generator, currencyRepository, cardRepository);
     }
 
+    /**
+     * This method tests the functionality of the getAllDeposits method in the DepositService class.
+     * It verifies that the method returns all deposits in the repository.
+     */
     @Test
     void testGetAllDeposits() {
         // Mocking data
@@ -65,6 +75,10 @@ class DepositServiceTest {
         assert result.size() == 1; // Ensure one deposit is returned
     }
 
+    /**
+     * This method tests the functionality of the filterAndSortDeposits method in the DepositService class.
+     * It verifies that the method returns all deposits in the repository.
+     */
     @Test
     void testFilterAndSortDeposits() {
         // Mocking data
@@ -81,6 +95,10 @@ class DepositServiceTest {
         assert result.getTotalElements() == 1; // Ensure one deposit is returned
     }
 
+    /**
+     * This method tests the functionality of the getDepositById method in the DepositService class.
+     * It verifies that the method returns the correct deposit when a valid ID is provided.
+     */
     @Test
     void testGetDepositById_ExistingId() {
         // Mocking data
@@ -96,6 +114,10 @@ class DepositServiceTest {
         assert result.getId().equals(id); // Ensure the correct deposit is returned
     }
 
+    /**
+     * This method tests the functionality of the getDepositById method in the DepositService class.
+     * It verifies that the method throws an exception when an invalid ID is provided.
+     */
     @Test
     void testGetDepositById_NonExistingId() {
         // Mocking data
@@ -111,6 +133,10 @@ class DepositServiceTest {
         }
     }
 
+    /**
+     * This method tests the functionality of the deleteDeposit method in the DepositService class.
+     * It verifies that the method throws an exception when the deposit is not found.
+     */
     @Test
     public void testDeleteDeposit_DepositNotFound() {
         Long depositId = 1L;
@@ -120,6 +146,10 @@ class DepositServiceTest {
         assertThrows(ApplicationException.class, () -> depositService.deleteDeposit(depositId));
     }
 
+    /**
+     * This method tests the functionality of the updateDeposit method in the DepositService class.
+     * It verifies that the method throws an exception when the deposit is not found.
+     */
     @Test
     public void testUpdateDeposit_DepositNotFound() {
         Long depositId = 1L;
@@ -133,6 +163,10 @@ class DepositServiceTest {
         assertThrows(ApplicationException.class, () -> depositService.updateDeposit(depositId, cardNumber, description, newAmount, currency));
     }
 
+    /**
+     * This method tests the functionality of the openDeposit method in the DepositService class.
+     * It verifies that the method throws an exception when the card is not found.
+     */
     @Test
     public void testOpenDeposit_CardNotFound() {
         String cardNumber = "1234567890";
@@ -145,6 +179,10 @@ class DepositServiceTest {
         assertThrows(ApplicationException.class, () -> depositService.openDeposit(cardNumber, depositAmount, description, currency));
     }
 
+    /**
+     * This method tests the functionality of the openDeposit method in the DepositService class.
+     * It verifies that the method throws an exception when an invalid deposit amount is provided.
+     */
     @Test
     public void testOpenDeposit_InvalidDepositAmount() {
         String cardNumber = "1234567890";
@@ -155,6 +193,10 @@ class DepositServiceTest {
         assertThrows(ApplicationException.class, () -> depositService.openDeposit(cardNumber, depositAmount, description, currency));
     }
 
+    /**
+     * This method tests the functionality of the openDeposit method in the DepositService class.
+     * It verifies that the method throws an exception when an invalid description is provided.
+     */
     @Test
     public void testOpenDeposit_InvalidDescription() {
         String cardNumber = "1234567890";
@@ -165,6 +207,10 @@ class DepositServiceTest {
         assertThrows(ApplicationException.class, () -> depositService.openDeposit(cardNumber, depositAmount, description, currency));
     }
 
+    /**
+     * This method tests the functionality of the updateDeposit method in the DepositService class.
+     * It verifies that the method throws an exception when an invalid card is provided.
+     */
     @Test
     void testUpdateDeposit_InvalidCard() {
         // Mocking data
@@ -190,6 +236,10 @@ class DepositServiceTest {
         }
     }
 
+    /**
+     * This method tests the functionality of the deleteDeposit method in the DepositService class.
+     * It verifies that the method deletes the deposit when the deposit is expired.
+     */
     @Test
     public void testDeleteDeposit_DepositExpired() {
         Long depositId = 1L;
@@ -209,6 +259,10 @@ class DepositServiceTest {
         verify(depositRepository, times(1)).delete(deposit);
     }
 
+    /**
+     * This method tests the functionality of the deleteDeposit method in the DepositService class.
+     * It verifies that the method deletes the deposit when the deposit is not expired.
+     */
     @Test
     public void testDeleteDeposit_DepositNotExpired() {
         Long depositId = 1L;

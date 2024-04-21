@@ -27,6 +27,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class is responsible for managing users.
+ * It is annotated with @Service to indicate that it's a Spring managed service.
+ * It uses UserRepository, PasswordEncoder, CurrencyDataRepository, and CardService to interact with the database.
+ * It also uses RestTemplate to make HTTP requests to an external API.
+ */
 @Service
 @CacheConfig(cacheNames = {"users"})
 public class UserService {
@@ -37,6 +43,14 @@ public class UserService {
     private final CardService cardService;
     private final RestTemplate restTemplate = new RestTemplate();
 
+    /**
+     * Constructs a new UserService with the given repositories, encoder, and service.
+     *
+     * @param userRepository The UserRepository to use.
+     * @param passwordEncoder The PasswordEncoder to use.
+     * @param currencyDataRepository The CurrencyDataRepository to use.
+     * @param cardService The CardService to use.
+     */
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CurrencyDataRepository currencyDataRepository, CardService cardService) {
         this.userRepository = userRepository;
@@ -45,16 +59,33 @@ public class UserService {
         this.cardService = cardService;
     }
 
+    /**
+     * Retrieves all users.
+     *
+     * @return A list of all users.
+     */
     @Cacheable
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
+    /**
+     * Retrieves users with filtering and sorting.
+     *
+     * @param pageable The pagination information.
+     * @return A page of users.
+     */
     @Cacheable
     public Page<User> filterAndSortUsers(Pageable pageable) {
         return userRepository.findAll(pageable);
     }
 
+    /**
+     * Retrieves a user by its ID.
+     *
+     * @param userId The ID of the user to retrieve.
+     * @return The retrieved user.
+     */
     @Cacheable(key = "#userId")
     public User getUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(
@@ -62,6 +93,18 @@ public class UserService {
         );
     }
 
+    /**
+     * Creates a new user.
+     *
+     * @param name The name of the user.
+     * @param surname The surname of the user.
+     * @param dateOfBirth The date of birth of the user.
+     * @param countryOfOrigin The country of origin of the user.
+     * @param email The email of the user.
+     * @param password The password of the user.
+     * @param phoneNumber The phone number of the user.
+     * @return The created user.
+     */
     @CacheEvict(allEntries = true)
     public User createUser(String name, String surname, LocalDate dateOfBirth, String countryOfOrigin,
                            String email, String password, String phoneNumber) {
@@ -109,6 +152,12 @@ public class UserService {
         return userRepository.save(savedUser);
     }
 
+    /**
+     * Checks if a country exists.
+     *
+     * @param countryName The name of the country to check.
+     * @return True if the country exists, false otherwise.
+     */
     private boolean countryExists(String countryName) {
         final String url = "https://restcountries.com/v3.1/all?fields=name";
         try {
@@ -134,6 +183,14 @@ public class UserService {
         return false;
     }
 
+    /**
+     * Updates a user by its ID.
+     *
+     * @param userId The ID of the user to update.
+     * @param email The new email of the user.
+     * @param password The new password of the user.
+     * @param phoneNumber The new phone number of the user.
+     */
     @CacheEvict(allEntries = true)
     public void updateUserById(Long userId, String email, String password, String phoneNumber) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -158,6 +215,14 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Validates user data.
+     *
+     * @param email The email of the user.
+     * @param password The password of the user.
+     * @param phoneNumber The phone number of the user.
+     * @param user The user to validate.
+     */
     private void validateUserData(String email, String password, String phoneNumber, User user) {
         if (isInvalidEmail(email)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email must contain valid tags.");
@@ -175,6 +240,12 @@ public class UserService {
         user.setPhoneNumber(phoneNumber);
     }
 
+    /**
+     * Uploads a user avatar.
+     *
+     * @param userId The ID of the user.
+     * @param userAvatar The avatar of the user.
+     */
     @CacheEvict(allEntries = true)
     public void uploadUserAvatar(Long userId, MultipartFile userAvatar) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -190,6 +261,12 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Updates a user's email by its ID.
+     *
+     * @param userId The ID of the user.
+     * @param email The new email of the user.
+     */
     @CacheEvict(allEntries = true)
     public void updateUserEmailById(Long userId, String email) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -214,6 +291,12 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Updates a user's password by its ID.
+     *
+     * @param userId The ID of the user.
+     * @param password The new password of the user.
+     */
     @CacheEvict(allEntries = true)
     public void updateUserPasswordById(Long userId, String password) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -237,6 +320,12 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Updates a user's role by its ID.
+     *
+     * @param userId The ID of the user.
+     * @param role The new role of the user.
+     */
     @CacheEvict(allEntries = true)
     public void updateUserRoleById(Long userId, String role) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -253,6 +342,11 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Updates a user's status by its ID.
+     *
+     * @param userId The ID of the user.
+     */
     @CacheEvict(allEntries = true)
     public void updateUserStatusById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -270,6 +364,11 @@ public class UserService {
         }
     }
 
+    /**
+     * Updates a user's visibility by its ID.
+     *
+     * @param userId The ID of the user.
+     */
     @CacheEvict(allEntries = true)
     public void updateUserVisibilityById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -291,6 +390,12 @@ public class UserService {
 
     }
 
+    /**
+     * Updates a user's phone number by its ID.
+     *
+     * @param userId The ID of the user.
+     * @param phoneNumber The new phone number of the user.
+     */
     @CacheEvict(allEntries = true)
     public void updateUserPhoneNumberById(Long userId, String phoneNumber) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -312,6 +417,11 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Deletes a user by its ID.
+     *
+     * @param userId The ID of the user to delete.
+     */
     @CacheEvict(allEntries = true)
     public void deleteUserById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -325,23 +435,53 @@ public class UserService {
         }
     }
 
+    /**
+     * Checks if a name is valid.
+     *
+     * @param name The name to check.
+     * @return True if the name is valid, false otherwise.
+     */
     private boolean isValidName(String name) {
         return name != null && name.length() >= 2 /*&& name.length() <= 10*/;
     }
 
+    /**
+     * Checks if a surname is valid.
+     *
+     * @param surname The surname to check.
+     * @return True if the surname is valid, false otherwise.
+     */
     private boolean isValidSurname(String surname) {
         return surname != null && surname.length() >= 2 && surname.length() <= 15;
     }
 
+    /**
+     * Checks if an email is invalid.
+     *
+     * @param email The email to check.
+     * @return True if the email is invalid, false otherwise.
+     */
     private boolean isInvalidEmail(String email) {
         return !EmailValidator.getInstance().isValid(email);
     }
 
+    /**
+     * Checks if a password is invalid.
+     *
+     * @param password The password to check.
+     * @return True if the password is invalid, false otherwise.
+     */
     private boolean isInvalidPassword(String password) {
         // Password validation logic
         return password == null || !password.matches("^(?=.*[A-Z])(?=.*[0-9\\W]).{8,20}$");
     }
 
+    /**
+     * Checks if a phone number is invalid.
+     *
+     * @param phoneNumber The phone number to check.
+     * @return True if the phone number is invalid, false otherwise.
+     */
     private boolean isInvalidPhoneNumber(String phoneNumber) {
         // Phone number validation logic
         return phoneNumber == null || !phoneNumber.matches("^\\+\\d{1,3}\\d{9,15}$");

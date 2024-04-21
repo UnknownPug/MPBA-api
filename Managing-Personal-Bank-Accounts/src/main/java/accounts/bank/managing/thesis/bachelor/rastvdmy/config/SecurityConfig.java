@@ -27,6 +27,11 @@ import java.util.Collections;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+/**
+ * This class is responsible for the security configuration of the application.
+ * It sets up the security filter chain, the logout success handler, and the user details service.
+ * It also configures the global authentication manager builder.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -39,6 +44,15 @@ public class SecurityConfig {
         this.userRepository = userRepository;
     }
 
+    /**
+     * This method sets up the security filter chain.
+     * It configures session management, headers, CSRF protection,
+     * request authorization, basic HTTP authentication, form login, and logout.
+     *
+     * @param http The HttpSecurity instance.
+     * @return The SecurityFilterChain instance.
+     * @throws Exception If an error occurs during configuration.
+     */
     @Bean
     protected SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -69,6 +83,12 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * This method sets up the logout success handler.
+     * It updates the user's visibility status and redirects the user to the login page after logout.
+     *
+     * @return The LogoutSuccessHandler instance.
+     */
     @Bean
     public LogoutSuccessHandler logoutSuccessHandler() {
         return (request, response, authentication) -> {
@@ -84,6 +104,13 @@ public class SecurityConfig {
         };
     }
 
+    /**
+     * This method configures the global authentication manager builder.
+     * It sets up the user details service.
+     *
+     * @param auth The AuthenticationManagerBuilder instance.
+     * @throws Exception If an error occurs during configuration.
+     */
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(email -> {
@@ -104,6 +131,12 @@ public class SecurityConfig {
         });
     }
 
+    /**
+     * This method sets up the password encoder.
+     * It uses BCryptPasswordEncoder.
+     *
+     * @return The PasswordEncoder instance.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

@@ -25,6 +25,10 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * This class is used to test the functionality of the BankLoanService class.
+ * It uses the Mockito framework for mocking dependencies and JUnit for running the tests.
+ */
 @ExtendWith(MockitoExtension.class)
 public class BankLoanServiceTest {
 
@@ -44,6 +48,10 @@ public class BankLoanServiceTest {
     private User testUser;
     private Card testCard;
 
+    /**
+     * This method is used to set up the test environment before each test method is executed.
+     * It initializes the test objects with appropriate values.
+     */
     @BeforeEach
     public void setUp() {
         testLoan = new BankLoan(); // Initialize with appropriate values
@@ -51,6 +59,10 @@ public class BankLoanServiceTest {
         testCard = new Card(); // Initialize with appropriate values
     }
 
+    /**
+     * This method tests the functionality of the getAllLoans method in the BankLoanService class.
+     * It verifies that the method returns all loans in the repository.
+     */
     @Test
     public void testGetAllLoans() {
         List<BankLoan> loanList = new ArrayList<>();
@@ -66,6 +78,11 @@ public class BankLoanServiceTest {
         verify(loanRepository, times(1)).findAll();
     }
 
+    /**
+     * This method tests the functionality of the filterAndSortLoans method in the BankLoanService class.
+     * It verifies
+     * that the method returns a page of loans sorted and filtered according to the provided Pageable object.
+     */
     @Test
     public void testFilterAndSortLoans() {
         Pageable pageable = mock(Pageable.class);
@@ -81,6 +98,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, times(1)).findAll(pageable);
     }
 
+    /**
+     * This method tests the functionality of the getLoanById method in the BankLoanService class.
+     * It verifies that the method returns the correct loan when a valid ID is provided.
+     */
     @Test
     public void testGetLoanById_Exists() {
         Long loanId = 1L;
@@ -94,6 +115,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, times(1)).findById(loanId);
     }
 
+    /**
+     * This method tests the functionality of the getLoanById method in the BankLoanService class.
+     * It verifies that the method throws an exception when an invalid ID is provided.
+     */
     @Test
     public void testGetLoanById_NotFound() {
         Long loanId = 1L;
@@ -107,7 +132,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, times(1)).findById(loanId);
     }
 
-    // Testing getLoanByReferenceNumber
+    /**
+     * This method tests the functionality of the getLoanByReferenceNumber method in the BankLoanService class.
+     * It verifies that the method returns the correct loan when a valid reference number is provided.
+     */
     @Test
     public void testGetLoanByReferenceNumber_Success() {
         String referenceNumber = "123456789";
@@ -119,6 +147,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, times(1)).findByReferenceNumber(referenceNumber);
     }
 
+    /**
+     * This method tests the functionality of the getLoanByReferenceNumber method in the BankLoanService class.
+     * It verifies that the method throws an exception when an invalid reference number is provided.
+     */
     @Test
     public void testGetLoanByReferenceNumber_NotFound() {
         String referenceNumber = ""; // Empty reference number
@@ -127,7 +159,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, never()).findByReferenceNumber(referenceNumber);
     }
 
-    // Testing addLoanToCard for invalid card
+    /**
+     * This method tests the functionality of the addLoanToCard method in the BankLoanService class.
+     * It verifies that the method throws an exception when an invalid card ID is provided.
+     */
     @Test
     public void testAddLoanToCard_InvalidCard() {
         Long cardId = 1L; // Assuming a card with ID 1 does not exist
@@ -144,7 +179,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, never()).save(any(BankLoan.class));
     }
 
-    // Testing addLoanToCard for blocked card
+    /**
+     * This method tests the functionality of the addLoanToCard method in the BankLoanService class.
+     * It verifies that the method throws an exception when a blocked card ID is provided.
+     */
     @Test
     public void testAddLoanToCard_BlockedCard() {
         Long cardId = 1L;
@@ -163,7 +201,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, never()).save(any(BankLoan.class));
     }
 
-    // Testing openSettlementAccount for invalid user
+    /**
+     * This method tests the functionality of the openSettlementAccount method in the BankLoanService class.
+     * It verifies that the method throws an exception when an invalid user ID is provided.
+     */
     @Test
     public void testOpenSettlementAccount_InvalidUser() {
         Long userId = 1L; // Assuming a user with ID 1 does not exist
@@ -180,7 +221,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, never()).save(any(BankLoan.class));
     }
 
-    // Testing openSettlementAccount for invalid loan range
+    /**
+     * This method tests the functionality of the openSettlementAccount method in the BankLoanService class.
+     * It verifies that the method throws an exception when an invalid loan range is provided.
+     */
     @Test
     public void testOpenSettlementAccount_InvalidLoanRange() {
         Long userId = 1L;
@@ -197,7 +241,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, never()).save(any(BankLoan.class));
     }
 
-    // Testing openSettlementAccount for blocked user
+    /**
+     * This method tests the functionality of the openSettlementAccount method in the BankLoanService class.
+     * It verifies that the method throws an exception when a blocked user ID is provided.
+     */
     @Test
     public void testOpenSettlementAccount_BlockedUser() {
         Long userId = 1L;
@@ -216,6 +263,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, never()).save(any(BankLoan.class));
     }
 
+    /**
+     * This method tests the functionality of the repayLoan method in the BankLoanService class.
+     * It verifies that the method correctly updates the loan amount and repaid loan amount.
+     */
     @Test
     public void testRepayLoan_Success() {
         Long loanId = 1L;
@@ -238,6 +289,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, times(1)).save(testLoan);
     }
 
+    /**
+     * This method tests the functionality of the updateLoanDate method in the BankLoanService class.
+     * It verifies that the method correctly updates the start and expiration dates of the loan.
+     */
     @Test
     public void testUpdateLoanDate_Success() {
         Long loanId = 1L;
@@ -257,6 +312,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, times(1)).save(testLoan);
     }
 
+    /**
+     * This method tests the functionality of the updateLoanDate method in the BankLoanService class.
+     * It verifies that the method throws an exception when an invalid date range is provided.
+     */
     @Test
     public void testUpdateLoanDate_InvalidDateRange() {
         Long loanId = 1L;
@@ -273,6 +332,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, never()).save(testLoan);
     }
 
+    /**
+     * This method tests the functionality of the deleteUserLoan method in the BankLoanService class.
+     * It verifies that the method correctly deletes a user's loan when the loan is fully repaid.
+     */
     @Test
     public void testDeleteUserLoan_Success() {
         Long loanId = 1L;
@@ -295,6 +358,10 @@ public class BankLoanServiceTest {
         verify(loanRepository, times(1)).delete(testLoan);
     }
 
+    /**
+     * This method tests the functionality of the deleteUserLoan method in the BankLoanService class.
+     * It verifies that the method throws an exception when the loan is not fully repaid.
+     */
     @Test
     public void testDeleteUserLoan_LoanNotFullyRepaid() {
         Long loanId = 1L;

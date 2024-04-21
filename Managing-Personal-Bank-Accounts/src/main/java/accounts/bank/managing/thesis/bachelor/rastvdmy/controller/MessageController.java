@@ -16,7 +16,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
+/**
+ * This class is responsible for handling message related requests.
+ * It provides endpoints for getting all messages, getting a message by id, getting messages by content,
+ * getting sorted messages, and sending a message.
+ */
 @Slf4j
 @RestController
 @RequestMapping(path = "/chat")
@@ -26,38 +30,69 @@ public class MessageController {
     private final MessageService messageService;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
+    /**
+     * Constructor for the MessageController.
+     *
+     * @param messageService The service to handle message operations.
+     * @param kafkaTemplate  The Kafka template for sending messages.
+     */
     @Autowired
     public MessageController(MessageService messageService, KafkaTemplate<String, String> kafkaTemplate) {
         this.messageService = messageService;
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    @GetMapping(path = "/")
+    /**
+     * This method is used to get all messages.
+     *
+     * @return A list of all messages.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<List<Message>> getMessages() {
         LOG.info("Getting messages ...");
         return ResponseEntity.ok(messageService.getMessages());
     }
 
-    @GetMapping(path = "/{id}")
+    /**
+     * This method is used to get a message by id.
+     *
+     * @param messageId The id of the message.
+     * @return The message with the given id.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/{id}")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Message> getMessageById(@PathVariable(value = "id") Long messageId) {
         LOG.info("Getting message id: {} ...", messageId);
         return ResponseEntity.ok(messageService.getMessageById(messageId));
     }
 
-    @GetMapping(path = "/search/{content}")
+    /**
+     * This method is used to get messages by content.
+     *
+     * @param content The content of the messages.
+     * @return A list of messages with the given content.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/search/{content}")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<List<Message>> getMessagesByContent(@PathVariable(value = "content") String content) {
         LOG.info("Getting messages by content: {} ...", content);
         return ResponseEntity.ok(messageService.getMessagesByContent(content));
     }
 
-    @GetMapping(path = "/{id}/")
+    /**
+     * This method is used to get sorted messages.
+     *
+     * @param userId The id of the user.
+     * @param sort   The sort option.
+     * @param order  The order option.
+     * @return A list of sorted messages.
+     */
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping(path = "/{id}/")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<List<Message>> getSortedMessages(
             @PathVariable(value = "id") Long userId,
@@ -87,8 +122,14 @@ public class MessageController {
         };
     }
 
-    @PostMapping(path = "/")
+    /**
+     * This method is used to send a message.
+     *
+     * @param messageRequest The request containing the sender id, receiver id, and content of the message.
+     * @return The sent message.
+     */
     @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping(path = "/")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Message> sendMessage(@RequestBody MessageRequest messageRequest) {
         LOG.info("Sending message ...");

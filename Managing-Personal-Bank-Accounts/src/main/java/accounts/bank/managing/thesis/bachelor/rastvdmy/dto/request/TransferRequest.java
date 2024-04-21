@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
+/**
+ * This class represents a request for a transfer.
+ * It contains the id, sender id, reference number, receiver card number, description, and amount of the transfer.
+ */
 public record TransferRequest(
         Long id,
 

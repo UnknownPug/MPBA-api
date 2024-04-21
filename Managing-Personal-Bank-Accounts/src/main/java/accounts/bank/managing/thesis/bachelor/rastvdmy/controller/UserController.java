@@ -1,6 +1,5 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
-
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.UserRequest;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.User;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
@@ -21,6 +20,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * This class is responsible for handling user related requests.
+ * It provides endpoints for getting all users, filtering users, getting a user by id,
+ * creating a user, updating a user, uploading a user avatar,
+ * updating a user's email, password, role, status, visibility, phone number,
+ * and deleting a user.
+ */
 @Slf4j
 @RestController
 @RequestMapping(path = "/profile")
@@ -29,11 +35,21 @@ public class UserController {
     private static final Logger LOG = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
 
+    /**
+     * Constructor for the UserController.
+     *
+     * @param userService The service to handle user operations.
+     */
     @Autowired
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
+    /**
+     * This method is used to get all users.
+     *
+     * @return A list of all users.
+     */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_ADMIN')")
@@ -42,6 +58,14 @@ public class UserController {
         return ResponseEntity.ok(userService.getUsers());
     }
 
+    /**
+     * This method is used to filter users.
+     *
+     * @param page The page number.
+     * @param size The size of the page.
+     * @param sort The sort order.
+     * @return A page of filtered users.
+     */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/filter")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_ADMIN')")
@@ -64,6 +88,12 @@ public class UserController {
         }
     }
 
+    /**
+     * This method is used to get a user by id.
+     *
+     * @param userId The id of the user.
+     * @return The user with the given id.
+     */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_ADMIN', 'ROLE_USER')")
@@ -72,6 +102,12 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
 
+    /**
+     * This method is used to create a user.
+     *
+     * @param user The request containing the user's name, surname, date of birth, country of origin, email, password, and phone number.
+     * @return The created user.
+     */
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/register")
     public ResponseEntity<User> createUser(@RequestBody UserRequest user) {
@@ -87,6 +123,12 @@ public class UserController {
         ));
     }
 
+    /**
+     * This method is used to update a user by id.
+     *
+     * @param userId The id of the user.
+     * @param user   The request containing the user's email, password, and phone number.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
@@ -98,6 +140,12 @@ public class UserController {
                 user.phoneNumber());
     }
 
+    /**
+     * This method is used to upload a user avatar.
+     *
+     * @param userId     The id of the user.
+     * @param userAvatar The user's avatar file.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/avatar")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
@@ -106,6 +154,12 @@ public class UserController {
         userService.uploadUserAvatar(userId, userAvatar);
     }
 
+    /**
+     * This method is used to update a user's email by id.
+     *
+     * @param userId  The id of the user.
+     * @param request The request containing the user's email.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/email")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
@@ -114,6 +168,12 @@ public class UserController {
         userService.updateUserEmailById(userId, request.email());
     }
 
+    /**
+     * This method is used to update a user's password by id.
+     *
+     * @param userId  The id of the user.
+     * @param request The request containing the user's password.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/password")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
@@ -122,6 +182,12 @@ public class UserController {
         userService.updateUserPasswordById(userId, request.password());
     }
 
+    /**
+     * This method is used to update a user's role by id.
+     *
+     * @param userId  The id of the user.
+     * @param request The request containing the user's role.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/role")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -130,6 +196,11 @@ public class UserController {
         userService.updateUserRoleById(userId, request.userRole());
     }
 
+    /**
+     * This method is used to update a user's status by id.
+     *
+     * @param userId The id of the user.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/status")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_ADMIN')")
@@ -138,6 +209,11 @@ public class UserController {
         userService.updateUserStatusById(userId);
     }
 
+    /**
+     * This method is used to update a user's visibility by id.
+     *
+     * @param userId The id of the user.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/visibility")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_ADMIN', 'ROLE_USER')")
@@ -146,6 +222,12 @@ public class UserController {
         userService.updateUserVisibilityById(userId);
     }
 
+    /**
+     * This method is used to update a user's phone number by id.
+     *
+     * @param userId  The id of the user.
+     * @param request The request containing the user's phone number.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/phone-number")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
@@ -154,6 +236,11 @@ public class UserController {
         userService.updateUserPhoneNumberById(userId, request.phoneNumber());
     }
 
+    /**
+     * This method is used to delete a user by id.
+     *
+     * @param userId The id of the user.
+     */
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(path = "/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")

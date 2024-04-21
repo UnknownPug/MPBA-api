@@ -24,6 +24,11 @@ import java.util.List;
 
 import static accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Currency.*;
 
+/**
+ * This class is responsible for managing deposits.
+ * It is annotated with @Service to indicate that it's a Spring managed service.
+ * It uses DepositRepository, Generator, CurrencyDataRepository, and CardRepository to interact with the database.
+ */
 @Service
 public class DepositService {
     private final DepositRepository depositRepository;
@@ -31,6 +36,14 @@ public class DepositService {
     private final CurrencyDataRepository currencyRepository;
     private final CardRepository cardRepository;
 
+    /**
+     * Constructs a new DepositService with the given repositories and generator.
+     *
+     * @param depositRepository  The DepositRepository to use.
+     * @param generator          The Generator to use.
+     * @param currencyRepository The CurrencyDataRepository to use.
+     * @param cardRepository     The CardRepository to use.
+     */
     @Autowired
     public DepositService(DepositRepository depositRepository, Generator generator,
                           CurrencyDataRepository currencyRepository, CardRepository cardRepository) {
@@ -40,16 +53,33 @@ public class DepositService {
         this.cardRepository = cardRepository;
     }
 
+    /**
+     * Retrieves all deposits.
+     *
+     * @return A list of all deposits.
+     */
     @Cacheable(value = "deposits")
     public List<Deposit> getAllDeposits() {
         return depositRepository.findAll();
     }
 
+    /**
+     * Retrieves deposits with filtering and sorting.
+     *
+     * @param pageable The pagination information.
+     * @return A page of deposits.
+     */
     @Cacheable(value = "deposits")
     public Page<Deposit> filterAndSortDeposits(Pageable pageable) {
         return depositRepository.findAll(pageable);
     }
 
+    /**
+     * Retrieves a deposit by its ID.
+     *
+     * @param id The ID of the deposit to retrieve.
+     * @return The retrieved deposit.
+     */
     @Cacheable(value = "deposits", key = "#id")
     public Deposit getDepositById(Long id) {
         return depositRepository.findById(id).orElseThrow(
@@ -57,6 +87,15 @@ public class DepositService {
         );
     }
 
+    /**
+     * Opens a deposit for a specific card.
+     *
+     * @param cardNumber    The card number for the deposit.
+     * @param depositAmount The amount of the deposit.
+     * @param description   The description of the deposit.
+     * @param currency      The currency of the deposit.
+     * @return The created deposit.
+     */
     @CacheEvict(value = {"deposits", "cards"}, allEntries = true)
     public Deposit openDeposit(String cardNumber, BigDecimal depositAmount, String description, Currency currency) {
         Card card = getUserCard(cardNumber, depositAmount);
@@ -99,27 +138,61 @@ public class DepositService {
         return depositRepository.save(deposit);
     }
 
+    /**
+     * Checks if the provided deposit card number is valid.
+     *
+     * @param depositCard The deposit card number to check.
+     * @return True if the deposit card number is not null
+     * and matches the pattern of 10 digits followed by a forward slash and 4 digits, false otherwise.
+     */
     private boolean isValidDepositCard(String depositCard) {
         // Regular expression to match 10 digits followed by a forward slash and 4 digits
         String regex = "^\\d{10}/\\d{4}$";
         return depositCard != null && depositCard.matches(regex);
     }
 
+    /**
+     * Checks if the provided reference number is valid.
+     *
+     * @param referenceNumber The reference number to check.
+     * @return True if the reference number is not null, not empty, and its length is less than or equal to 11, false otherwise.
+     */
     private boolean isValidReferenceNumber(String referenceNumber) {
         return referenceNumber != null && !referenceNumber.isEmpty() && referenceNumber.length() <= 11;
     }
 
+    /**
+     * Checks if the provided description is valid.
+     *
+     * @param description The description to check.
+     * @return True if the description is not null, not empty,
+     * and its length is less than or equal to 100 characters, false otherwise.
+     */
     private boolean isValidDescription(String description) {
         return description != null && !description.isEmpty() && description.length() <= 100;
     }
 
+    /**
+     * Converts the provided deposit amount to the currency of the deposit.
+     *
+     * @param deposit       The deposit for which the amount is to be converted.
+     * @param depositAmount The amount of the deposit to convert.
+     * @return The converted deposit amount.
+     */
     private BigDecimal convertCurrency(Deposit deposit, BigDecimal depositAmount) {
         Currency depositCurrency = deposit.getCurrency();
         return convertCurrencyCase(depositCurrency, depositAmount);
     }
 
-    // The deposit cannot be renewed before the end of the deposit period
-    // (with the condition of not improving/deteriorating).
+    /**
+     * Updates a deposit.
+     *
+     * @param depositId   The ID of the deposit to update.
+     * @param cardNumber  The card number for the deposit.
+     * @param description The description of the deposit.
+     * @param newAmount   The new amount of the deposit.
+     * @param currency    The currency of the deposit.
+     */
     @CacheEvict(value = {"deposits", "cards"}, allEntries = true)
     public void updateDeposit(Long depositId, String cardNumber, String description,
                               BigDecimal newAmount, Currency currency) {
@@ -136,6 +209,14 @@ public class DepositService {
         openDeposit(cardNumber, newAmount, description, currency); // Open a new deposit
     }
 
+    /**
+     * Retrieves a card by its card number and checks if the card has enough balances for a new amount.
+     *
+     * @param cardNumber The card number to retrieve the card.
+     * @param newAmount  The new amount to check if the card has enough balances.
+     * @return The retrieved card, if it exists, is not blocked, and has enough balances for the new amount.
+     * @throws ApplicationException if the card is not found, is blocked, or does not have enough balances for the new amount.
+     */
     private Card getUserCard(String cardNumber, BigDecimal newAmount) {
         Card card = cardRepository.findByCardNumber(cardNumber);
         if (card == null) {
@@ -150,6 +231,11 @@ public class DepositService {
         return card;
     }
 
+    /**
+     * Deletes a deposit.
+     *
+     * @param depositId The ID of the deposit to delete.
+     */
     @CacheEvict(value = {"deposits", "cards"}, allEntries = true)
     public void deleteDeposit(Long depositId) {
         Deposit deposit = depositRepository.findById(depositId).orElseThrow(
@@ -180,11 +266,25 @@ public class DepositService {
         depositRepository.delete(deposit);
     }
 
+    /**
+     * Converts the provided amount to the currency of the card.
+     *
+     * @param card   The card for which the currency is to be used.
+     * @param amount The amount to convert.
+     * @return The converted amount.
+     */
     private BigDecimal convertToCardCurrency(Card card, BigDecimal amount) {
         Currency cardCurrency = card.getCurrencyType();
         return convertCurrencyCase(cardCurrency, amount);
     }
 
+    /**
+     * Converts the provided amount to the specified currency.
+     *
+     * @param currency The currency to which the amount is to be converted.
+     * @param amount   The amount to convert.
+     * @return The converted amount.
+     */
     private BigDecimal convertCurrencyCase(Currency currency, BigDecimal amount) {
         return switch (currency) {
             case USD -> amount.multiply(

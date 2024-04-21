@@ -21,6 +21,12 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class is responsible for managing currency data.
+ * It is annotated with @Service to indicate that it's a Spring managed service.
+ * It uses CurrencyDataRepository to interact with the database.
+ * It also uses RestTemplate to make HTTP requests to an external API.
+ */
 @Service
 public class CurrencyDataService {
     private final CurrencyDataRepository currencyDataRepository;
@@ -29,17 +35,34 @@ public class CurrencyDataService {
     @Value("${api.key}")
     private String apiKey;
 
+    /**
+     * Constructs a new CurrencyDataService with the given repository and RestTemplate.
+     *
+     * @param currencyDataRepository The CurrencyDataRepository to use.
+     * @param restTemplate The RestTemplate to use.
+     */
     @Autowired
     public CurrencyDataService(CurrencyDataRepository currencyDataRepository, RestTemplate restTemplate) {
         this.currencyDataRepository = currencyDataRepository;
         this.restTemplate = restTemplate;
     }
 
+    /**
+     * Retrieves all currency data.
+     *
+     * @return A list of all currency data.
+     */
     @Cacheable(value = "currencies")
     public List<CurrencyData> findAllCurrencies() {
         return currencyDataRepository.findAll();
     }
 
+    /**
+     * Retrieves currency data by its type.
+     *
+     * @param currencyType The type of the currency to retrieve.
+     * @return The retrieved currency data.
+     */
     @Cacheable(value = "currencies", key = "#currencyType")
     public CurrencyData findByCurrency(String currencyType) {
         if (currencyType.isEmpty()) {
@@ -59,6 +82,12 @@ public class CurrencyDataService {
         }
     }
 
+    /**
+     * Retrieves currency data from an external API.
+     *
+     * @param currencyType The type of the currency to retrieve.
+     * @return The retrieved currency data.
+     */
     private CurrencyData getCurrencyFromApi(String currencyType) {
         final String apiUrl = "https://v6.exchangerate-api.com/v6/" + apiKey + "/latest/" + Currency.CZK;
         try {
@@ -87,6 +116,10 @@ public class CurrencyDataService {
         return null;
     }
 
+    /**
+     * Retrieves all exchange rates from an external API and updates the database.
+     * This method is scheduled to run every 24 hours.
+     */
     @CacheEvict(value = "currencies", allEntries = true)
     @Scheduled(fixedRate = 86400000) // Update every 24 hours
     @PostConstruct

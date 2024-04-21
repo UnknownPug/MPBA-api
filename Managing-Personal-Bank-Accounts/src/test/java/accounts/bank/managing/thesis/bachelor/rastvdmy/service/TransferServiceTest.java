@@ -25,6 +25,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
+/**
+ * This class is used to test the functionality of the TransferService class.
+ * It uses the Mockito framework for mocking dependencies and JUnit for running the tests.
+ */
 @ExtendWith(MockitoExtension.class)
 class TransferServiceTest {
 
@@ -37,6 +41,9 @@ class TransferServiceTest {
     @Mock
     private TransferService transferService;
 
+    /**
+     * This method is used to set up the test environment before each test.
+     */
     @BeforeEach
     void setUp() {
         transferRepository = mock(TransferRepository.class);
@@ -45,6 +52,10 @@ class TransferServiceTest {
         transferService = new TransferService(transferRepository, cardRepository, currencyRepository);
     }
 
+    /**
+     * This method tests the functionality of the getTransfers method in the TransferService class.
+     * It verifies that the method returns all transfers in the repository.
+     */
     @Test
     void testGetTransfers() {
         // Mocking data
@@ -59,6 +70,11 @@ class TransferServiceTest {
         assert result.size() == 1; // Ensure one transfer is returned
     }
 
+    /**
+     * This method tests the functionality of the filterAndSortTransfers method in the TransferService class.
+     * It verifies that the method returns a page of transfers sorted and filtered
+     * according to the provided Pageable object.
+     */
     @Test
     void testFilterAndSortTransfers() {
         // Mocking data
@@ -75,6 +91,10 @@ class TransferServiceTest {
         assert result.getTotalElements() == 1; // Ensure one transfer is returned
     }
 
+    /**
+     * This method tests the functionality of the getTransferById method in the TransferService class.
+     * It verifies that the method returns the correct transfer when a valid ID is provided.
+     */
     @Test
     void testGetTransferById_ExistingId() {
         // Mocking data
@@ -90,6 +110,10 @@ class TransferServiceTest {
         assert result.getId().equals(transferId); // Ensure the correct transfer is returned
     }
 
+    /**
+     * This method tests the functionality of the getTransferById method in the TransferService class.
+     * It verifies that the method throws an exception when an invalid ID is provided.
+     */
     @Test
     void testGetTransferById_NonExistingId() {
         // Mocking data
@@ -105,6 +129,10 @@ class TransferServiceTest {
         }
     }
 
+    /**
+     * This method tests the functionality of the getTransferByReferenceNumber method in the TransferService class.
+     * It verifies that the method returns the correct transfer when a valid reference number is provided.
+     */
     @Test
     void testGetTransferByReferenceNumber_NonEmptyReferenceNumber() {
         // Mocking data
@@ -119,6 +147,10 @@ class TransferServiceTest {
         assert result != null; // Ensure a transfer is returned
     }
 
+    /**
+     * This method tests the functionality of the getTransferByReferenceNumber method in the TransferService class.
+     * It verifies that the method throws an exception when an empty reference number is provided.
+     */
     @Test
     void testGetTransferByReferenceNumber_EmptyReferenceNumber() {
         // Mocking data
@@ -133,6 +165,10 @@ class TransferServiceTest {
         }
     }
 
+    /**
+     * This method tests the functionality of the createTransfer method in the TransferService class.
+     * It verifies that the method throws an exception when the sender card is not found.
+     */
     @Test
     public void testCreateTransfer_SenderCardNotFound() {
         Long senderId = 1L;
@@ -145,6 +181,10 @@ class TransferServiceTest {
         assertThrows(ApplicationException.class, () -> transferService.createTransfer(senderId, receiverCardNumber, amount, description));
     }
 
+    /**
+     * This method tests the functionality of the createTransfer method in the TransferService class.
+     * It verifies that the method throws an exception when the sender card is blocked.
+     */
     @Test
     public void testCreateTransfer_SenderCardBlocked() {
         Long senderId = 1L;
@@ -159,6 +199,10 @@ class TransferServiceTest {
         assertThrows(ApplicationException.class, () -> transferService.createTransfer(senderId, receiverCardNumber, amount, description));
     }
 
+    /**
+     * This method tests the functionality of the createTransfer method in the TransferService class.
+     * It verifies that the method throws an exception when the sender card has insufficient funds.
+     */
     @Test
     public void testCreateTransfer_InsufficientFunds() {
         Long senderId = 1L;
@@ -174,6 +218,10 @@ class TransferServiceTest {
         assertThrows(ApplicationException.class, () -> transferService.createTransfer(senderId, receiverCardNumber, amount, description));
     }
 
+    /**
+     * This method tests the functionality of the createTransfer method in the TransferService class.
+     * It verifies that the method throws an exception when a negative amount is provided.
+     */
     @Test
     public void testCreateTransfer_NegativeAmount() {
         Long senderId = 1L;
@@ -189,6 +237,10 @@ class TransferServiceTest {
         assertThrows(ApplicationException.class, () -> transferService.createTransfer(senderId, receiverCardNumber, amount, description));
     }
 
+    /**
+     * This method tests the functionality of the createTransfer method in the TransferService class.
+     * It verifies that the method throws an exception when the receiver card is not found.
+     */
     @Test
     public void testCreateTransfer_ReceiverCardNotFound() {
         Long senderId = 1L;
@@ -205,6 +257,10 @@ class TransferServiceTest {
         assertThrows(ApplicationException.class, () -> transferService.createTransfer(senderId, receiverCardNumber, amount, description));
     }
 
+    /**
+     * This method tests the functionality of the createTransfer method in the TransferService class.
+     * It verifies that the method throws an exception when the receiver card is blocked.
+     */
     @Test
     public void testCreateTransfer_ReceiverCardBlocked() {
         Long senderId = 1L;

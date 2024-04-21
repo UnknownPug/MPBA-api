@@ -21,6 +21,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * This class is responsible for managing cards.
+ * It is annotated with @Service to indicate that it's a Spring managed service.
+ * It uses CardRepository and UserRepository to interact with the database.
+ * It also uses a Generator to generate card numbers, IBANs, and SWIFT codes.
+ */
 @Service
 public class CardService {
 
@@ -30,6 +36,14 @@ public class CardService {
 
     private final Generator generator;
 
+    /**
+     * Constructs a new CardService with the given repositories and generator.
+     *
+     * @param cardRepository The CardRepository to use.
+     * @param userRepository The UserRepository to use.
+     * @param currencyDataService The CurrencyDataService to use.
+     * @param generator The Generator to use.
+     */
     @Autowired
     public CardService(CardRepository cardRepository, UserRepository userRepository,
                        CurrencyDataService currencyDataService, Generator generator) {
@@ -39,16 +53,33 @@ public class CardService {
         this.generator = generator;
     }
 
+    /**
+     * Retrieves all cards.
+     *
+     * @return A list of all cards.
+     */
     @Cacheable(value = "cards")
     public List<Card> getAllCards() {
         return cardRepository.findAll();
     }
 
+    /**
+     * Retrieves cards with filtering and sorting.
+     *
+     * @param pageable The pagination information.
+     * @return A page of cards.
+     */
     @Cacheable(value = "cards")
     public Page<Card> filterAndSortCards(Pageable pageable) {
         return cardRepository.findAll(pageable);
     }
 
+    /**
+     * Retrieves a card by its ID.
+     *
+     * @param cardId The ID of the card to retrieve.
+     * @return The retrieved card.
+     */
     @Cacheable(value = "cards", key = "#cardId")
     public Card getCardById(Long cardId) {
         return cardRepository.findById(cardId).orElseThrow(
@@ -56,6 +87,12 @@ public class CardService {
         );
     }
 
+    /**
+     * Retrieves a card by its card number.
+     *
+     * @param cardNumber The card number of the card to retrieve.
+     * @return The retrieved card.
+     */
     @Cacheable(value = "cards", key = "#cardNumber")
     public Card getCardByCardNumber(String cardNumber) {
         Card card = cardRepository.findByCardNumber(cardNumber);
@@ -65,6 +102,14 @@ public class CardService {
         return cardRepository.findByCardNumber(cardNumber);
     }
 
+    /**
+     * Creates a new card for a user.
+     *
+     * @param userId The ID of the user.
+     * @param chosenCurrency The currency of the card.
+     * @param type The type of the card.
+     * @return The created card.
+     */
     @CacheEvict(value = {"cards", "users"}, allEntries = true)
     public Card createCard(Long userId, String chosenCurrency, String type) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -129,24 +174,56 @@ public class CardService {
         return cardRepository.save(card);
     }
 
+    /**
+     * Checks if the provided IBAN code is valid.
+     *
+     * @param ibanCode The IBAN code to check.
+     * @return True if the IBAN code is not null and its length is 24, false otherwise.
+     */
     private boolean isValidIban(String ibanCode) {
         return ibanCode != null && ibanCode.length() == 24;
     }
 
+    /**
+     * Checks if the provided card number is valid.
+     *
+     * @param cardNumber The card number to check.
+     * @return True if the card number is not null and its length is 16, false otherwise.
+     */
     private boolean isValidCardNumber(String cardNumber) {
         return cardNumber != null && cardNumber.length() == 16;
     }
 
+    /**
+     * Checks if the provided SWIFT code is valid.
+     *
+     * @param swift The SWIFT code to check.
+     * @return True if the SWIFT code is not null, and its length is 8, false otherwise.
+     */
     private boolean isValidSwift(String swift) {
         return swift != null && swift.length() == 8;
     }
 
+    /**
+     * Checks if the provided account number is valid.
+     *
+     * @param accountNumber The account number to check.
+     * @return True if the account number is not null and matches the pattern of 10 digits
+     * followed by a forward slash and 4 digits, false otherwise.
+     */
     private boolean isValidAccountNumber(String accountNumber) {
         // Regular expression to match 10 digits followed by a forward slash and 4 digits
         String regex = "^\\d{10}/\\d{4}$";
         return accountNumber != null && accountNumber.matches(regex);
     }
 
+    /**
+     * Checks if the provided card type is valid and sets it to the card.
+     *
+     * @param type The card type to check.
+     * @param card The card to set the type to.
+     * @throws ApplicationException if the card type is empty or does not exist.
+     */
     private void cardTypeCheck(String type, Card card) {
         if (type.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card type must be filled.");
@@ -160,6 +237,13 @@ public class CardService {
         card.setCardType(cardType);
     }
 
+    /**
+     * Refills a card.
+     *
+     * @param cardId The ID of the card to refill.
+     * @param pin The pin of the card.
+     * @param balance The amount to refill.
+     */
     @CacheEvict(value = "cards", allEntries = true)
     public void cardRefill(Long cardId, Integer pin, BigDecimal balance) {
         Card card = cardRepository.findById(cardId).orElseThrow(
@@ -184,6 +268,13 @@ public class CardService {
         }
     }
 
+    /**
+     * Converts the provided balance to the currency of the card and adds it to the card's balance.
+     * The conversion rate is retrieved from the CurrencyDataService.
+     *
+     * @param card The card to which the balance will be added.
+     * @param balance The balance to add to the card. This balance is in a different currency and will be converted to the card's currency.
+     */
     private void conversationToCardCurrency(Card card, BigDecimal balance) {
         switch (card.getCurrencyType()) {
             case USD -> card.setBalance(card.getBalance().add(balance).multiply(
@@ -204,6 +295,11 @@ public class CardService {
         }
     }
 
+    /**
+     * Updates the status of a card.
+     *
+     * @param id The ID of the card to update.
+     */
     @CacheEvict(value = "cards", allEntries = true)
     public void updateCardStatus(Long id) {
         Card card = cardRepository.findById(id).orElseThrow(
@@ -224,6 +320,11 @@ public class CardService {
         }
     }
 
+    /**
+     * Changes the type of card.
+     *
+     * @param cardId The ID of the card to change.
+     */
     @CacheEvict(value = "cards", allEntries = true)
     public void changeCardType(Long cardId) {
         Card card = cardRepository.findById(cardId).orElseThrow(
@@ -247,6 +348,12 @@ public class CardService {
         }
     }
 
+    /**
+     * Deletes a card.
+     *
+     * @param cardId The ID of the card to delete.
+     * @param userId The ID of the user.
+     */
     @Transactional
     @CacheEvict(value = {"cards", "users"}, allEntries = true)
     public void deleteCard(Long cardId, Long userId) {
@@ -266,6 +373,12 @@ public class CardService {
         }
     }
 
+    /**
+     * Checks if the card's expiration date has passed.
+     *
+     * @param card The card to check.
+     * @return True if the current date is after the card's expiration date, false otherwise.
+     */
     private boolean checkCardExpirationDate(Card card) {
         return LocalDate.now().isAfter(card.getCardExpirationDate());
     }
