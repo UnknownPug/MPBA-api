@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -87,7 +88,7 @@ public class CardService {
         if (!isValidCardNumber(cardNumber)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card number must be 16 digits.");
         }
-        card.setCardNumber(cardNumber);
+        card.setCardNumber(HtmlUtils.htmlEscape(cardNumber));
 
         int generateCvv = random.nextInt(maxCvvLimit - minCvvLimit + 1) + minCvvLimit;
         card.setCvv(generateCvv);
@@ -97,12 +98,13 @@ public class CardService {
 
         card.setBalance(BigDecimal.ZERO);
         card.setUser(user);
-        card.setHolderName(user.getName() + " " + user.getSurname());
-        if (!isValidIban(generator.generateIban())) {
+        card.setHolderName(HtmlUtils.htmlEscape(user.getName()) + " " + HtmlUtils.htmlEscape(user.getSurname()));
+        String generatedIban = HtmlUtils.htmlEscape(generator.generateIban());
+        if (!isValidIban(generatedIban)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid IBAN.");
         }
-        card.setIban(generator.generateIban());
-        String generatedSwift = generator.generateSwift();
+        card.setIban(generatedIban);
+        String generatedSwift = HtmlUtils.htmlEscape(generator.generateSwift());
         if (!isValidSwift(generatedSwift)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid SWIFT.");
         }
@@ -116,7 +118,7 @@ public class CardService {
         } catch (Exception e) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Currency " + chosenCurrency + " does not exist.");
         }
-        String generatedAccountNumber = generator.generateAccountNumber();
+        String generatedAccountNumber = HtmlUtils.htmlEscape(generator.generateAccountNumber());
         if (!isValidAccountNumber(generatedAccountNumber)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid account number.");
         }
@@ -223,7 +225,7 @@ public class CardService {
     }
 
     @CacheEvict(value = "cards", allEntries = true)
-    public void changeCardType(Long cardId, String cardType) {
+    public void changeCardType(Long cardId) {
         Card card = cardRepository.findById(cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NO_CONTENT, "Card with id: " + cardId + " not found.")
         );
@@ -233,8 +235,16 @@ public class CardService {
         if (card.getStatus() == CardStatus.STATUS_CARD_BLOCKED) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable for blocked card.");
         }
-        cardTypeCheck(cardType, card);
-        cardRepository.save(card);
+        switch (card.getCardType()) {
+            case VISA -> {
+                card.setCardType(CardType.MASTERCARD);
+                cardRepository.save(card);
+            }
+            case MASTERCARD -> {
+                card.setCardType(CardType.VISA);
+                cardRepository.save(card);
+            }
+        }
     }
 
     @Transactional

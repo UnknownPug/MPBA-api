@@ -1,7 +1,7 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.entity;
 
 public enum UserRole {
-    ROLE_USER("USER"), ROLE_ADMIN("ADMIN"), ROLE_MODERATOR("MODERATOR");
+    ROLE_USER("ROLE_USER"), ROLE_ADMIN("ROLE_ADMIN"), ROLE_MODERATOR("ROLE_MODERATOR");
 
     private final String role;
 

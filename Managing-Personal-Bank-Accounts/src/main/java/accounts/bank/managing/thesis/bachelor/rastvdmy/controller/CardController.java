@@ -34,28 +34,28 @@ public class CardController {
     }
 
     @GetMapping(path = "/")
-//    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MODERATOR')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<Card>> getCards() {
-        LOG.debug("Getting all cards ...");
+        LOG.info("Getting all cards ...");
         return ResponseEntity.ok(cardService.getAllCards());
     }
 
     @GetMapping(path = "/filter")
     @ResponseStatus(HttpStatus.OK)
-//    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<Page<Card>> filterCards(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "asc") String sort) {
-        LOG.debug("Filtering cards ...");
+        LOG.info("Filtering cards ...");
         switch (sort.toLowerCase()) {
             case "asc":
-                LOG.debug("Sorting cards by balance in ascending order ...");
+                LOG.info("Sorting cards by balance in ascending order ...");
                 Pageable pageableAsc = PageRequest.of(page, size, Sort.by("cardNumber").ascending());
                 return ResponseEntity.ok(cardService.filterAndSortCards(pageableAsc));
             case "desc":
-                LOG.debug("Sorting cards by balance in descending order ...");
+                LOG.info("Sorting cards by balance in descending order ...");
                 Pageable pageableDesc = PageRequest.of(page, size, Sort.by("cardNumber").descending());
                 return ResponseEntity.ok(cardService.filterAndSortCards(pageableDesc));
             default:
@@ -65,58 +65,59 @@ public class CardController {
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
-//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Card> getCardById(@PathVariable(value = "id") Long cardId) {
-        LOG.debug("Getting card id {} ...", cardId);
+        LOG.info("Getting card id {} ...", cardId);
         return ResponseEntity.ok(cardService.getCardById(cardId));
     }
 
     @GetMapping(path = "/number")
     @ResponseStatus(HttpStatus.OK)
-//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Card> getCardByCardNumber(@RequestBody CardRequest request) {
-        LOG.debug("Getting card by card number {} ...", request.cardNumber());
+        LOG.info("Getting card by card number {} ...", request.cardNumber());
         return ResponseEntity.ok(cardService.getCardByCardNumber(request.cardNumber()));
     }
 
     @PatchMapping(path = "/{id}/status")
     @ResponseStatus(HttpStatus.OK)
-//    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MODERATOR')")
     public void updateUserCardStatus(@PathVariable(value = "id") Long id) {
-        LOG.debug("Getting card status ...");
+        LOG.info("Getting card status ...");
         cardService.updateCardStatus(id);
     }
 
     @PostMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Card> createCard(@PathVariable(value = "id") Long userId,
                                            @RequestBody CardRequest cardRequest) {
-        LOG.debug("Creating card ...");
+        LOG.info("Creating card ...");
         return ResponseEntity.ok(cardService.createCard(userId, cardRequest.currency(), cardRequest.type()));
     }
 
     @PatchMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public void cardRefill(@PathVariable(value = "id") Long cardId, @RequestBody CardRequest request) {
-        LOG.debug("Refilling card ...");
+        LOG.info("Refilling card ...");
         cardService.cardRefill(cardId, request.pin(), request.balance());
     }
 
     @PatchMapping(path = "/{id}/type")
     @ResponseStatus(HttpStatus.ACCEPTED)
-//    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MODERATOR')")
     public void changeCardType
-            (@PathVariable(value = "id") Long cardId, @RequestBody CardRequest request) {
-        LOG.debug("Changing card type ...");
-        cardService.changeCardType(cardId, request.type());
+            (@PathVariable(value = "id") Long cardId) {
+        LOG.info("Changing card type ...");
+        cardService.changeCardType(cardId);
     }
 
     @DeleteMapping(path = "/{id}/from/{uid}") // Only admin
     @ResponseStatus(HttpStatus.NO_CONTENT)
-//    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void deleteCard(@PathVariable(value = "id") Long cardId, @PathVariable(value = "uid") Long userId) {
-        LOG.debug("Deleting card {} from user {}...", cardId, userId);
+        LOG.info("Deleting card {} from user {}...", cardId, userId);
         cardService.deleteCard(cardId, userId);
     }
 }

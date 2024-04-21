@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.HtmlUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -79,11 +80,11 @@ public class UserService {
         if (!isValidName(name)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Name should be between 2 and 10 characters.");
         }
-        user.setName(name);
+        user.setName(HtmlUtils.htmlEscape(name));
         if (!isValidSurname(surname)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Surname should be between 2 and 15 characters.");
         }
-        user.setSurname(surname);
+        user.setSurname(HtmlUtils.htmlEscape(surname));
         if (dateOfBirth.isAfter(LocalDate.of(LocalDate.now().getYear() - 18,
                 LocalDate.MAX.getMonth(),
                 LocalDate.MAX.getDayOfMonth())) ||
@@ -93,7 +94,7 @@ public class UserService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "The age of the user can be between 18 and 100.");
         }
         user.setDateOfBirth(dateOfBirth);
-        if (countryExists(countryOfOrigin)) {
+        if (countryExists(HtmlUtils.htmlEscape(countryOfOrigin))) {
             user.setCountryOrigin(countryOfOrigin);
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Country " + countryOfOrigin + " does not exist.");
@@ -161,14 +162,14 @@ public class UserService {
         if (isInvalidEmail(email)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email must contain valid tags.");
         }
-        user.setEmail(email);
+        user.setEmail(HtmlUtils.htmlEscape(email));
         if (isInvalidPassword(password)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "Password must contain at least one uppercase letter and one number or symbol.");
         }
-        user.setPassword(password);
+        user.setPassword(HtmlUtils.htmlEscape(password));
         user.encodePassword(passwordEncoder);
-        if (isInvalidPhoneNumber(phoneNumber)) {
+        if (isInvalidPhoneNumber(HtmlUtils.htmlEscape(phoneNumber))) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number should be in international format.");
         }
         user.setPhoneNumber(phoneNumber);
@@ -209,7 +210,7 @@ public class UserService {
         if (isInvalidEmail(email)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email must contain valid tags.");
         }
-        user.setEmail(email);
+        user.setEmail(HtmlUtils.htmlEscape(email));
         userRepository.save(user);
     }
 
@@ -231,7 +232,7 @@ public class UserService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "Password must contain at least one uppercase letter and one number or symbol.");
         }
-        user.setPassword(password);
+        user.setPassword(HtmlUtils.htmlEscape(password));
         user.encodePassword(passwordEncoder);
         userRepository.save(user);
     }
@@ -258,11 +259,11 @@ public class UserService {
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id: " + userId + " not found.")
         );
         switch (user.getStatus()) {
-            case UserStatus.STATUS_DEFAULT, UserStatus.STATUS_UNBLOCKED -> {
+            case STATUS_DEFAULT, STATUS_UNBLOCKED -> {
                 user.setStatus(UserStatus.STATUS_BLOCKED);
                 userRepository.save(user);
             }
-            case UserStatus.STATUS_BLOCKED -> {
+            case STATUS_BLOCKED -> {
                 user.setStatus(UserStatus.STATUS_UNBLOCKED);
                 userRepository.save(user);
             }
@@ -307,7 +308,7 @@ public class UserService {
         if (isInvalidPhoneNumber(phoneNumber)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Phone number should be in international format.");
         }
-        user.setPhoneNumber(phoneNumber);
+        user.setPhoneNumber(HtmlUtils.htmlEscape(phoneNumber));
         userRepository.save(user);
     }
 
@@ -325,7 +326,7 @@ public class UserService {
     }
 
     private boolean isValidName(String name) {
-        return name != null && name.length() >= 2 && name.length() <= 10;
+        return name != null && name.length() >= 2 /*&& name.length() <= 10*/;
     }
 
     private boolean isValidSurname(String surname) {
@@ -343,6 +344,6 @@ public class UserService {
 
     private boolean isInvalidPhoneNumber(String phoneNumber) {
         // Phone number validation logic
-        return phoneNumber == null || !phoneNumber.matches("^(\\+\\d{1,3})?\\d{9,15}$");
+        return phoneNumber == null || !phoneNumber.matches("^\\+\\d{1,3}\\d{9,15}$");
     }
 }

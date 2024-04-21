@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,25 +34,27 @@ public class DepositController {
 
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<List<Deposit>> getAllDeposits() {
-        LOG.debug("Getting all deposits ...");
+        LOG.info("Getting all deposits ...");
         return ResponseEntity.ok(depositService.getAllDeposits());
     }
 
     @GetMapping(path = "/filter")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<Page<Deposit>> filterDeposits(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "asc") String sort) {
-        LOG.debug("Filtering deposits ...");
+        LOG.info("Filtering deposits ...");
         switch (sort.toLowerCase()) {
             case "asc":
-                LOG.debug("Sorting deposits by amount in ascending order ...");
+                LOG.info("Sorting deposits by amount in ascending order ...");
                 Pageable pageableAsc = PageRequest.of(page, size, Sort.by("depositAmount").ascending());
                 return ResponseEntity.ok(depositService.filterAndSortDeposits(pageableAsc));
             case "desc":
-                LOG.debug("Sorting deposits by amount in descending order ...");
+                LOG.info("Sorting deposits by amount in descending order ...");
                 Pageable pageableDesc = PageRequest.of(page, size, Sort.by("depositAmount").descending());
                 return ResponseEntity.ok(depositService.filterAndSortDeposits(pageableDesc));
             default:
@@ -61,31 +64,35 @@ public class DepositController {
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Deposit> getDepositById(@PathVariable(value = "id") Long depositId) {
-        LOG.debug("Getting deposit id: {} ...", depositId);
+        LOG.info("Getting deposit id: {} ...", depositId);
         return ResponseEntity.ok(depositService.getDepositById(depositId));
     }
 
     @PostMapping(path = "/")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Deposit> openDeposit(@RequestBody DepositRequest request) {
-        LOG.debug("Creating deposit ...");
+        LOG.info("Creating deposit ...");
         return ResponseEntity.ok(depositService.openDeposit(request.cardNumber(), request.depositAmount(), request.description(), request.currency()));
     }
 
     @PutMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public void updateDeposit(
             @PathVariable(value = "id") Long depositId,
             @RequestBody DepositRequest request) {
-        LOG.debug("Updating deposit ...");
+        LOG.info("Updating deposit ...");
         depositService.updateDeposit(depositId, request.cardNumber(), request.description(), request.depositAmount(), request.currency());
     }
 
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public void deleteDeposit(@PathVariable(value = "id") Long depositId) {
-        LOG.debug("Deleting deposit ...");
+        LOG.info("Deleting deposit ...");
         depositService.deleteDeposit(depositId);
     }
 }

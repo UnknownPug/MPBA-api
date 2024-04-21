@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -158,7 +159,7 @@ public class TransferService {
         transfer.setDateTime(LocalDateTime.now());
         String referenceNumber;
         do {
-            referenceNumber = generator.generateReferenceNumber();
+            referenceNumber = HtmlUtils.htmlEscape(generator.generateReferenceNumber());
             if (!isValidReferenceNumber(referenceNumber)) {
                 throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid reference number.");
             }
@@ -168,7 +169,7 @@ public class TransferService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "Description must be between 1 and 100 characters.");
         }
-        transfer.setDescription(description);
+        transfer.setDescription(HtmlUtils.htmlEscape(description));
     }
 
     private boolean isValidReferenceNumber(String referenceNumber) {

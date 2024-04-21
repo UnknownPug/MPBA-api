@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -136,7 +137,7 @@ public class BankLoanService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "Invalid reference number. Size must be less or equal to 11.");
         }
-        loan.setReferenceNumber(referenceNumber);
+        loan.setReferenceNumber(HtmlUtils.htmlEscape(referenceNumber));
         try {
             Currency currencyType = Currency.valueOf(chosenCurrencyType.toUpperCase());
             loan.setCurrency(currencyType);
@@ -156,7 +157,7 @@ public class BankLoanService {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan is not found.")
         );
-        if (loan.getLoanAmount().compareTo(loanRefund) < 0) {
+        if (loan.getLoanAmount().compareTo(loanRefund) < 0.00) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid loan amount or loan was already repaid.");
         }
         try {
@@ -172,9 +173,16 @@ public class BankLoanService {
                 loan.setRepaidLoan(loan.getRepaidLoan().add(loanRefund));
                 loan.setLoanAmount(loan.getLoanAmount().subtract(loanRefund));
             }
-            if (loan.getLoanAmount().compareTo(BigDecimal.ZERO) == 0) {
-                deleteCardLoan(loanId);
-                return;
+            if (loan.getLoanAmount().compareTo(BigDecimal.ZERO) == 0.00) {
+                if (loan.getUserLoan() != null) {
+                    System.out.println("Deleting user loan");
+                    deleteUserLoan(loanId);
+                    return;
+                } else if (loan.getCardLoan() != null) {
+                    System.out.println("Deleting card loan");
+                    deleteCardLoan(loanId);
+                    return;
+                }
             }
         } catch (IllegalArgumentException e) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid currency: " + currencyType);
@@ -198,12 +206,23 @@ public class BankLoanService {
 
     @Transactional
     @CacheEvict(value = "loans", allEntries = true)
-    public void deleteBankLoan(Long loanId) {
+    public void deleteUserLoan(Long loanId) {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan with id " + loanId + " is not found.")
         );
         User user = userRepository.findByBankLoanId(loanId);
-        deleteLoan(loanId, loan, user);
+        if (user == null) {
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "User with bank loan id " + loanId + " is not found.");
+        }
+        System.out.println("USER: Loan amount: " + loan.getLoanAmount());
+        if (loan.getLoanAmount().compareTo(BigDecimal.ZERO) == 0.00) {
+            user.setBankLoan(null);
+            userRepository.save(user);
+            loanRepository.delete(loan);
+        } else {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    "Loan is not repaid and has " + loan.getLoanAmount() + " " + loan.getCurrency() + " left.");
+        }
     }
 
     @Transactional
@@ -212,18 +231,15 @@ public class BankLoanService {
         BankLoan loan = loanRepository.findById(loanId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Loan with id " + loanId + " is not found.")
         );
-        User user = userRepository.findByCardLoanId(loanId);
-        deleteLoan(loanId, loan, user);
-    }
-
-    private void deleteLoan(Long loanId, BankLoan loan, User user) {
-        if (user == null) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "User with loan id " + loanId + " is not found.");
+        Card card = cardRepository.findByCardLoanId(loanId);
+        if (card == null) {
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "Card with bank loan id " + loanId + " is not found.");
         }
-        if (loan.getLoanAmount().compareTo(BigDecimal.ZERO) == 0) {
-            user.setBankLoan(null);
-            userRepository.save(user);
-            loanRepository.deleteById(loanId); // now you can safely delete the loan
+        System.out.println("CARD: Loan amount: " + loan.getLoanAmount());
+        if (loan.getLoanAmount().compareTo(BigDecimal.ZERO) == 0.00) {
+            card.setCardLoan(null);
+            cardRepository.save(card);
+            loanRepository.delete(loan);
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "Loan is not repaid and has " + loan.getLoanAmount() + " " + loan.getCurrency() + " left.");

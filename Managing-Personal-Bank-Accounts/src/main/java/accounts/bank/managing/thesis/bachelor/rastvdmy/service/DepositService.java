@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -64,7 +65,7 @@ public class DepositService {
         }
         Deposit deposit = new Deposit();
         deposit.setCurrency(currency);
-        String depositCard = generator.generateAccountNumber();
+        String depositCard = HtmlUtils.htmlEscape(generator.generateAccountNumber());
         if (!isValidDepositCard(depositCard)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid deposit card.");
         }
@@ -78,18 +79,21 @@ public class DepositService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "The length of the description must be between 1 and 100 characters.");
         }
-        deposit.setDescription(description);
+        deposit.setDescription(HtmlUtils.htmlEscape(description));
         deposit.setStartDate(LocalDateTime.now());
         deposit.setExpirationDate(deposit.getStartDate().plusYears(1));
         String referenceNumber;
         do {
-            referenceNumber = generator.generateReferenceNumber();
+            referenceNumber = HtmlUtils.htmlEscape(generator.generateReferenceNumber());
             if (!isValidReferenceNumber(referenceNumber)) {
                 throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid reference number.");
             }
         } while (depositRepository.existsByReferenceNumber(referenceNumber));
         deposit.setReferenceNumber(referenceNumber);
-        card.setBalance(card.getBalance().subtract(depositAmount));
+        card.setBalance(card.getBalance().subtract(
+                depositAmount.multiply(BigDecimal.valueOf(
+                        currencyRepository.findByCurrency(card.getCurrencyType().toString()).getRate())
+                )));
         cardRepository.save(card);
 
         return depositRepository.save(deposit);

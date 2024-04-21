@@ -33,27 +33,27 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/")
-//    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<List<BankLoan>> getAllLoans() {
-        LOG.debug("Getting all loans ...");
+        LOG.info("Getting all loans ...");
         return ResponseEntity.ok(bankLoanService.getAllLoans());
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/filter")
-//    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<Page<BankLoan>> filterLoans(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "asc") String sort) {
-        LOG.debug("Filtering loans ...");
+        LOG.info("Filtering loans ...");
         switch (sort.toLowerCase()) {
             case "asc":
-                LOG.debug("Sorting loans by amount in ascending order ...");
+                LOG.info("Sorting loans by amount in ascending order ...");
                 Pageable pageableAsc = PageRequest.of(page, size, Sort.by("loanAmount").ascending());
                 return ResponseEntity.ok(bankLoanService.filterAndSortLoans(pageableAsc));
             case "desc":
-                LOG.debug("Sorting loans by amount in descending order ...");
+                LOG.info("Sorting loans by amount in descending order ...");
                 Pageable pageableDesc = PageRequest.of(page, size, Sort.by("loanAmount").descending());
                 return ResponseEntity.ok(bankLoanService.filterAndSortLoans(pageableDesc));
             default:
@@ -63,34 +63,34 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{id}")
-//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<BankLoan> getLoanById(@PathVariable(value = "id") Long loanId) {
-        LOG.debug("Getting loan id: {} ...", loanId);
+        LOG.info("Getting loan id: {} ...", loanId);
         return ResponseEntity.ok(bankLoanService.getLoanById(loanId));
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/reference")
-//    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<BankLoan> getLoanByReferenceNumber(@RequestBody BankLoanRequest request) {
-        LOG.debug("Getting loan by reference: {} ...", request.referenceNumber());
+        LOG.info("Getting loan by reference: {} ...", request.referenceNumber());
         return ResponseEntity.ok(bankLoanService.getLoanByReferenceNumber(request.referenceNumber()));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/{id}")
-//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<BankLoan> openLoan(@PathVariable(value = "id") Long id,
                                              @RequestParam(value = "option") String option,
                                              @RequestBody BankLoanRequest loanRequest) {
         return switch (option.toLowerCase()) {
             case "user" -> {
-                LOG.debug("Opening settlement account for loan for user {} ...", id);
+                LOG.info("Opening settlement account for loan for user {} ...", id);
                 yield ResponseEntity.ok(bankLoanService.openSettlementAccount(
                         id, loanRequest.loanAmount(), loanRequest.currencyType()));
             }
             case "card" -> {
-                LOG.debug("Opening card for loan for user with card {} ...", id);
+                LOG.info("Opening card for loan for user with card {} ...", id);
                 yield ResponseEntity.ok(bankLoanService.addLoanToCard(
                         id, loanRequest.loanAmount(), loanRequest.currencyType()));
             }
@@ -100,27 +100,27 @@ public class BankLoanController {
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}")
-//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public void loanRepayment(@PathVariable(value = "id") Long loanId, @RequestBody BankLoanRequest loanRequest) {
-        LOG.debug("Repaying settlement account loan {} ...", loanId);
+        LOG.info("Repaying settlement account loan {} ...", loanId);
         bankLoanService.repayLoan(loanId, loanRequest.loanAmount(), loanRequest.currencyType());
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PatchMapping(path = "/{id}/date")
-//    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public void updateLoanDate(@PathVariable(value = "id") Long loanId, @RequestBody BankLoanRequest request) {
-        LOG.debug("Updating settlement account loan {} ...", loanId);
+        LOG.info("Updating settlement account loan {} ...", loanId);
         bankLoanService.updateLoanDate(loanId, request.startDate(), request.expirationDate());
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(path = "/{id}")
-//    @PreAuthorize("hasAnyRole('MODERATOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public void deleteLoan(@RequestParam String sort, @PathVariable(value = "id") Long loanId) {
-        LOG.debug("Deleting settlement account loan for user {} ...", loanId);
+        LOG.info("Deleting settlement account loan for user {} ...", loanId);
         switch (sort.toLowerCase()) {
-            case "user" -> bankLoanService.deleteBankLoan(loanId);
+            case "user" -> bankLoanService.deleteUserLoan(loanId);
             case "card" -> bankLoanService.deleteCardLoan(loanId);
             default -> throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid sort option. Use 'user' or 'card'.");
         }

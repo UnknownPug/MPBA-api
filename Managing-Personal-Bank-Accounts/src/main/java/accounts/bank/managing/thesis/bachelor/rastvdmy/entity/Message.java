@@ -7,7 +7,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -24,7 +23,6 @@ public class Message implements Serializable {
     private Long id;
 
     @Column(name = "content", nullable = false)
-    @Size(min = 1, max = 100, message = "The length of the message must be between 1 and 100 characters")
     private String content;
 
     @Column(name = "timestamp", nullable = false)
@@ -34,13 +32,11 @@ public class Message implements Serializable {
 
     @ManyToOne
     @ToString.Exclude
-    @Size(min = 1, max = 100, message = "The length of the message must be between 1 and 100 characters")
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
     @ManyToOne
     @ToString.Exclude
-    @Size(min = 1, max = 100, message = "The length of the message must be between 1 and 100 characters")
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 }

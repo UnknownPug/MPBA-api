@@ -5,9 +5,9 @@ server:
       enabled: true
 spring:
   datasource:
-      password: postgres
-      username: postgres
-      url: jdbc:postgresql://localhost:5432/postgres
+    password: postgres
+    username: postgres
+    url: jdbc:postgresql://localhost:5432/postgres
   jpa:
     hibernate:
       ddl-auto: update
@@ -20,5 +20,7 @@ spring:
   mvc:
     servlet:
       path: /
+  kafka:
+    bootstrap-servers: localhost:9092
 api:
   key: 2d03edf7aa4c0318731708ae

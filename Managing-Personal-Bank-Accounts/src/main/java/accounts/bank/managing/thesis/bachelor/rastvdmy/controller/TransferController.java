@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,25 +33,27 @@ public class TransferController {
 
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<List<Transfer>> getTransfers() {
-        LOG.debug("Getting all transfers ...");
+        LOG.info("Getting all transfers ...");
         return ResponseEntity.ok(transferService.getTransfers());
     }
 
     @GetMapping(path = "/filter")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<Page<Transfer>> filterTransfers(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "asc") String sort) {
-        LOG.debug("Filtering transfers ...");
+        LOG.info("Filtering transfers ...");
         switch (sort.toLowerCase()) {
             case "asc":
-                LOG.debug("Sorting transfers by amount in ascending order ...");
+                LOG.info("Sorting transfers by amount in ascending order ...");
                 Pageable pageableAsc = PageRequest.of(page, size, Sort.by("dateTime").ascending());
                 return ResponseEntity.ok(transferService.filterAndSortTransfers(pageableAsc));
             case "desc":
-                LOG.debug("Sorting transfers by amount in descending order ...");
+                LOG.info("Sorting transfers by amount in descending order ...");
                 Pageable pageableDesc = PageRequest.of(page, size, Sort.by("dateTime").descending());
                 return ResponseEntity.ok(transferService.filterAndSortTransfers(pageableDesc));
             default:
@@ -60,22 +63,25 @@ public class TransferController {
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Transfer> getTransferById(@PathVariable(value = "id") TransferRequest request) {
-        LOG.debug("Getting transfer id: {} ...", request.id());
-        return ResponseEntity.ok(transferService.getTransferById(request.id()));
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
+    public ResponseEntity<Transfer> getTransferById(@PathVariable(value = "id") Long id) {
+        LOG.info("Getting transfer id: {} ...", id);
+        return ResponseEntity.ok(transferService.getTransferById(id));
     }
 
     @GetMapping(path = "/reference")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<Transfer> getTransferByReferenceNumber(@RequestBody TransferRequest request) {
-        LOG.debug("Getting transfer by reference: {} ...", request.referenceNumber());
+        LOG.info("Getting transfer by reference: {} ...", request.referenceNumber());
         return ResponseEntity.ok(transferService.getTransferByReferenceNumber(request.referenceNumber()));
     }
 
     @PostMapping(path = "/")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
     public ResponseEntity<Transfer> createTransfer(@RequestBody TransferRequest transfer) {
-        LOG.debug("Creating transfer ...");
+        LOG.info("Creating transfer ...");
         return ResponseEntity.ok(
                 transferService.createTransfer(
                         transfer.senderId(),

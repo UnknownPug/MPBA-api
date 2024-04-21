@@ -28,17 +28,18 @@ public class CurrencyDataController {
 
     @GetMapping(path = "/")
     @ResponseStatus(HttpStatus.OK)
-//    @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_MODERATOR')")
     public ResponseEntity<List<CurrencyData>> updateAndFetchAllCurrencies() {
-        LOG.debug("Updating currency data ...");
+        LOG.info("Updating currency data ...");
         currencyDataService.findAllExchangeRates();
         return ResponseEntity.ok(currencyDataService.findAllCurrencies());
     }
 
     @GetMapping(path = "/{currency}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_MODERATOR')")
     public ResponseEntity<CurrencyData> findByCurrency(@PathVariable(value = "currency") String currencyType) {
-        LOG.debug("Getting currency {} ...", currencyType);
+        LOG.info("Getting currency {} ...", currencyType);
         currencyDataService.findAllExchangeRates();
         return ResponseEntity.ok(currencyDataService.findByCurrency(currencyType));
     }

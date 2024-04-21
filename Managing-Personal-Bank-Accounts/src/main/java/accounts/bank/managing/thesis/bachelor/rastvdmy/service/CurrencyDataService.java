@@ -47,7 +47,7 @@ public class CurrencyDataService {
         }
         List<CurrencyData> currencyDataList = currencyDataRepository.findAllByCurrency(currencyType);
         if (!currencyDataList.isEmpty()) {
-            return currencyDataList.getFirst();
+            return currencyDataList.get(0);
         } else {
             CurrencyData currencyData = getCurrencyFromApi(currencyType);
             if (currencyData != null) {
