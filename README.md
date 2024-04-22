@@ -112,6 +112,24 @@ After You have run the Kafka, You can run the project
 1. Run Maven command: `mvn clean install`
 2. Run the project by executing `Application.java` class
 3. Open Postman and enjoy the project
+
+#### Honorable mention:
+
+After you will execute the application, you will be able to make a login and logout
+of the application due to the fact that we are using authentication and session cookies to improve application speed.
+
+Also with login and logout process, status of the user is changing (`STATUS-ONLINE` or `STATUS-OFFLINE`).
+
+1. After executing the project, You need to open Your browser and enter `http://your_ip:your_ip/login` where You will
+redirect to the login page. After entering Your valid credentials and pressing Enter, You will be redirected to the page, where You will see something like:
+
+```json
+{"type":"about:blank","title":"Not Found","status":404,"detail":"No static resource .","instance":"/"}
+```
+Your status will be `STATUS_ONLINE`
+
+2. If You will try to enter `http://your_ip:your_ip/logout`, you will be redirect to the login page and status will be `STATUS_OFFLINE`
+
 -- -- --
 ### <a name="docker"></a> Docker
 
