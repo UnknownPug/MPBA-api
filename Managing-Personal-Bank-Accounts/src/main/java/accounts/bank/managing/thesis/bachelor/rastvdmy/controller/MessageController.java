@@ -49,7 +49,7 @@ public class MessageController {
      */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<List<Message>> getMessages() {
         LOG.info("Getting messages ...");
         return ResponseEntity.ok(messageService.getMessages());
@@ -63,7 +63,7 @@ public class MessageController {
      */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Message> getMessageById(@PathVariable(value = "id") Long messageId) {
         LOG.info("Getting message id: {} ...", messageId);
         return ResponseEntity.ok(messageService.getMessageById(messageId));
@@ -77,7 +77,7 @@ public class MessageController {
      */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/search/{content}")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<List<Message>> getMessagesByContent(@PathVariable(value = "content") String content) {
         LOG.info("Getting messages by content: {} ...", content);
         return ResponseEntity.ok(messageService.getMessagesByContent(content));
@@ -93,7 +93,7 @@ public class MessageController {
      */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{id}/")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<List<Message>> getSortedMessages(
             @PathVariable(value = "id") Long userId,
             @RequestParam(value = "sort") String sort,
@@ -130,7 +130,7 @@ public class MessageController {
      */
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Message> sendMessage(@RequestBody MessageRequest messageRequest) {
         LOG.info("Sending message ...");
         kafkaTemplate.send("messages", messageRequest.receiverId().toString(), messageRequest.content());
