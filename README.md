@@ -154,6 +154,6 @@ You can change the name of the image to Your needs.
 Also in this application was used third-party APIs
 
 1. [Exchange Rate API](https://app.exchangerate-api.com/dashboard) for getting exchange rate currencies
-2. [Rest Countries API](https://restcountries.com/v3.1/all?fields=name) for validation of existing countries
+2. [REST Countries API](https://restcountries.com/v3.1/all?fields=name) for validation of existing countries
 -- -- --
 ## Thank You for Your attention!
