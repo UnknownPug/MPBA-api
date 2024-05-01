@@ -140,7 +140,7 @@ public class TransferService {
 
         if (!senderCard.getCurrencyType().equals(receiverCard.getCurrencyType())) {
             if (senderCard.getUser().equals(receiverCard.getUser())) { // If sender and receiver have the same user
-                transferCurrency(amount, senderCard, transfer);
+                transferCurrency(amount, receiverCard, transfer);
             } else {
                 throw new ApplicationException(HttpStatus.BAD_REQUEST, "Different currency types ...");
             }
