@@ -39,6 +39,8 @@ class DepositServiceTest {
     @Mock
     private Generator generator;
     @Mock
+    private CurrencyDataService currencyDataService;
+    @Mock
     private CurrencyDataRepository currencyRepository;
     @Mock
     private CardRepository cardRepository;
@@ -52,9 +54,10 @@ class DepositServiceTest {
     void setUp() {
         depositRepository = mock(DepositRepository.class);
         generator = mock(Generator.class);
-        currencyRepository = mock(CurrencyDataRepository.class);
+        currencyDataService = mock(CurrencyDataService.class);
         cardRepository = mock(CardRepository.class);
-        depositService = new DepositService(depositRepository, generator, currencyRepository, cardRepository);
+        currencyRepository = mock(CurrencyDataRepository.class);
+        depositService = new DepositService(depositRepository, generator, currencyDataService, cardRepository, currencyRepository);
     }
 
     /**

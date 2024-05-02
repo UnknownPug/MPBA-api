@@ -13,7 +13,6 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.CardStatus;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Transfer;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ class TransferServiceTest {
     @Mock
     private CardRepository cardRepository;
     @Mock
-    private CurrencyDataRepository currencyRepository;
+    private CurrencyDataService currencyDataService;
     @Mock
     private TransferService transferService;
 
@@ -48,8 +47,8 @@ class TransferServiceTest {
     void setUp() {
         transferRepository = mock(TransferRepository.class);
         cardRepository = mock(CardRepository.class);
-        currencyRepository = mock(CurrencyDataRepository.class);
-        transferService = new TransferService(transferRepository, cardRepository, currencyRepository);
+        currencyDataService = mock(CurrencyDataService.class);
+        transferService = new TransferService(transferRepository, cardRepository, currencyDataService);
     }
 
     /**

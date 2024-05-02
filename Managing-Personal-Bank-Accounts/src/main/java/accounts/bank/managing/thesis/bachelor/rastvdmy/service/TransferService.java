@@ -4,7 +4,6 @@ import accounts.bank.managing.thesis.bachelor.rastvdmy.service.component.Generat
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.*;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.TransferRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -29,21 +28,21 @@ import java.util.Objects;
 public class TransferService {
     private final TransferRepository transferRepository;
     private final CardRepository cardRepository;
-    private final CurrencyDataRepository currencyRepository;
+    private final CurrencyDataService currencyDataService;
 
     /**
      * Constructs a new TransferService with the given repositories.
      *
      * @param transferRepository The TransferRepository to use.
      * @param cardRepository     The CardRepository to use.
-     * @param currencyRepository The CurrencyDataRepository to use.
+     * @param currencyDataService The CurrencyDataService to use.
      */
     @Autowired
     public TransferService(TransferRepository transferRepository, CardRepository cardRepository,
-                           CurrencyDataRepository currencyRepository) {
+                           CurrencyDataService currencyDataService) {
         this.transferRepository = transferRepository;
         this.cardRepository = cardRepository;
-        this.currencyRepository = currencyRepository;
+        this.currencyDataService = currencyDataService;
     }
 
     /**
@@ -140,7 +139,7 @@ public class TransferService {
 
         if (!senderCard.getCurrencyType().equals(receiverCard.getCurrencyType())) {
             if (senderCard.getUser().equals(receiverCard.getUser())) { // If sender and receiver have the same user
-                transferCurrency(amount, receiverCard, transfer);
+                transferCurrency(amount, senderCard.getCurrencyType(), receiverCard.getCurrencyType(), transfer);
             } else {
                 throw new ApplicationException(HttpStatus.BAD_REQUEST, "Different currency types ...");
             }
@@ -164,39 +163,44 @@ public class TransferService {
      * Transfers currency from one card to another.
      *
      * @param amount     The amount to transfer.
-     * @param senderCard The sender's card.
+     * @param senderCurrency The sender's currency.
+     * @param receiverCurrency The receiver's currency.
      * @param transfer   The transfer to perform.
      */
-    private void transferCurrency(BigDecimal amount, Card senderCard, Transfer transfer) {
-        switch (senderCard.getCurrencyType()) {
+    private void transferCurrency(BigDecimal amount, Currency senderCurrency, Currency receiverCurrency, Transfer transfer) {
+        switch (senderCurrency) {
             case USD:
                 transfer.setAmount(amount.multiply(
-                        BigDecimal.valueOf(
-                                currencyRepository.findByCurrency(Currency.USD.toString()).getRate())
-                ));
+                        BigDecimal.valueOf(currencyDataService.convertCurrency(
+                                senderCurrency.toString(), receiverCurrency.toString()).getRate()))
+                );
                 transfer.setCurrency(Currency.USD);
                 break;
             case EUR:
                 transfer.setAmount(amount.multiply(
-                        BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.EUR.toString()).getRate())
+                        BigDecimal.valueOf(currencyDataService.convertCurrency(
+                                senderCurrency.toString(), receiverCurrency.toString()).getRate())
                 ));
                 transfer.setCurrency(Currency.EUR);
                 break;
             case UAH:
                 transfer.setAmount(amount.multiply(
-                        BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.UAH.toString()).getRate())
+                        BigDecimal.valueOf(currencyDataService.convertCurrency(
+                                senderCurrency.toString(), receiverCurrency.toString()).getRate())
                 ));
                 transfer.setCurrency(Currency.UAH);
                 break;
             case CZK:
                 transfer.setAmount(amount.multiply(
-                        BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.CZK.toString()).getRate())
+                        BigDecimal.valueOf(currencyDataService.convertCurrency(
+                                        senderCurrency.toString(), receiverCurrency.toString()).getRate())
                 ));
                 transfer.setCurrency(Currency.CZK);
                 break;
             case PLN:
                 transfer.setAmount(amount.multiply(
-                        BigDecimal.valueOf(currencyRepository.findByCurrency(Currency.PLN.toString()).getRate())
+                        BigDecimal.valueOf(currencyDataService.convertCurrency(
+                                senderCurrency.toString(), receiverCurrency.toString()).getRate())
                 ));
                 transfer.setCurrency(Currency.PLN);
                 break;

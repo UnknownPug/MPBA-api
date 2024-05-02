@@ -1,13 +1,13 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.CardStatus;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.component.Generator;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Currency;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Deposit;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CardRepository;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.CurrencyDataRepository;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.repository.DepositRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -33,24 +33,27 @@ import static accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Currency.*;
 public class DepositService {
     private final DepositRepository depositRepository;
     private final Generator generator;
-    private final CurrencyDataRepository currencyRepository;
+    private final CurrencyDataService currencyDataService;
     private final CardRepository cardRepository;
+    private final CurrencyDataRepository currencyRepository;
 
     /**
      * Constructs a new DepositService with the given repositories and generator.
      *
-     * @param depositRepository  The DepositRepository to use.
-     * @param generator          The Generator to use.
-     * @param currencyRepository The CurrencyDataRepository to use.
-     * @param cardRepository     The CardRepository to use.
+     * @param depositRepository   The DepositRepository to use.
+     * @param generator           The Generator to use.
+     * @param currencyDataService The CurrencyDataService to use.
+     * @param cardRepository      The CardRepository to use.
      */
     @Autowired
     public DepositService(DepositRepository depositRepository, Generator generator,
-                          CurrencyDataRepository currencyRepository, CardRepository cardRepository) {
+                          CurrencyDataService currencyDataService, CardRepository cardRepository,
+                          CurrencyDataRepository currencyRepository) {
         this.depositRepository = depositRepository;
         this.generator = generator;
-        this.currencyRepository = currencyRepository;
+        this.currencyDataService = currencyDataService;
         this.cardRepository = cardRepository;
+        this.currencyRepository = currencyRepository;
     }
 
     /**
@@ -173,15 +176,15 @@ public class DepositService {
     }
 
     /**
-     * Converts the provided deposit amount to the currency of the deposit.
+     * Converts the deposit amount to the currency of the deposit.
      *
-     * @param deposit       The deposit for which the amount is to be converted.
-     * @param depositAmount The amount of the deposit to convert.
-     * @return The converted deposit amount.
+     * @param deposit       The deposit to convert the amount for.
+     * @param depositAmount The amount to convert.
+     * @return The converted amount.
      */
     private BigDecimal convertCurrency(Deposit deposit, BigDecimal depositAmount) {
         Currency depositCurrency = deposit.getCurrency();
-        return convertCurrencyCase(depositCurrency, depositAmount);
+        return convertCurrencyToDeposit(depositCurrency, depositAmount);
     }
 
     /**
@@ -242,22 +245,23 @@ public class DepositService {
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Deposit is not valid.")
         );
         Card card = deposit.getCardDeposit();
-        if (deposit.getExpirationDate().isBefore(LocalDateTime.now())) {
+        if (LocalDateTime.now().isBefore(deposit.getExpirationDate())) {
             BigDecimal returnAmount;
             if (card.getCurrencyType().equals(deposit.getCurrency())) {
                 returnAmount = deposit.getDepositAmount();
             } else {
-                returnAmount = convertToCardCurrency(card, deposit.getDepositAmount());
+                returnAmount = convertCurrencyCase(
+                        card.getCurrencyType(), deposit.getCurrency(), deposit.getDepositAmount());
             }
             card.setBalance(card.getBalance().add(returnAmount));
             card.setDepositTransaction(null);
             cardRepository.save(card);
-        } else if (deposit.getExpirationDate().isAfter(LocalDateTime.now())) {
+        } else if (LocalDateTime.now().isAfter(deposit.getExpirationDate())) {
             BigDecimal returnAmount = deposit.getDepositAmount().multiply(BigDecimal.valueOf(1.05)); // 5% bonus
             if (card.getCurrencyType().equals(deposit.getCurrency())) {
                 returnAmount = deposit.getDepositAmount();
             } else {
-                returnAmount = convertToCardCurrency(card, returnAmount);
+                returnAmount = convertCurrencyCase(card.getCurrencyType(), deposit.getCurrency(), returnAmount);
             }
             card.setBalance(card.getBalance().add(returnAmount));
             card.setDepositTransaction(null);
@@ -267,25 +271,13 @@ public class DepositService {
     }
 
     /**
-     * Converts the provided amount to the currency of the card.
+     * Converts the deposit amount to the currency of the deposit.
      *
-     * @param card   The card for which the currency is to be used.
-     * @param amount The amount to convert.
-     * @return The converted amount.
-     */
-    private BigDecimal convertToCardCurrency(Card card, BigDecimal amount) {
-        Currency cardCurrency = card.getCurrencyType();
-        return convertCurrencyCase(cardCurrency, amount);
-    }
-
-    /**
-     * Converts the provided amount to the specified currency.
-     *
-     * @param currency The currency to which the amount is to be converted.
+     * @param currency The currency to convert the amount for.
      * @param amount   The amount to convert.
      * @return The converted amount.
      */
-    private BigDecimal convertCurrencyCase(Currency currency, BigDecimal amount) {
+    private BigDecimal convertCurrencyToDeposit(Currency currency, BigDecimal amount) {
         return switch (currency) {
             case USD -> amount.multiply(
                     BigDecimal.valueOf(currencyRepository.findByCurrency(USD.toString()).getRate())
@@ -301,6 +293,23 @@ public class DepositService {
             );
             case PLN -> amount.multiply(
                     BigDecimal.valueOf(currencyRepository.findByCurrency(PLN.toString()).getRate())
+            );
+        };
+    }
+
+    /**
+     * Converts the deposit amount to the currency of the card.
+     *
+     * @param cardCurrency    The currency of the card.
+     * @param depositCurrency The currency of the deposit.
+     * @param amount          The amount to convert.
+     * @return The converted amount.
+     */
+    private BigDecimal convertCurrencyCase(Currency cardCurrency, Currency depositCurrency, BigDecimal amount) {
+        return switch (cardCurrency) {
+            case USD, UAH, EUR, CZK, PLN -> amount.multiply(
+                    BigDecimal.valueOf(currencyDataService.convertCurrency(
+                            depositCurrency.toString(), cardCurrency.toString()).getRate())
             );
         };
     }

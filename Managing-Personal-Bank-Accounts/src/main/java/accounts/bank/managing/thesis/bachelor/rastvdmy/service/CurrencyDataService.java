@@ -117,6 +117,37 @@ public class CurrencyDataService {
     }
 
     /**
+     * Converts a currency to another currency.
+     *
+     * @param baseCurrency The currency to convert from.
+     * @param targetCurrency The currency to convert to.
+     * @return The converted currency data.
+     */
+    public CurrencyData convertCurrency(String baseCurrency, String targetCurrency) {
+        final String apiUrl = "https://v6.exchangerate-api.com/v6/" + apiKey + "/pair/" + baseCurrency + "/" + targetCurrency;
+        try {
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    apiUrl,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {
+                    });
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> responseBody = response.getBody();
+                if (responseBody.containsKey("conversion_rate")) {
+                    CurrencyData currencyData = new CurrencyData();
+                    currencyData.setCurrency(targetCurrency);
+                    currencyData.setRate(((Number) responseBody.get("conversion_rate")).doubleValue());
+                    return currencyData;
+                }
+            }
+        } catch (RestClientException e) {
+            e.getCause();
+        }
+        return null;
+    }
+
+    /**
      * Retrieves all exchange rates from an external API and updates the database.
      * This method is scheduled to run every 24 hours.
      */
