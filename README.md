@@ -24,9 +24,9 @@
 
 ### [Docker](#docker)
 
-### [Video demonstration](#video)
-
 ### [Third-party APIs](#api)
+
+### [Video demonstration](#video)
 
 -- -- --
 
