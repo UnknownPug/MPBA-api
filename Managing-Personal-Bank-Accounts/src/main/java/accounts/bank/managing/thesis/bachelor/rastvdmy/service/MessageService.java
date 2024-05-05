@@ -164,7 +164,7 @@ public class MessageService {
      * @return True if the content is valid, false otherwise.
      */
     private boolean isValidContent(String content) {
-        return content != null && !content.isEmpty() && content.length() <= 100;
+        return content != null && !content.isEmpty() && content.length() <= 1000;
     }
 
     /**
