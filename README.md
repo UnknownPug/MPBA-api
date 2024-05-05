@@ -24,6 +24,8 @@
 
 ### [Docker](#docker)
 
+### [Video demonstration](#video)
+
 ### [Third-party APIs](#api)
 
 -- -- --
@@ -157,5 +159,15 @@ Also in this application was used third-party APIs
 
 1. [Exchange Rate API](https://app.exchangerate-api.com/dashboard) for getting exchange rate currencies
 2. [REST Countries API](https://restcountries.com/v3.1/all?fields=name) for validation of existing countries
+-- -- --
+### <a name="video"></a> Video demonstration
+
+Also attached to the description is a video demonstration of the project, where you can see the main functions of the application:
+
+
+https://github.com/UnknownPug/Managing-personal-bank-accounts/assets/73190129/bce71ae2-070d-4547-a2df-c49abc2edc4c
+
+
+
 -- -- --
 ## Thank You for Your attention!
