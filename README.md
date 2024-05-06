@@ -33,9 +33,9 @@
 ### <a name="description"></a> Description
 
 Nowadays, there are many different banks that try to attract future customers with favorable services.
-When creating a card, customers are asked to install the bank's mobile app
-where the user will have full access to their data and accounts, but what many banks don't tell You
-is that they also have web apps that can also be used to manage their accounts.
+When creating a card, customers are asked to install the bank's mobile app,
+where the user will have full access to their data and accounts.
+What many banks don't tell You is that they also have web apps that can also be used to manage their accounts.
 Due to this, if many banks have a modern interface of their web application, they are also complex.
 The complexity is that it takes time to fully use the application, for example, if You want to make a transaction, You
 have to click through several
