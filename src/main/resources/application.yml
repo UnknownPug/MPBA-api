@@ -1,13 +1,13 @@
 server:
-  port: 8082
+  port: # Enter port number
   error:
     whitelabel:
       enabled: true
 spring:
   datasource:
-    password: postgres
-    username: postgres
-    url: jdbc:postgresql://localhost:5432/postgres
+    password: # Enter password of the database
+    username: # Enter username of the database
+    url: # Enter URL
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,12 +15,12 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   security:
     user:
-      name: postgres
-      password: postgres
+      name: # Enter username of the database
+      password: # Enter password of the database
   mvc:
     servlet:
       path: /
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: #Enter Kafka ip and port
 api:
-  key: 2d03edf7aa4c0318731708ae
+  key: # Enter API Key for the ExchangeRate-API

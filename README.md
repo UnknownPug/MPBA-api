@@ -8,7 +8,7 @@
 
 ### Spring Boot version: 3.2.3
 
-### Actual project version: 4.2.2
+### Actual project version: 4.2.5
 
 ### ● Main documentation can be found by clicking [here](https://drive.google.com/file/d/1k44jh4FDOH3mNoLpYRbHdH2hwj3EBmG9/view?usp=sharing)
 
@@ -76,23 +76,25 @@ If the requirements are met, You need to clone the repository:
 1. Clone the repository by `git clone`
 2. Open the project in Your IDE
 
-After You have opened the project, You need to configure the database that You will be using:
+Next we need to configure the database:
+     
+     1. Open the database in IntelliJ, click on "New" (or + button)
 
-Change the `spring.datasource` data to Your requirements:
+     2. Choose the datasource and then find and choose the PostgreSQL database
+     
+     3. Set the port, username and password to Your requirements and click apply
 
-         1. Open the database in IntelliJ, click on "New" (or + button)
-         
-         2. Choose the datasource and then find and choose the PostgreSQL database
-         
-         3. Set the port, username and password to Your requirements and click apply
-         
-         4. When the database will be set, we need to change the application.properties
-            in the src/main/resources directory to the databases.
+After You have set the database, You need to configure application.yml file before running the project:
 
-Also check `kafka.bootstrap-servers` port in the `src/main/resources/application.properties`, 
-that the port is free and not used by another application.
+1. Open `application.yml` file in `src/main/resources`
+2. Set the `port` to the port that You are using for the database (default is `8080`)
+3. Set the `username` and `password` to Your database username and password
+4. Set the `url` to Your PostgreSQL url
+5. Set the security users' `name` and `password` that You are using for the database
+6. Set the `kafka.bootstrap-servers` to Your IP and port (example: `localhost:9092`)
+7. Set the `api.key` to Your "ExchangeRate-API" key, that You got from the API web page.
 
-After You have checked the port, You need to run Kafka:
+After You have configured the `application.yml` file, You need to run the Kafka server by following these steps
 
 1. Open the installed folder of Kafka `cd {path to kafka folder}/bin`
 2. Run Zookeeper:
@@ -124,9 +126,11 @@ After You have run the Kafka, You can run the project
 After you will execute the application, you will be able to make a login and logout
 of the application due to the fact that we are using authentication and session cookies to improve application speed.
 
-Also with login and logout process, status of the user is changing (`STATUS-ONLINE` or `STATUS-OFFLINE`).
+Also with login and logout process, status of the user is changing to `STATUS-ONLINE` or `STATUS-OFFLINE`.
 
-1. After executing the project, You need to open Your browser and enter `http://your_ip:your_ip/login` where You will
+To try this feature, You need to follow these steps:
+
+1. After executing the project, You need to open Your browser and enter `http://your_ip:your_port/login` where You will
 redirect to the login page. After entering Your valid credentials and pressing Enter, You will be redirected to the page, where You will see something like:
 
 ```json
