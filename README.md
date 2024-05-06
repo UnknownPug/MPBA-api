@@ -145,10 +145,21 @@ Your status will be `STATUS_ONLINE`
 
 This project includes a Dockerfile that can be used to run the project in Docker.
 
-To run the project in Docker, You need to have Docker installed on Your machine.
+To run the project in Docker, firstly You need to have Docker installed on Your machine.
 
-After the Docker is installed,
-You need to build the project by running this line in the console 
+Next You need to configure the Dockerfile:
+
+1. Open the Dockerfile in the root of the project.
+2. Set the `SERVER_PORT` to the port that You are using for the database (default is `8080`).
+3. Set the `DATASOURCE_USERNAME` and `DATASOURCE_PASSWORD` to Your database username and password.
+4. Set the `DATASOURCE_URL` to Your PostgreSQL url.
+5. Set the JPA DATABASE `username` and `password` that You are using for the database.
+6. Set the security username and password that You are using for the database.
+7. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (eg Kafka server) (example: `localhost:9092`).
+8. Set the `API_KEY` to Your "ExchangeRate-API" key, that You got from the API web page.
+9. Set the `EXPOSE` port to the port that You are using for the database.
+
+After the Docker is configured, You need to build the project by running this line in the console 
 ```docker
 docker build -t name-image .
 ```
