@@ -154,7 +154,7 @@ Next, You need to configure the Dockerfile:
 3. Set the `DATASOURCE_USERNAME` and `DATASOURCE_PASSWORD` to Your database username and password.
 4. Set the `DATASOURCE_URL` to Your PostgreSQL url.
 5. Set the `JPA_DATABASE` `username` and `password` that You are using for the database.
-6. Set the `SECURITY_USER_NAME` and `ECURITY_USER_PASSWORD` that You are using for the database.
+6. Set the `SECURITY_USER_NAME` and `SECURITY_USER_PASSWORD` that You are using for the database.
 7. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (e.g., Kafka server) (example: `localhost:9092`).
 8. Set the `API_KEY` to Your "ExchangeRate-API" key, that You got from the API web page.
 9. Set the `EXPOSE` port to the port that You are using for the database.
@@ -166,6 +166,8 @@ docker build -t name-image .
 Where `name-image` is the name of the image that You want to give to the project.
 
 You can change the name of the image to Your needs.
+
+After running this line, Docker will build the image of the project.
 
 -- -- --
 ### <a name="api"></a>Third-party APIs
