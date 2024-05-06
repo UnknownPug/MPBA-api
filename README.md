@@ -115,7 +115,7 @@ kafka-console-consumer --topic messages --from-beginning --bootstrap-server Your
 
 After You have run the Kafka, You can run the project
 
-1. Run Maven command: `mvn clean install`
+1. Run Maven command: `mvn clean install` (or `mvn clean install -U`)
 2. Run the project by executing `Application.java` class
 3. Open Postman and enjoy the project
 
