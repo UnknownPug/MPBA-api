@@ -8,7 +8,7 @@
 
 ### Spring Boot version: 3.2.3
 
-### Actual project version: 4.2.1
+### Actual project version: 4.2.2
 
 ### ● Main documentation can be found by clicking [here]()
 
