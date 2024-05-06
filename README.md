@@ -76,7 +76,7 @@ If the requirements are met, You need to clone the repository:
 1. Clone the repository by `git clone`
 2. Open the project in Your IDE
 
-Next we need to configure the database:
+Next, we need to configure the database:
      
      1. Open the database in IntelliJ, click on "New" (or + button)
 
@@ -123,10 +123,10 @@ After You have run the Kafka, You can run the project
 
 #### Honorable mention:
 
-After you will execute the application, you will be able to make a login and logout
-of the application due to the fact that we are using authentication and session cookies to improve application speed.
+After you execute the application, you will be able to make a login and logout
+of the application because we are using authentication and session cookies to improve application speed.
 
-Also with login and logout process, status of the user is changing to `STATUS-ONLINE` or `STATUS-OFFLINE`.
+Also with a login and logout process, status of the user is changing to `STATUS-ONLINE` or `STATUS-OFFLINE`.
 
 To try this feature, You need to follow these steps:
 
@@ -145,9 +145,9 @@ Your status will be `STATUS_ONLINE`
 
 This project includes a Dockerfile that can be used to run the project in Docker.
 
-To run the project in Docker, firstly You need to have Docker installed on Your machine.
+To run the project in Docker, firstly, You need to have Docker installed on Your machine.
 
-Next You need to configure the Dockerfile:
+Next, You need to configure the Dockerfile:
 
 1. Open the Dockerfile in the root of the project.
 2. Set the `SERVER_PORT` to the port that You are using for the database (default is `8080`).
@@ -155,7 +155,7 @@ Next You need to configure the Dockerfile:
 4. Set the `DATASOURCE_URL` to Your PostgreSQL url.
 5. Set the JPA DATABASE `username` and `password` that You are using for the database.
 6. Set the security username and password that You are using for the database.
-7. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (eg Kafka server) (example: `localhost:9092`).
+7. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (e.g., Kafka server) (example: `localhost:9092`).
 8. Set the `API_KEY` to Your "ExchangeRate-API" key, that You got from the API web page.
 9. Set the `EXPOSE` port to the port that You are using for the database.
 
