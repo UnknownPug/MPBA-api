@@ -8,7 +8,7 @@
 
 ### Spring Boot version: 3.2.3
 
-### Actual project version: 4.2.7
+### Actual project version: 4.2.8
 
 ### ● Main documentation can be found by clicking [here](https://drive.google.com/file/d/1k44jh4FDOH3mNoLpYRbHdH2hwj3EBmG9/view?usp=sharing)
 
@@ -153,8 +153,8 @@ Next, You need to configure the Dockerfile:
 2. Set the `SERVER_PORT` to the port that You are using for the database (default is `8080`).
 3. Set the `DATASOURCE_USERNAME` and `DATASOURCE_PASSWORD` to Your database username and password.
 4. Set the `DATASOURCE_URL` to Your PostgreSQL url.
-5. Set the JPA DATABASE `username` and `password` that You are using for the database.
-6. Set the security username and password that You are using for the database.
+5. Set the `JPA_DATABASE` `username` and `password` that You are using for the database.
+6. Set the `SECURITY_USER_NAME` and `ECURITY_USER_PASSWORD` that You are using for the database.
 7. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (e.g., Kafka server) (example: `localhost:9092`).
 8. Set the `API_KEY` to Your "ExchangeRate-API" key, that You got from the API web page.
 9. Set the `EXPOSE` port to the port that You are using for the database.
