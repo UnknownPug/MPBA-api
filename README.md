@@ -138,7 +138,7 @@ redirect to the login page. After entering Your valid credentials and pressing E
 ```
 Your status will be `STATUS_ONLINE`
 
-2. If You will try to enter `http://your_ip:your_ip/logout`, you will be redirect to the login page and status will be `STATUS_OFFLINE`
+2. If You try to enter `http://your_ip:your_port/logout`, you will be redirected to the login page and status will be `STATUS_OFFLINE`
 
 -- -- --
 ### <a name="docker"></a> Docker
