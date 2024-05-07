@@ -8,7 +8,7 @@
 
 ### Spring Boot version: 3.2.3
 
-### Actual project version: 4.3.1
+### Actual project version: 4.3.4
 
 ### ● Main documentation can be found by clicking [here](https://drive.google.com/file/d/1k44jh4FDOH3mNoLpYRbHdH2hwj3EBmG9/view?usp=sharing)
 
@@ -17,6 +17,8 @@
 ## Contents
 
 ### [Description](#description)
+
+### [Goal](#goal)
 
 ### [Postman](#postman)
 
@@ -42,6 +44,10 @@ Due to this, if many banks have a modern interface of their web application, the
 
 The complexity is that it takes time to fully use the application, for example, if You want to make a transaction, You have to click through several pages when it could be done in one: change user data, for example, if the location where You live has been changed, the possibility of transferring funds to another account and more.
 
+-- -- --
+
+### <a name="goal"></a> Goal
+
 The aim of the work is to analyze existing web applications of banks and to develop a server part for managing personal bank accounts.
 
 The program should present an opportunity to easily and quickly manage bank accounts, change rates, create new cards, transactions and the ability to change their data.
@@ -61,35 +67,36 @@ that can be used to test the server-side application.
 
 To run the project, You need to configure Your workplace:
 
-1) Installed Java 17 and Maven
-2) Installed PostgreSQL
-3) Installed IDE for running the app (Preferable: IntelliJ IDEA)
-4) Installed Postman
-5) Installed Git
+1) Installed Java 17 and Maven.
+2) Installed PostgreSQL.
+3) Installed IDE for running the app (Preferable: IntelliJ IDEA).
+4) Installed Postman.
+5) Installed Git.
 6) Installed [Kafka](https://kafka.apache.org/quickstart).
    In the project I am using version 3.1.0, which can be
-   downloaded by clicking [here](https://archive.apache.org/dist/kafka/3.1.0/kafka_2.13-3.1.0.tgz)
-7) Installed Docker (Optional)
+   downloaded by clicking [here](https://archive.apache.org/dist/kafka/3.1.0/kafka_2.13-3.1.0.tgz).
+7) Installed Docker (Optional).
 
 If the requirements are met, You need to clone the repository:
 
 1. Copy SSH link from the repository.
 2. Open terminal and write `git clone (paste copied ssh link)`.
-3. Open the project folder in Your IDE.
+3. Open the project folder in Your IDE (Preferable IntelliJ IDEA).
 
 Next, we need to configure the database:
      
-     1. Open the database in IntelliJ, click on "New" (or +) button.
+     1. Open the database in IntelliJ, click on "+" button.
 
      2. Choose the datasource and then find and choose the PostgreSQL database.
      
-     3. Set the port, username and password to Your requirements and click apply.
+     3. Set the port (if port 5432 is already in use), username and password 
+     to Your requirements and click "Apply".
 
 After You have set the database, You need to configure application.yml file before running the project:
 
 1. Open `application.yml` file in `src/main/resources`
 
-2. Set the `port` that You are using for web services (default is `8080`).
+2. Set the `port` that You are using for web services (preferable to set `8082`).
 
 3. Set the `username` and `password` that You set in database.
 
@@ -130,25 +137,6 @@ After You have run the Kafka, You can run the project.
 
 3. Open Postman and enjoy the project
 
-#### Honorable mention:
-
-After you execute the application, you will be able to make a login and logout
-of the application because we are using authentication and session cookies to improve application speed.
-
-Also with a login and logout process, status of the user is changing to `STATUS-ONLINE` or `STATUS-OFFLINE`.
-
-To try this feature, You need to follow these steps:
-
-1. After executing the project, You need to open Your browser and enter `http://your_ip:your_port/login` where You will
-redirect to the login page. After entering Your valid credentials and pressing Enter, You will be redirected to the page, where You will see something like:
-
-```json
-{"type":"about:blank","title":"Not Found","status":404,"detail":"No static resource .","instance":"/"}
-```
-Your status will be `STATUS_ONLINE`
-
-2. If You try to enter `http://your_ip:your_port/logout`, you will be redirected to the login page and status will be `STATUS_OFFLINE`
-
 -- -- --
 ### <a name="docker"></a> Docker
 
@@ -160,21 +148,19 @@ Next, You need to configure the Dockerfile:
 
 1. Open the Dockerfile in the root of the project.
 
-2. Set the `SERVER_PORT` to the port that You are using for the database (default is `8080`).
+2. Set the `SERVER_PORT` to the port number that You are using for the web services (preferable to set `8082`).
 
 3. Set the `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` to Your database username and password.
 
-4. Set the `SPRING_DATASOURCE_URL` to Your PostgreSQL url.
+4. Set the `SPRING_DATASOURCE_URL` to Your genrated database url.
 
-5. Set the `SPRING_JPA_DATABASE` `username` and `password` that You are using for the database.
+5. Set the `SPRING_SECURITY_USER_NAME` and `SPRING_SECURITY_USER_PASSWORD` that You are using for the database.
 
-6. Set the `SPRING_SECURITY_USER_NAME` and `SPRING_SECURITY_USER_PASSWORD` that You are using for the database.
+6. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (e.g., Kafka server) (default: `localhost:9092`).
 
-7. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (e.g., Kafka server) (example: `localhost:9092`).
+7. Set the `API_KEY` to Your "ExchangeRate-API" key, that You got from the API web page.
 
-8. Set the `API_KEY` to Your "ExchangeRate-API" key, that You got from the API web page.
-
-9. Set the `EXPOSE` port to the port that You are using for the database.
+8. Set the `EXPOSE` port number that You are using for the web services (preferable to set `8082`).
 
 After the Docker is configured, You need to build the project by running this line in the console:
 
