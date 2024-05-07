@@ -8,7 +8,7 @@
 
 ### Spring Boot version: 3.2.3
 
-### Actual project version: 4.3.0
+### Actual project version: 4.3.1
 
 ### ● Main documentation can be found by clicking [here](https://drive.google.com/file/d/1k44jh4FDOH3mNoLpYRbHdH2hwj3EBmG9/view?usp=sharing)
 
@@ -33,21 +33,21 @@
 ### <a name="description"></a> Description
 
 Nowadays, there are many different banks that try to attract future customers with favorable services.
-When creating a card, customers are asked to install the bank's mobile app,
-where the user will have full access to their data and accounts.
-What many banks don't tell You is that they also have web apps that can also be used to manage their accounts.
-Due to this, if many banks have a modern interface of their web application, they are also complex.
-The complexity is that it takes time to fully use the application, for example, if You want to make a transaction, You
-have to click through several
-pages when it could be done in one: change user data, for example, if the location where You live has been changed,
-the possibility of transferring funds to another account and more.
 
-The aim of the work is to analyze existing web applications of banks and to develop a server part for managing personal
-bank accounts.
-The program should present an opportunity to easily and quickly manage bank accounts, change rates,
-create new cards, transactions and the ability to change their data.
-In the process of the implementation of the project, as well as the bachelor's thesis,
-a prototype of the server will be created with functionality covering the needs of the client.
+When creating a card, customers are asked to install the bank's mobile app, where the user will have full access to their data and accounts.
+
+What many banks don't tell You is that they also have web apps that can also be used to manage their accounts. 
+
+Due to this, if many banks have a modern interface of their web application, they are also complex.
+
+The complexity is that it takes time to fully use the application, for example, if You want to make a transaction, You have to click through several pages when it could be done in one: change user data, for example, if the location where You live has been changed, the possibility of transferring funds to another account and more.
+
+The aim of the work is to analyze existing web applications of banks and to develop a server part for managing personal bank accounts.
+
+The program should present an opportunity to easily and quickly manage bank accounts, change rates, create new cards, transactions and the ability to change their data.
+
+In the process of the implementation of the project, as well as the bachelor's thesis, a prototype of the server will be created with functionality covering the needs of the client.
+
 -- -- --
 
 ### <a name="postman"></a> Postman
@@ -67,36 +67,43 @@ To run the project, You need to configure Your workplace:
 4) Installed Postman
 5) Installed Git
 6) Installed [Kafka](https://kafka.apache.org/quickstart).
-   In mine project I was using version 3.1.0, which can be
-   downloaded [here](https://archive.apache.org/dist/kafka/3.1.0/kafka_2.13-3.1.0.tgz)
+   In the project I am using version 3.1.0, which can be
+   downloaded by clicking [here](https://archive.apache.org/dist/kafka/3.1.0/kafka_2.13-3.1.0.tgz)
 7) Installed Docker (Optional)
 
 If the requirements are met, You need to clone the repository:
 
-1. Clone the repository by `git clone`
-2. Open the project in Your IDE
+1. Copy SSH link from the repository.
+2. Open terminal and write `git clone (paste copied ssh link)`.
+3. Open the project folder in Your IDE.
 
 Next, we need to configure the database:
      
-     1. Open the database in IntelliJ, click on "New" (or + button)
+     1. Open the database in IntelliJ, click on "New" (or +) button.
 
-     2. Choose the datasource and then find and choose the PostgreSQL database
+     2. Choose the datasource and then find and choose the PostgreSQL database.
      
-     3. Set the port, username and password to Your requirements and click apply
+     3. Set the port, username and password to Your requirements and click apply.
 
 After You have set the database, You need to configure application.yml file before running the project:
 
 1. Open `application.yml` file in `src/main/resources`
-2. Set the `port` to the port that You are using for the database (default is `8080`)
-3. Set the `username` and `password` to Your database username and password
-4. Set the `url` to Your PostgreSQL url
-5. Set the security users' `name` and `password` that You are using for the database
-6. Set the `kafka.bootstrap-servers` to Your IP and port (example: `localhost:9092`)
-7. Set the `api.key` to Your "ExchangeRate-API" key, that You got from the API web page.
 
-After You have configured the `application.yml` file, You need to run the Kafka server by following these steps
+2. Set the `port` that You are using for web services (default is `8080`).
 
-1. Open the installed folder of Kafka `cd {path to kafka folder}/bin`
+3. Set the `username` and `password` that You set in database.
+
+4. Set the `url` that was generated in Your database.
+
+5. Set the security users' `name` and `password` that You set in database.
+
+6. Set the `kafka.bootstrap-servers` to Your IP and port (default: `localhost:9092`).
+
+7. Set in `api.key` the generated key "ExchangeRate-API" that you got from the API web page.
+
+After You have configured the `application.yml` file, You need to run the Kafka server by following these steps:
+
+1. Open the installed folder of Kafka `cd {path to kafka folder}/bin`.
 2. Run Zookeeper:
 
 ```shell
@@ -115,10 +122,12 @@ zookeeper-server-start ../config/zookeeper.properties
 kafka-console-consumer --topic messages --from-beginning --bootstrap-server Your_ip:Your_port
 ```
 
-After You have run the Kafka, You can run the project
+After You have run the Kafka, You can run the project.
 
 1. Run Maven command: `mvn clean install` (or `mvn clean install -U`)
+
 2. Run the project by executing `Application.java` class
+
 3. Open Postman and enjoy the project
 
 #### Honorable mention:
@@ -150,16 +159,25 @@ To run the project in Docker, firstly, You need to have Docker installed on Your
 Next, You need to configure the Dockerfile:
 
 1. Open the Dockerfile in the root of the project.
+
 2. Set the `SERVER_PORT` to the port that You are using for the database (default is `8080`).
+
 3. Set the `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` to Your database username and password.
+
 4. Set the `SPRING_DATASOURCE_URL` to Your PostgreSQL url.
+
 5. Set the `SPRING_JPA_DATABASE` `username` and `password` that You are using for the database.
+
 6. Set the `SPRING_SECURITY_USER_NAME` and `SPRING_SECURITY_USER_PASSWORD` that You are using for the database.
+
 7. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (e.g., Kafka server) (example: `localhost:9092`).
+
 8. Set the `API_KEY` to Your "ExchangeRate-API" key, that You got from the API web page.
+
 9. Set the `EXPOSE` port to the port that You are using for the database.
 
-After the Docker is configured, You need to build the project by running this line in the console 
+After the Docker is configured, You need to build the project by running this line in the console:
+
 ```docker
 docker build -t name-image .
 ```
@@ -172,7 +190,7 @@ After running this line, Docker will build the image of the project.
 -- -- --
 ### <a name="api"></a>Third-party APIs
 
-Also in this application was used third-party APIs
+Also in this application was used third-party APIs:
 
 1. [Exchange Rate API](https://app.exchangerate-api.com/dashboard) for getting exchange rate currencies
 2. [REST Countries API](https://restcountries.com) for validation of existing countries
