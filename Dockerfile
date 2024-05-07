@@ -38,7 +38,7 @@ ENV SPRING_SECURITY_USER_PASSWORD
 
 ENV SPRING_MVC_SERVLET_PATH /
 
-# Enter the Kafka server
+# Enter the Kafka bootstrap server ip and port
 ENV SPRING_KAFKA_BOOTSTRAP_SERVERS
 
 # Enter the API key from ExchangeRate-API
