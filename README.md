@@ -152,7 +152,7 @@ Next, You need to configure the Dockerfile:
 
 3. Set the `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` to Your database username and password.
 
-4. Set the `SPRING_DATASOURCE_URL` to Your genrated database url.
+4. Set the `SPRING_DATASOURCE_URL` to Your genrated url, but instead of ip use `host.docker.internal`.
 
 5. Set the `SPRING_SECURITY_USER_NAME` and `SPRING_SECURITY_USER_PASSWORD` that You are using for the database.
 
