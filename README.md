@@ -98,7 +98,7 @@ After You have set the database, You need to configure application.yml file befo
 
 2. Set the `server.port` that You are using for web services (preferable to set `8082`).
 
-3. Set the `spring.datasource.password` and `spring.datasource.username` that You set in database.
+3. Set the `spring.datasource.password` and `spring.datasource.username` to password and username that You set in database.
 
 4. Set the `spring.datasource.url` that was generated in Your database.
 
@@ -106,7 +106,7 @@ After You have set the database, You need to configure application.yml file befo
 
 6. Set the `spring.kafka.bootstrap-servers` to Your IP and port (default: `localhost:9092`).
 
-7. Set in `api.key` the generated key that you got from the ExchangeRate-API web page.
+7. Set in `api.key` the generated key that You got from the ExchangeRate-API web page.
 
 After You have configured the `application.yml` file, You need to run the Kafka server by following these steps:
 
@@ -150,15 +150,15 @@ Next, You need to configure the Dockerfile:
 
 2. Set the `SERVER_PORT` to the port number that You are using for the web services (preferable to set `8082`).
 
-3. Set the `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` to Your database username and password.
+3. Set the `SPRING_DATASOURCE_PASSWORD` and `SPRING_DATASOURCE_USERNAME` to Your database password and username.
 
 4. Set the `SPRING_DATASOURCE_URL` to Your genrated url, but instead of ip use `host.docker.internal`.
 
-5. Set the `SPRING_SECURITY_USER_NAME` and `SPRING_SECURITY_USER_PASSWORD` that You are using for the database.
+5. Set the `SPRING_SECURITY_USER_NAME` and `SPRING_SECURITY_USER_PASSWORD` to password and username that You set in database.
 
-6. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (e.g., Kafka server) (default: `localhost:9092`).
+6. Set the `SPRING_KAFKA_BOOTSTRAP_SERVERS` to Your IP and port (default: `localhost:9092`).
 
-7. Set the `API_KEY` to Your "ExchangeRate-API" key, that You got from the API web page.
+7. Set the `API_KEY` to Your generated key that You got from the ExchangeRate-API web page.
 
 8. Set the `EXPOSE` port number that You are using for the web services (preferable to set `8082`).
 
@@ -183,7 +183,7 @@ Also in this application was used third-party APIs:
 -- -- --
 ### <a name="video"></a> Video demonstration
 
-Also attached to the description is a video demonstration of the project, where you can see the main functions of the application:
+Also attached to the description is a video demonstration of the project, where You can see the main functions of the application:
 
 
 https://github.com/UnknownPug/Managing-personal-bank-accounts/assets/73190129/bce71ae2-070d-4547-a2df-c49abc2edc4c
