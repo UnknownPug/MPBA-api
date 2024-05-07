@@ -96,17 +96,17 @@ After You have set the database, You need to configure application.yml file befo
 
 1. Open `application.yml` file in `src/main/resources`
 
-2. Set the `port` that You are using for web services (preferable to set `8082`).
+2. Set the `server.port` that You are using for web services (preferable to set `8082`).
 
-3. Set the `username` and `password` that You set in database.
+3. Set the `spring.datasource.password` and `spring.datasource.username` that You set in database.
 
-4. Set the `url` that was generated in Your database.
+4. Set the `spring.datasource.url` that was generated in Your database.
 
-5. Set the security users' `name` and `password` that You set in database.
+5. Set the security users' `spring.security.user.name` and `spring.security.user.password` that You set in database.
 
-6. Set the `kafka.bootstrap-servers` to Your IP and port (default: `localhost:9092`).
+6. Set the `spring.kafka.bootstrap-servers` to Your IP and port (default: `localhost:9092`).
 
-7. Set in `api.key` the generated key "ExchangeRate-API" that you got from the API web page.
+7. Set in `api.key` the generated key that you got from the ExchangeRate-API web page.
 
 After You have configured the `application.yml` file, You need to run the Kafka server by following these steps:
 
