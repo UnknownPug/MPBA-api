@@ -1,5 +1,5 @@
 server:
-  port: # Enter port number
+  port: # Enter web services port number
   error:
     whitelabel:
       enabled: true
@@ -7,7 +7,7 @@ spring:
   datasource:
     password: # Enter password of the database
     username: # Enter username of the database
-    url: # Enter URL
+    url: # Enter database URL
   jpa:
     hibernate:
       ddl-auto: update
