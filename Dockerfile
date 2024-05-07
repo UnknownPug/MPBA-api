@@ -12,22 +12,40 @@ WORKDIR /app
 # Copy the compiled JAR file from the build stage
 COPY --from=build /tmp/dockerapp/target/*.jar /app/app.jar
 
-# Set environment variables
-ENV SERVER_PORT # Enter the port number
-ENV SPRING_DATASOURCE_PASSWORD # Enter the password
-ENV SPRING_DATASOURCE_USERNAME # Enter the username
-ENV SPRING_DATASOURCE_URL # Enter the database URL
+# Set environment variable  (same as for application.yml file):
+
+# Enter the web server port number
+ENV SERVER_PORT
+
+# Enter the datasource password 
+ENV SPRING_DATASOURCE_PASSWORD
+
+# Enter the datasource username
+ENV SPRING_DATASOURCE_USERNAME
+
+# Enter the database URL
+ENV SPRING_DATASOURCE_URL
+
 ENV SPRING_JPA_HIBERNATE_DDL_AUTO update
-ENV SPRING_JPA_DATABASE # Enter the database name
+ENV SPRING_JPA_DATABASE postgresql
 ENV SPRING_JPA_DATABASE_PLATFORM org.hibernate.dialect.PostgreSQLDialect
-ENV SPRING_SECURITY_USER_NAME # Enter the username
-ENV SPRING_SECURITY_USER_PASSWORD # Enter the password
+
+# Enter the username
+ENV SPRING_SECURITY_USER_NAME
+
+# Enter the password
+ENV SPRING_SECURITY_USER_PASSWORD
+
 ENV SPRING_MVC_SERVLET_PATH /
 ENV SPRING_KAFKA_BOOTSTRAP_SERVERS # Enter the Kafka server
-ENV API_KEY # Enter the API key
+
+# Enter the API key from ExchangeRate-API
+ENV API_KEY
 
 # Expose the port the application runs on
-EXPOSE # Enter the port number
+
+# Enter the web server port number
+EXPOSE 
 
 # Command to run the application
 CMD ["java", "-jar", "app.jar"]
