@@ -140,7 +140,7 @@ After You have run the Kafka, You can run the project.
 -- -- --
 ### <a name="docker"></a> Docker
 
-This project includes a Dockerfile that can be used to run the project in Docker.
+This project includes a Dockerfile that can be used to generate Docker image.
 
 To run the project in Docker, firstly, You need to have Docker installed on Your machine.
 
