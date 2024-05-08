@@ -10,7 +10,7 @@
 
 ### Actual project version: 4.3.3
 
-### ● Main documentation can be found by clicking [here](https://drive.google.com/file/d/1k44jh4FDOH3mNoLpYRbHdH2hwj3EBmG9/view?usp=sharing)
+### ● Main documentation can be found by clicking [here](https://drive.google.com/file/d/1zdiyWcDliwQ9S8SOraMvlNF6fkAbw0xR/view?usp=sharing)
 
 ### ● Project also contains Java documentation - [Javadoc](https://unknownpug.github.io/Managing-personal-bank-accounts/)
 
