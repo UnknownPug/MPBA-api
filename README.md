@@ -79,7 +79,7 @@ To run the project, You need to configure Your workplace:
 
 If the requirements are met, You need to clone the repository:
 
-1. Copy HTTPS link from the repository (which is `https://github.com/UnknownPug/Managing-personal-bank-accounts.git`.
+1. Copy HTTPS link from the repository (which is `https://github.com/UnknownPug/Managing-personal-bank-accounts.git`).
 2. Open terminal and write `git clone https://github.com/UnknownPug/Managing-personal-bank-accounts.git`.
 3. Open the project folder in Your IDE (Preferable IntelliJ IDEA).
 
