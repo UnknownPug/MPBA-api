@@ -60,7 +60,7 @@ class MessageServiceTest {
         List<Message> result = messageService.getMessages();
 
         // Assertions
-        assert result.size() == 1; // Ensure one message is returned
+        assertEquals(result.size(), 1); // Ensure one message is returned
     }
 
     /**
@@ -79,7 +79,7 @@ class MessageServiceTest {
         Message result = messageService.getMessageById(messageId);
 
         // Assertions
-        assert result.getId().equals(messageId); // Ensure the correct message is returned
+        assertEquals(result.getId(), messageId); // Ensure the correct message is returned
     }
 
     /**
@@ -97,7 +97,7 @@ class MessageServiceTest {
             messageService.getMessageById(messageId);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
         }
     }
 
@@ -117,7 +117,7 @@ class MessageServiceTest {
         List<Message> result = messageService.getMessagesByContent(content);
 
         // Assertions
-        assert result.size() == 1; // Ensure one message is returned
+        assertEquals(result.size(), 1); // Ensure one message is returned
     }
 
     /**
@@ -134,7 +134,7 @@ class MessageServiceTest {
             messageService.getMessagesByContent(content);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
         }
     }
 
@@ -247,7 +247,7 @@ class MessageServiceTest {
             messageService.sendMessage(senderId, receiverId, content);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.BAD_REQUEST); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.BAD_REQUEST); // Ensure correct exception is thrown
         }
     }
 }

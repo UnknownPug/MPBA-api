@@ -1,5 +1,6 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -73,7 +74,7 @@ class UserServiceTest {
         List<User> result = userService.getUsers();
 
         // Assertions
-        assert result.size() == 1; // Ensure one user is returned
+        assertEquals(result.size(), 1); // Ensure one user is returned
     }
 
     /**
@@ -94,7 +95,7 @@ class UserServiceTest {
         Page<User> result = userService.filterAndSortUsers(pageable);
 
         // Assertions
-        assert result.getTotalElements() == 1; // Ensure one user is returned
+        assertEquals(result.getTotalElements(), 1); // Ensure one user is returned
     }
 
     /**
@@ -113,7 +114,7 @@ class UserServiceTest {
         User result = userService.getUserById(userId);
 
         // Assertions
-        assert result.getId().equals(userId); // Ensure the correct user is returned
+        assertEquals(result.getId(), userId); // Ensure the correct user is returned
     }
 
     /**
@@ -131,7 +132,7 @@ class UserServiceTest {
             userService.getUserById(userId);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
         }
     }
 
@@ -244,7 +245,7 @@ class UserServiceTest {
             userService.updateUserById(userId, email, password, phoneNumber);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
         }
     }
 
@@ -469,7 +470,7 @@ class UserServiceTest {
             userService.updateUserPasswordById(userId, password);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
         }
     }
 
@@ -626,7 +627,7 @@ class UserServiceTest {
             userService.updateUserPhoneNumberById(userId, phoneNumber);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
         }
     }
 }

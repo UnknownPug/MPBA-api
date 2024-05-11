@@ -1,6 +1,6 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
@@ -66,7 +66,7 @@ class TransferServiceTest {
         List<Transfer> result = transferService.getTransfers();
 
         // Assertions
-        assert result.size() == 1; // Ensure one transfer is returned
+        assertEquals(result.size(), 1); // Ensure one transfer is returned
     }
 
     /**
@@ -87,7 +87,7 @@ class TransferServiceTest {
         Page<Transfer> result = transferService.filterAndSortTransfers(pageable);
 
         // Assertions
-        assert result.getTotalElements() == 1; // Ensure one transfer is returned
+        assertEquals(result.getTotalElements(), 1); // Ensure one transfer is returned
     }
 
     /**
@@ -106,7 +106,7 @@ class TransferServiceTest {
         Transfer result = transferService.getTransferById(transferId);
 
         // Assertions
-        assert result.getId().equals(transferId); // Ensure the correct transfer is returned
+        assertEquals(result.getId(), transferId); // Ensure the correct transfer is returned
     }
 
     /**
@@ -124,7 +124,7 @@ class TransferServiceTest {
             transferService.getTransferById(transferId);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
         }
     }
 
@@ -143,7 +143,7 @@ class TransferServiceTest {
         Transfer result = transferService.getTransferByReferenceNumber(referenceNumber);
 
         // Assertions
-        assert result != null; // Ensure a transfer is returned
+        assertNotEquals(result ,null); // Ensure a transfer is returned
     }
 
     /**
@@ -160,7 +160,7 @@ class TransferServiceTest {
             transferService.getTransferByReferenceNumber(referenceNumber);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.BAD_REQUEST); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.BAD_REQUEST); // Ensure correct exception is thrown
         }
     }
 

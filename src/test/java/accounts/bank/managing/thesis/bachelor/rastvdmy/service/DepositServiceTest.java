@@ -1,5 +1,6 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -75,7 +76,7 @@ class DepositServiceTest {
         List<Deposit> result = depositService.getAllDeposits();
 
         // Assertions
-        assert result.size() == 1; // Ensure one deposit is returned
+        assertEquals(result.size(), 1); // Ensure one deposit is returned
     }
 
     /**
@@ -95,7 +96,7 @@ class DepositServiceTest {
         Page<Deposit> result = depositService.filterAndSortDeposits(pageable);
 
         // Assertions
-        assert result.getTotalElements() == 1; // Ensure one deposit is returned
+        assertEquals(result.getTotalElements(), 1); // Ensure one deposit is returned
     }
 
     /**
@@ -114,7 +115,7 @@ class DepositServiceTest {
         Deposit result = depositService.getDepositById(id);
 
         // Assertions
-        assert result.getId().equals(id); // Ensure the correct deposit is returned
+        assertEquals(result.getId(), id); // Ensure the correct deposit is returned
     }
 
     /**
@@ -132,7 +133,7 @@ class DepositServiceTest {
             depositService.getDepositById(id);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.NOT_FOUND); // Ensure correct exception is thrown
         }
     }
 
@@ -235,7 +236,7 @@ class DepositServiceTest {
             depositService.updateDeposit(depositId, cardNumber, "Updated deposit", newAmount, currency);
         } catch (ApplicationException e) {
             // Assertions
-            assert e.getHttpStatus().equals(HttpStatus.BAD_REQUEST); // Ensure correct exception is thrown
+            assertEquals(e.getHttpStatus(), HttpStatus.BAD_REQUEST); // Ensure correct exception is thrown
         }
     }
 
