@@ -39,7 +39,7 @@ public class CurrencyDataService {
      * Constructs a new CurrencyDataService with the given repository and RestTemplate.
      *
      * @param currencyDataRepository The CurrencyDataRepository to use.
-     * @param restTemplate The RestTemplate to use.
+     * @param restTemplate           The RestTemplate to use.
      */
     @Autowired
     public CurrencyDataService(CurrencyDataRepository currencyDataRepository, RestTemplate restTemplate) {
@@ -119,7 +119,7 @@ public class CurrencyDataService {
     /**
      * Converts a currency to another currency.
      *
-     * @param baseCurrency The currency to convert from.
+     * @param baseCurrency   The currency to convert from.
      * @param targetCurrency The currency to convert to.
      * @return The converted currency data.
      */

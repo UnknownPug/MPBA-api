@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.HtmlUtils;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -46,10 +47,10 @@ public class UserService {
     /**
      * Constructs a new UserService with the given repositories, encoder, and service.
      *
-     * @param userRepository The UserRepository to use.
-     * @param passwordEncoder The PasswordEncoder to use.
+     * @param userRepository         The UserRepository to use.
+     * @param passwordEncoder        The PasswordEncoder to use.
      * @param currencyDataRepository The CurrencyDataRepository to use.
-     * @param cardService The CardService to use.
+     * @param cardService            The CardService to use.
      */
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CurrencyDataRepository currencyDataRepository, CardService cardService) {
@@ -96,13 +97,13 @@ public class UserService {
     /**
      * Creates a new user.
      *
-     * @param name The name of the user.
-     * @param surname The surname of the user.
-     * @param dateOfBirth The date of birth of the user.
+     * @param name            The name of the user.
+     * @param surname         The surname of the user.
+     * @param dateOfBirth     The date of birth of the user.
      * @param countryOfOrigin The country of origin of the user.
-     * @param email The email of the user.
-     * @param password The password of the user.
-     * @param phoneNumber The phone number of the user.
+     * @param email           The email of the user.
+     * @param password        The password of the user.
+     * @param phoneNumber     The phone number of the user.
      * @return The created user.
      */
     @CacheEvict(allEntries = true)
@@ -186,9 +187,9 @@ public class UserService {
     /**
      * Updates a user by its ID.
      *
-     * @param userId The ID of the user to update.
-     * @param email The new email of the user.
-     * @param password The new password of the user.
+     * @param userId      The ID of the user to update.
+     * @param email       The new email of the user.
+     * @param password    The new password of the user.
      * @param phoneNumber The new phone number of the user.
      */
     @CacheEvict(allEntries = true)
@@ -218,10 +219,10 @@ public class UserService {
     /**
      * Validates user data.
      *
-     * @param email The email of the user.
-     * @param password The password of the user.
+     * @param email       The email of the user.
+     * @param password    The password of the user.
      * @param phoneNumber The phone number of the user.
-     * @param user The user to validate.
+     * @param user        The user to validate.
      */
     private void validateUserData(String email, String password, String phoneNumber, User user) {
         if (isInvalidEmail(email)) {
@@ -243,7 +244,7 @@ public class UserService {
     /**
      * Uploads a user avatar.
      *
-     * @param userId The ID of the user.
+     * @param userId     The ID of the user.
      * @param userAvatar The avatar of the user.
      */
     @CacheEvict(allEntries = true)
@@ -265,7 +266,7 @@ public class UserService {
      * Updates a user's email by its ID.
      *
      * @param userId The ID of the user.
-     * @param email The new email of the user.
+     * @param email  The new email of the user.
      */
     @CacheEvict(allEntries = true)
     public void updateUserEmailById(Long userId, String email) {
@@ -294,7 +295,7 @@ public class UserService {
     /**
      * Updates a user's password by its ID.
      *
-     * @param userId The ID of the user.
+     * @param userId   The ID of the user.
      * @param password The new password of the user.
      */
     @CacheEvict(allEntries = true)
@@ -324,7 +325,7 @@ public class UserService {
      * Updates a user's role by its ID.
      *
      * @param userId The ID of the user.
-     * @param role The new role of the user.
+     * @param role   The new role of the user.
      */
     @CacheEvict(allEntries = true)
     public void updateUserRoleById(Long userId, String role) {
@@ -393,7 +394,7 @@ public class UserService {
     /**
      * Updates a user's phone number by its ID.
      *
-     * @param userId The ID of the user.
+     * @param userId      The ID of the user.
      * @param phoneNumber The new phone number of the user.
      */
     @CacheEvict(allEntries = true)
@@ -428,7 +429,12 @@ public class UserService {
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User with id " + userId + " not found.")
         );
         if (user.getCards().isEmpty()) {
-            userRepository.delete(user);
+            if (user.getBankLoan() == null || user.getBankLoan().getLoanAmount().compareTo(BigDecimal.ZERO) == 0) {
+                userRepository.deleteById(userId);
+            } else {
+                throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                        "User with id " + userId + " has an active loan. Repay the loan to remove user.");
+            }
         } else {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "User with id " + userId + " has cards. Delete the cards to remove user.");

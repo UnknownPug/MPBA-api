@@ -33,8 +33,8 @@ public class TransferService {
     /**
      * Constructs a new TransferService with the given repositories.
      *
-     * @param transferRepository The TransferRepository to use.
-     * @param cardRepository     The CardRepository to use.
+     * @param transferRepository  The TransferRepository to use.
+     * @param cardRepository      The CardRepository to use.
      * @param currencyDataService The CurrencyDataService to use.
      */
     @Autowired
@@ -162,10 +162,10 @@ public class TransferService {
     /**
      * Transfers currency from one card to another.
      *
-     * @param amount     The amount to transfer.
-     * @param senderCurrency The sender's currency.
+     * @param amount           The amount to transfer.
+     * @param senderCurrency   The sender's currency.
      * @param receiverCurrency The receiver's currency.
-     * @param transfer   The transfer to perform.
+     * @param transfer         The transfer to perform.
      */
     private void transferCurrency(BigDecimal amount, Currency senderCurrency, Currency receiverCurrency, Transfer transfer) {
         switch (senderCurrency) {
@@ -193,7 +193,7 @@ public class TransferService {
             case CZK:
                 transfer.setAmount(amount.multiply(
                         BigDecimal.valueOf(currencyDataService.convertCurrency(
-                                        senderCurrency.toString(), receiverCurrency.toString()).getRate())
+                                senderCurrency.toString(), receiverCurrency.toString()).getRate())
                 ));
                 transfer.setCurrency(Currency.CZK);
                 break;

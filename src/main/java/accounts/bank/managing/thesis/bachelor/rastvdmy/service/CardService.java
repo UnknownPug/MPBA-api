@@ -39,10 +39,10 @@ public class CardService {
     /**
      * Constructs a new CardService with the given repositories and generator.
      *
-     * @param cardRepository The CardRepository to use.
-     * @param userRepository The UserRepository to use.
+     * @param cardRepository      The CardRepository to use.
+     * @param userRepository      The UserRepository to use.
      * @param currencyDataService The CurrencyDataService to use.
-     * @param generator The Generator to use.
+     * @param generator           The Generator to use.
      */
     @Autowired
     public CardService(CardRepository cardRepository, UserRepository userRepository,
@@ -105,9 +105,9 @@ public class CardService {
     /**
      * Creates a new card for a user.
      *
-     * @param userId The ID of the user.
+     * @param userId         The ID of the user.
      * @param chosenCurrency The currency of the card.
-     * @param type The type of the card.
+     * @param type           The type of the card.
      * @return The created card.
      */
     @CacheEvict(value = {"cards", "users"}, allEntries = true)
@@ -240,8 +240,8 @@ public class CardService {
     /**
      * Refills a card.
      *
-     * @param cardId The ID of the card to refill.
-     * @param pin The pin of the card.
+     * @param cardId  The ID of the card to refill.
+     * @param pin     The pin of the card.
      * @param balance The amount to refill.
      */
     @CacheEvict(value = "cards", allEntries = true)
@@ -272,7 +272,7 @@ public class CardService {
      * Converts the provided balance to the currency of the card and adds it to the card's balance.
      * The conversion rate is retrieved from the CurrencyDataService.
      *
-     * @param card The card to which the balance will be added.
+     * @param card    The card to which the balance will be added.
      * @param balance The balance to add to the card. This balance is in a different currency and will be converted to the card's currency.
      */
     private void conversationToCardCurrency(Card card, BigDecimal balance) {
@@ -363,13 +363,22 @@ public class CardService {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NO_CONTENT, "User with id: " + userId + " not found.")
         );
-        if (card.getBalance().compareTo(BigDecimal.ZERO) == 0 && user.getCards().contains(card)) {
-            user.getCards().remove(card);
-            userRepository.save(user);
-            cardRepository.delete(card);
+        if (card.getCardLoan() == null || card.getCardLoan().getLoanAmount().compareTo(BigDecimal.ZERO) == 0) {
+            if (card.getDepositTransaction() == null
+                    || card.getDepositTransaction().getDepositAmount().compareTo(BigDecimal.ZERO) == 0) {
+                if (card.getBalance().compareTo(BigDecimal.ZERO) == 0 && user.getCards().contains(card)) {
+                    user.getCards().remove(card);
+                    userRepository.save(user);
+                    cardRepository.delete(card);
+                } else {
+                    throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                            "Card is not empty or user does not contain this card.");
+                }
+            } else {
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card has deposit transaction.");
+            }
         } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST,
-                    "Card is not empty or user does not contain this card.");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Card has loan.");
         }
     }
 

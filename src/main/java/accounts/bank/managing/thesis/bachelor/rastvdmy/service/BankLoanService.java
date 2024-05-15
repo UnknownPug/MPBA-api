@@ -39,11 +39,11 @@ public class BankLoanService {
     /**
      * Constructs a new BankLoanService with the given repositories and generator.
      *
-     * @param loanRepository The BankLoanRepository to use.
-     * @param userRepository The UserRepository to use.
+     * @param loanRepository     The BankLoanRepository to use.
+     * @param userRepository     The UserRepository to use.
      * @param currencyRepository The CurrencyDataRepository to use.
-     * @param cardRepository The CardRepository to use.
-     * @param generator The Generator to use.
+     * @param cardRepository     The CardRepository to use.
+     * @param generator          The Generator to use.
      */
     @Autowired
     public BankLoanService(BankLoanRepository loanRepository, UserRepository userRepository,
@@ -108,8 +108,8 @@ public class BankLoanService {
     /**
      * Opens a settlement account for a user.
      *
-     * @param id The ID of the user.
-     * @param bigDecimal The amount of the loan.
+     * @param id                 The ID of the user.
+     * @param bigDecimal         The amount of the loan.
      * @param chosenCurrencyType The currency type of the loan.
      * @return The created loan.
      */
@@ -122,8 +122,8 @@ public class BankLoanService {
     /**
      * Adds a loan to a card.
      *
-     * @param id The ID of the card.
-     * @param bigDecimal The amount of the loan.
+     * @param id                 The ID of the card.
+     * @param bigDecimal         The amount of the loan.
      * @param chosenCurrencyType The currency type of the loan.
      * @return The created loan.
      */
@@ -136,8 +136,8 @@ public class BankLoanService {
     /**
      * Creates a bank loan for a user.
      *
-     * @param userId The ID of the user.
-     * @param loanAmount The amount of the loan.
+     * @param userId             The ID of the user.
+     * @param loanAmount         The amount of the loan.
      * @param chosenCurrencyType The currency type of the loan.
      * @return The created loan.
      * @throws ApplicationException if the user is not found, is blocked, already has a loan, or the loan range is invalid.
@@ -164,8 +164,8 @@ public class BankLoanService {
     /**
      * Creates a bank loan for a card.
      *
-     * @param cardId The ID of the card.
-     * @param loanAmount The amount of the loan.
+     * @param cardId             The ID of the card.
+     * @param loanAmount         The amount of the loan.
      * @param chosenCurrencyType The currency type of the loan.
      * @return The created loan.
      * @throws ApplicationException if the card is not found, is blocked, the user already has a loan, or the loan range is invalid.
@@ -214,9 +214,9 @@ public class BankLoanService {
     /**
      * Creates a bank loan.
      *
-     * @param loanAmount The amount of the loan.
+     * @param loanAmount         The amount of the loan.
      * @param chosenCurrencyType The currency type of the loan.
-     * @param referenceNumber The reference number of the loan.
+     * @param referenceNumber    The reference number of the loan.
      * @return The created loan.
      * @throws ApplicationException if the reference number is invalid or the currency is invalid.
      */
@@ -253,8 +253,8 @@ public class BankLoanService {
     /**
      * Repays a loan.
      *
-     * @param loanId The ID of the loan to repay.
-     * @param loanRefund The amount to repay.
+     * @param loanId       The ID of the loan to repay.
+     * @param loanRefund   The amount to repay.
      * @param currencyType The currency type of the repayment.
      */
     @Transactional
@@ -299,8 +299,8 @@ public class BankLoanService {
     /**
      * Updates the date of a loan.
      *
-     * @param loanId The ID of the loan to update.
-     * @param startDate The new start date.
+     * @param loanId         The ID of the loan to update.
+     * @param startDate      The new start date.
      * @param expirationDate The new expiration date.
      */
     @CacheEvict(value = "loans", allEntries = true)
