@@ -8,9 +8,9 @@
 
 ### Spring Boot version: 3.2.3
 
-### Actual project version: 4.3.5
+### Actual project version: 4.4.0
 
-### ● Main documentation can be found by clicking [here](https://drive.google.com/file/d/1zdiyWcDliwQ9S8SOraMvlNF6fkAbw0xR/view?usp=sharing)
+### ● Main documentation can be found by clicking [here](https://drive.google.com/file/d/1Lq5fNT4jDxgkRO_rwZqfKqKyq5i3vBJX/view?usp=sharing)
 
 ### ● Project also contains Java documentation - [Javadoc](https://unknownpug.github.io/Managing-personal-bank-accounts/)
 
