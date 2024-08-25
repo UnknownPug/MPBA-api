@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This interface represents the repository for the CurrencyData entity.
@@ -14,7 +15,7 @@ import java.util.List;
  * It is annotated with @Repository to indicate that it's a component that directly accesses the database.
  */
 @Repository
-public interface CurrencyDataRepository extends JpaRepository<CurrencyData, Long> {
+public interface CurrencyDataRepository extends JpaRepository<CurrencyData, UUID> {
 
     /**
      * Finds a CurrencyData entity by its currency type.

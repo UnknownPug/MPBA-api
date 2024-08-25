@@ -1,9 +1,11 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.controller;
 
+import accounts.bank.managing.thesis.bachelor.rastvdmy.controller.mapper.MessageMapper;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request.MessageRequest;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.dto.response.MessageResponse;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Message;
-import accounts.bank.managing.thesis.bachelor.rastvdmy.exception.ApplicationException;
 import accounts.bank.managing.thesis.bachelor.rastvdmy.service.MessageService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,131 +16,81 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This class is responsible for handling message related requests.
- * It provides endpoints for getting all messages, getting a message by id, getting messages by content,
- * getting sorted messages, and sending a message.
  */
 @Slf4j
 @RestController
-@RequestMapping(path = "/chat")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DEFAULT')")
+@RequestMapping(path = "/api/v1/messages")
 public class MessageController {
-
     private final static Logger LOG = LoggerFactory.getLogger(MessageController.class);
     private final MessageService messageService;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final MessageMapper messageMapper;
 
     /**
      * Constructor for the MessageController.
      *
      * @param messageService The service to handle message operations.
-     * @param kafkaTemplate  The Kafka template for sending messages.
+     * @param kafkaTemplate  The template to send messages to Kafka.
      */
     @Autowired
-    public MessageController(MessageService messageService, KafkaTemplate<String, String> kafkaTemplate) {
+    public MessageController(MessageService messageService,
+                             KafkaTemplate<String, String> kafkaTemplate,
+                             MessageMapper messageMapper) {
         this.messageService = messageService;
         this.kafkaTemplate = kafkaTemplate;
+        this.messageMapper = messageMapper;
     }
 
-    /**
-     * This method is used to get all messages.
-     *
-     * @return A list of all messages.
-     */
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path = "/")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
-    public ResponseEntity<List<Message>> getMessages() {
-        LOG.info("Getting messages ...");
-        return ResponseEntity.ok(messageService.getMessages());
+    @GetMapping(produces = "application/json")
+    public ResponseEntity<List<MessageResponse>> getMessages(HttpServletRequest request, @RequestBody String username) {
+        logInfo("Getting messages ...");
+        List<Message> messages = messageService.getMessages(request, username);
+        List<MessageResponse> messagesResponses = messages.stream()
+                .map(message -> messageMapper.toResponse(
+                        new MessageRequest(message.getReceiver().getName(), message.getContent()))
+                ).collect(Collectors.toList());
+        return ResponseEntity.ok(messagesResponses);
     }
 
-    /**
-     * This method is used to get a message by id.
-     *
-     * @param messageId The id of the message.
-     * @return The message with the given id.
-     */
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path = "/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
-    public ResponseEntity<Message> getMessageById(@PathVariable(value = "id") Long messageId) {
-        LOG.info("Getting message id: {} ...", messageId);
-        return ResponseEntity.ok(messageService.getMessageById(messageId));
-    }
-
-    /**
-     * This method is used to get messages by content.
-     *
-     * @param content The content of the messages.
-     * @return A list of messages with the given content.
-     */
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path = "/search/{content}")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
-    public ResponseEntity<List<Message>> getMessagesByContent(@PathVariable(value = "content") String content) {
-        LOG.info("Getting messages by content: {} ...", content);
-        return ResponseEntity.ok(messageService.getMessagesByContent(content));
-    }
-
-    /**
-     * This method is used to get sorted messages.
-     *
-     * @param userId The id of the user.
-     * @param sort   The sort option.
-     * @param order  The order option.
-     * @return A list of sorted messages.
-     */
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path = "/{id}/")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
-    public ResponseEntity<List<Message>> getSortedMessages(
-            @PathVariable(value = "id") Long userId,
-            @RequestParam(value = "sort") String sort,
-            @RequestParam(value = "order", defaultValue = "asc") String order) {
-        return switch (sort.toLowerCase() + "-" + order.toLowerCase()) {
-            case "sender-asc" -> {
-                LOG.info("Getting sorted messages by sender id in ascending order: {} ...", userId);
-                yield ResponseEntity.ok(messageService.getSortedMessagesBySenderId(userId, "asc"));
-            }
-            case "sender-desc" -> {
-                LOG.info("Getting sorted messages by sender id in descending order: {} ...", userId);
-                yield ResponseEntity.ok(messageService.getSortedMessagesBySenderId(userId, "desc"));
-            }
-            case "receiver-asc" -> {
-                LOG.info("Getting sorted messages by receiver id in ascending order: {} ...", userId);
-                yield ResponseEntity.ok(messageService.getSortedMessagesByReceiverId(userId, "asc"));
-            }
-            case "receiver-desc" -> {
-                LOG.info("Getting sorted messages by receiver id in descending order: {} ...", userId);
-                yield ResponseEntity.ok(messageService.getSortedMessagesByReceiverId(userId, "desc"));
-            }
-            default -> throw new ApplicationException(
-                    HttpStatus.BAD_REQUEST,
-                    "Invalid type of sorting or order. Use 'sender' or 'receiver' for sorting" +
-                            " and 'asc' or 'desc' for order.");
-        };
-    }
-
-    /**
-     * This method is used to send a message.
-     *
-     * @param messageRequest The request containing the sender id, receiver id, and content of the message.
-     * @return The sent message.
-     */
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping(path = "/")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_USER', 'ROLE_ADMIN')")
-    public ResponseEntity<Message> sendMessage(@RequestBody MessageRequest messageRequest) {
-        LOG.info("Sending message ...");
-        kafkaTemplate.send("messages", messageRequest.receiverId().toString(), messageRequest.content());
-        LOG.info("Message has been successfully sent.");
-        return ResponseEntity.ok(messageService.sendMessage(
-                messageRequest.senderId(),
-                messageRequest.receiverId(),
-                messageRequest.content())
+    @GetMapping(path = "/content", produces = "application/json")
+    public ResponseEntity<MessageRequest> getMessage(HttpServletRequest request,
+                                                     @Valid @RequestBody MessageRequest messageRequest) {
+        logInfo("Getting message by text ...");
+        Message message = messageService.getMessageByContent(request, messageRequest.content());
+        MessageResponse messageResponse = messageMapper.toResponse(
+                new MessageRequest(message.getReceiver().getName(), message.getContent())
         );
+        return ResponseEntity.ok(messageMapper.toRequest(messageResponse));
+    }
+
+
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public ResponseEntity<MessageResponse> sendMessage(
+            HttpServletRequest request, @Valid @RequestBody MessageRequest messageRequest) throws Exception {
+        logInfo("Sending message ...");
+
+        kafkaTemplate.send("messages", messageRequest.receiverName(), messageRequest.content());
+
+        Message message = messageService.sendMessageById(request, messageRequest.receiverName(),
+                messageRequest.content());
+
+        MessageResponse response = messageMapper.toResponse(
+                new MessageRequest(message.getReceiver().getName(), message.getContent())
+        );
+        return ResponseEntity.accepted().body(response);
+    }
+
+    private void logInfo(String message, Object... args) {
+        LOG.info(message, args);
     }
 }

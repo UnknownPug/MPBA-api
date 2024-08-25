@@ -1,26 +1,37 @@
 server:
-  port: # Enter web services port number
+  port: 8082
   error:
     whitelabel:
       enabled: true
 spring:
   datasource:
-    password: # Enter password of the database
-    username: # Enter username of the database
-    url: # Enter database URL
+    password: # enter your password here
+    username: # enter your username here
+    url: # enter your url here
   jpa:
     hibernate:
-      ddl-auto: update
-    database: postgresql
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+      ddl-auto: none
+    open-in-view: false
   security:
     user:
-      name: # Enter username of the database
-      password: # Enter password of the database
+      name: # enter your username here
+      password: # enter your password here
   mvc:
     servlet:
       path: /
   kafka:
-    bootstrap-servers: #Enter Kafka ip and port
+    bootstrap-servers: localhost:9092
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yml
+    default-schema: public
+    url: # enter you database url here
+    user: # enter your database username here
+    password: # enter your database password here
+    driver-class-name: org.postgresql.Driver
 api:
-  key: # Enter API Key for the ExchangeRate-API
+  key: # enter your api key here
+security:
+  jwt:
+    # plain text: cvutfelsit2025, key: dmitriyrastvorov
+    secret-key: # enter your secret key here
+    expiration-time: 3600000

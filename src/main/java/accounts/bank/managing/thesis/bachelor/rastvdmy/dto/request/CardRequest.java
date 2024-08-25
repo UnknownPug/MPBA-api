@@ -3,22 +3,29 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.math.BigDecimal;
+import javax.validation.constraints.NotBlank;
+import java.time.LocalDate;
 
 /**
- * This class represents a request for a card.
- * It contains the currency type, card type, card number, pin, and balance of the card.
+ * This class represents a card in the banking system.
+ * @param cardNumber The card number.
+ * @param cvv The cvv of the card.
+ * @param pin The pin of the card.
  */
 public record CardRequest(
-        String currency,
-
-        @JsonProperty("card_type")
-        String type,
-
+        @NotBlank(message = "Card number is mandatory")
         @JsonProperty("card_number")
         String cardNumber,
 
-        Integer pin,
+        @NotBlank(message = "CVV is mandatory")
+        String cvv,
 
-        BigDecimal balance) {
-}
+        @NotBlank(message = "PIN is mandatory")
+        String pin,
+
+        @JsonProperty("start_date")
+        LocalDate startDate,
+
+        @JsonProperty("expiration_date")
+        LocalDate expirationDate
+) {}

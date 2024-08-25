@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This interface represents the repository for the Message entity.
@@ -14,13 +15,9 @@ import java.util.List;
  * It is annotated with @Repository to indicate that it's a component that directly accesses the database.
  */
 @Repository
-public interface MessageRepository extends JpaRepository<Message, Long> {
+public interface MessageRepository extends JpaRepository<Message, String> {
 
-    /**
-     * Finds all Message entities by their content.
-     *
-     * @param content The content of the Message entities to find.
-     * @return A list of Message entities with the given content, or an empty list if no such entities exist.
-     */
-    List<Message> findByContent(String content);
+    List<Message> findAllBySenderIdAndReceiverName(UUID id, String username);
+
+    Message findBySenderIdAndContent(UUID id, String content);
 }

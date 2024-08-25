@@ -5,3 +5,8 @@ hazelcast:
         enabled: true
   jet:
     enabled: true
+
+  map:
+    myMap:
+      time-to-live-seconds: 3600  # Time of life - 1 hour
+      max-idle-seconds: 1800      # Maximum idle time - 30 minutes

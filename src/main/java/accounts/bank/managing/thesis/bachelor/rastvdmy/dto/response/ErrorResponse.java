@@ -1,8 +1,12 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.dto.response;
 
 /**
- * This class represents an error response.
- * It contains the error message and the value causing the error.
+ * Error response
+ * @param message The message of the error
+ * @param value The value of the error
  */
-public record ErrorResponse(String message, String value) {
-}
+public record ErrorResponse(
+        String message,
+
+        String value
+) {}

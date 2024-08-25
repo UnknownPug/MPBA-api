@@ -3,16 +3,18 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.validation.constraints.NotBlank;
+
 /**
- * This class represents a request for a message.
- * It contains the sender id, receiver id, and content of the message.
+ * This class represents a message in the banking system.
+ * @param receiverName The name of the receiver.
+ * @param content The content of the message.
  */
 public record MessageRequest(
-        @JsonProperty("sender_id")
-        Long senderId,
+        @NotBlank(message = "Sender name is mandatory")
+        @JsonProperty(namespace = "receiver_name")
+        String receiverName,
 
-        @JsonProperty("receiver_id")
-        Long receiverId,
-
-        String content) {
-}
+        @NotBlank(message = "Content is mandatory")
+        String content
+) {}

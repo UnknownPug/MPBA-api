@@ -1,18 +1,19 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.entity;
 
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.enums.CardCategory;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.enums.CardStatus;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.enums.CardType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This class represents a bank card.
@@ -21,10 +22,13 @@ import java.util.List;
  * card expiration date, recipient time, user, card loan, deposit transaction,
  * sender transfer transaction, and receiver transfer transaction.
  */
-@Entity
 @Setter
 @Getter
 @ToString
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
 @Table(name = "card")
 public class Card implements Serializable {
 
@@ -32,9 +36,21 @@ public class Card implements Serializable {
      * The id of the card.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
-    private Long id;
+    private UUID id;
+
+    /**
+     * The category of the card.
+     */
+    @Enumerated(EnumType.STRING)
+    private CardCategory category;
+
+    /**
+     * The type of the card.
+     */
+    @Enumerated(EnumType.STRING)
+    private CardType type;
 
     /**
      * The status of the card.
@@ -43,126 +59,58 @@ public class Card implements Serializable {
     private CardStatus status;
 
     /**
-     * The type of the card.
-     */
-    @Enumerated(EnumType.STRING)
-    private CardType cardType;
-
-    /**
-     * The currency type of the card.
-     */
-    @Enumerated(EnumType.STRING)
-    private Currency currencyType;
-
-    /**
      * The card number.
      */
+    @NotBlank
     @Column(name = "card_number", nullable = false)
     private String cardNumber;
 
     /**
-     * The account number associated with the card.
-     */
-    @Column(name = "account_number", nullable = false)
-    private String accountNumber;
-
-    /**
-     * The IBAN of the card.
-     */
-    @Column(name = "iban", nullable = false)
-    private String iban;
-
-    /**
      * The CVV of the card.
      */
+    @NotBlank
     @Column(name = "cvv", nullable = false)
-    private Integer cvv;
+    private String cvv;
 
     /**
      * The PIN of the card.
      */
+    @NotBlank
     @Column(name = "pin", nullable = false)
-    private Integer pin;
+    private String pin;
 
     /**
-     * The name of the cardholder.
+     * The start date of the card.
      */
-    @Column(name = "card_holder", nullable = false)
-    private String holderName;
-
-    /**
-     * The SWIFT code of the card.
-     */
-    @Column(name = "swift", nullable = false)
-    private String swift;
-
-    /**
-     * The balance of the card.
-     */
-    @Column(name = "balance", nullable = false)
-    private BigDecimal balance;
+    @NotBlank
+    @DateTimeFormat(pattern = "yyyy-MM-dd", iso = DateTimeFormat.ISO.DATE)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Column(name = "start_date")
+    private LocalDate startDate;
 
     /**
      * The expiration date of the card.
      */
-    @Column(name = "expiration_date")
+    @NotBlank
     @DateTimeFormat(pattern = "yyyy-MM-dd", iso = DateTimeFormat.ISO.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate cardExpirationDate;
+    @Column(name = "expiration_date")
+    private LocalDate expirationDate;
 
     /**
-     * The recipient time of the card.
+     * The balance of the card.
      */
-    @Column(name = "recipient_time")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm", iso = DateTimeFormat.ISO.DATE_TIME)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
-    private LocalDateTime recipientTime;
-
-    /**
-     * The user associated with the card.
-     */
-    @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    /**
-     * The bank loan associated with the card.
-     */
     @JsonIgnore
-    @OneToOne(mappedBy = "cardLoan", cascade = CascadeType.ALL)
     @ToString.Exclude
-    private BankLoan cardLoan;
+    @JoinColumn(name = "account_id")
+    private BankAccount account;
 
     /**
-     * The deposit transaction associated with the card.
+     * The sender payments of the card.
      */
+    @OneToMany(mappedBy = "senderCard")
     @JsonIgnore
-    @OneToOne(mappedBy = "cardDeposit", cascade = CascadeType.ALL)
     @ToString.Exclude
-    private Deposit depositTransaction;
-
-    /**
-     * The list of sender transfer transactions associated with the card.
-     */
-    @JsonIgnore
-    @OneToMany(mappedBy = "senderCard", cascade = CascadeType.ALL)
-    @ToString.Exclude
-    private List<Transfer> senderTransferTransaction;
-
-    /**
-     * The list of receiver transfer transactions associated with the card.
-     */
-    @JsonIgnore
-    @OneToMany(mappedBy = "receiverCard", cascade = CascadeType.ALL)
-    @ToString.Exclude
-    private List<Transfer> receiverTransferTransaction;
-
-    /**
-     * Default constructor for the Card class.
-     * Sets the status of the card to default.
-     */
-    public Card() {
-        this.status = CardStatus.STATUS_CARD_DEFAULT;
-    }
+    private List<Payment> senderPayments;
 }

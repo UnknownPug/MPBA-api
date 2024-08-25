@@ -1,18 +1,22 @@
 package accounts.bank.managing.thesis.bachelor.rastvdmy.entity;
 
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.enums.UserRole;
+import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This class represents a user in the system.
@@ -23,6 +27,9 @@ import java.util.List;
 @Getter
 @ToString
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "user_profile")
 public class User implements Serializable {
 
@@ -30,15 +37,15 @@ public class User implements Serializable {
      * The id of the user.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
-    private Long id;
+    private UUID id;
 
     /**
      * The role of the user.
      */
     @Enumerated(EnumType.STRING)
-    private UserRole userRole;
+    private UserRole role;
 
     /**
      * The status of the user.
@@ -47,29 +54,27 @@ public class User implements Serializable {
     private UserStatus status;
 
     /**
-     * The visibility of the user.
-     */
-    @Enumerated(EnumType.STRING)
-    private UserVisibility visibility;
-
-    /**
      * The name of the user.
      */
+    @NotBlank(message = "Name is mandatory")
+    @Min(value = 2, message = "Name should have at least 2 characters")
     @Column(name = "name", nullable = false)
     private String name;
 
     /**
      * The surname of the user.
      */
+    @NotBlank(message = "Surname is mandatory")
+    @Size(min = 2, max = 15, message = "Surname should have at least 2 characters and at most 15 characters")
     @Column(name = "surname", nullable = false)
     private String surname;
 
     /**
      * The date of birth of the user.
      */
-    @Column(name = "date_of_birth", nullable = false)
     @DateTimeFormat(pattern = "yyyy-MM-dd", iso = DateTimeFormat.ISO.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
     /**
@@ -81,12 +86,15 @@ public class User implements Serializable {
     /**
      * The email of the user.
      */
+    @NotBlank(message = "Email is mandatory")
+    @Email(message = "Email should be valid")
     @Column(name = "email", nullable = false)
     private String email;
 
     /**
      * The password of the user.
      */
+    @NotBlank(message = "Password is mandatory")
     @Column(name = "password", nullable = false)
     private String password;
 
@@ -99,73 +107,46 @@ public class User implements Serializable {
     /**
      * The phone number of the user.
      */
+    @NotBlank(message = "Phone number is mandatory")
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
     /**
      * The currency data associated with the user.
      */
-    @JsonIgnore
     @ManyToMany
+    @JsonIgnore
     @ToString.Exclude
     private List<CurrencyData> currencyData;
 
     /**
-     * The bank loan associated with the user.
-     */
-    @JsonIgnore
-    @OneToOne(mappedBy = "userLoan", cascade = CascadeType.ALL)
-    @ToString.Exclude
-    private BankLoan bankLoan;
-
-    /**
      * The messages sent by the user.
      */
-    @JsonIgnore
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     @ToString.Exclude
     private List<Message> senderMessages;
 
     /**
      * The messages received by the user.
      */
-    @JsonIgnore
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     @ToString.Exclude
     private List<Message> receiverMessages;
 
     /**
-     * The cards associated with the user.
+     * The access tokens associated with the user.
      */
-    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     @ToString.Exclude
-    private List<Card> cards;
+    private List<AccessToken> accessTokens;
 
-    /**
-     * Default Constructor for user.
-     * Sets the user role to ROLE_USER, visibility to STATUS_ONLINE,
-     * status to STATUS_DEFAULT, and avatar to a default image.
-     * Initializes the card list.
-     */
-    public User() {
-        this.userRole = UserRole.ROLE_USER;
-        this.visibility = UserVisibility.STATUS_ONLINE;
-        this.status = UserStatus.STATUS_DEFAULT;
-        this.avatar = "https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1";
-        this.cards = new ArrayList<>();
-    }
-
-    /**
-     * Constructor for user with a specified role.
-     * Sets the user role to the specified role and visibility to STATUS_ONLINE.
-     *
-     * @param role The role of the user.
-     */
-    public User(UserRole role) {
-        this.userRole = role;
-        this.visibility = UserVisibility.STATUS_ONLINE;
-    }
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @ToString.Exclude
+    private List<BankIdentity> bankIdentities;
 
     /**
      * Encodes the password of the user.
@@ -174,12 +155,5 @@ public class User implements Serializable {
      */
     public void encodePassword(PasswordEncoder encoder) {
         this.password = encoder.encode(password);
-    }
-
-    /**
-     * Erases the password of the user.
-     */
-    public void erasePassword() {
-        this.password = null;
     }
 }

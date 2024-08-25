@@ -2,30 +2,27 @@ package accounts.bank.managing.thesis.bachelor.rastvdmy.repository;
 
 import accounts.bank.managing.thesis.bachelor.rastvdmy.entity.Card;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * This interface represents the repository for the Card entity.
  * It extends JpaRepository to provide methods to manipulate Card entities.
- * JpaRepository is a JPA specific extension of Repository which provides JPA related methods such as flushing the persistence context and deleting records in a batch.
+ * JpaRepository is a JPA specific extension of Repository
+ * that provides JPA related methods such as flushing the persistence context and deleting records in a batch.
  * It is annotated with @Repository to indicate that it's a component that directly accesses the database.
  */
 @Repository
-public interface CardRepository extends JpaRepository<Card, Long> {
+public interface CardRepository extends JpaRepository<Card, String> {
 
-    /**
-     * Finds a Card entity by its card number.
-     *
-     * @param receiverCardNumber The card number of the Card entity to find.
-     * @return The Card entity with the given card number, or null if no such entity exists.
-     */
-    Card findByCardNumber(String receiverCardNumber);
+    @Query("SELECT c FROM Card c WHERE c.account.id = :accountId")
+    List<Card> findAllByBankAccountId(UUID accountId);
 
-    /**
-     * Finds a Card entity by its associated loan ID.
-     *
-     * @param loanId The loan ID associated with the Card entity to find.
-     * @return The Card entity with the given loan ID, or null if no such entity exists.
-     */
-    Card findByCardLoanId(Long loanId);
+    Optional<Card> findByAccountIdAndId(UUID accountId, UUID id);
+
+    Optional<Card> findByAccountId(UUID id);
 }

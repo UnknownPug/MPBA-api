@@ -7,16 +7,18 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This class represents the currency data.
  * It contains the id, currency, rate, and a list of users.
  */
-@Entity
 @Getter
 @Setter
 @ToString
+@Entity
 @Table(name = "currency_data")
 public class CurrencyData implements Serializable {
 
@@ -24,9 +26,9 @@ public class CurrencyData implements Serializable {
      * The id of the currency data.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
-    private Long id;
+    private UUID id;
 
     /**
      * The currency of the currency data.
@@ -38,13 +40,13 @@ public class CurrencyData implements Serializable {
      * The rate of the currency.
      */
     @Column(name = "rate", nullable = false)
-    private Double rate;
+    private BigDecimal rate;
 
     /**
      * The list of users associated with the currency data.
      */
+    @ManyToMany(mappedBy = "currencyData")
     @JsonIgnore
     @ToString.Exclude
-    @ManyToMany(mappedBy = "currencyData")
     private List<User> users;
 }
