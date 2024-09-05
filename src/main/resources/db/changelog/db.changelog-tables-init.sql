@@ -5,12 +5,12 @@ CREATE TABLE user_profile (
     status VARCHAR(255),
     name VARCHAR(255) NOT NULL,
     surname VARCHAR(255) NOT NULL,
-    date_of_birth DATE NOT NULL,
+    date_of_birth VARCHAR(255) NOT NULL,
     country_of_origin VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     avatar VARCHAR(255) NOT NULL,
-    phone_number VARCHAR(255) NOT NULL
+    phone_number VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- Changeset Unknown:2
@@ -19,8 +19,7 @@ CREATE TABLE bank_identity (
     bank_name VARCHAR(255) NOT NULL,
     bank_number VARCHAR(255) NOT NULL,
     user_id UUID NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user_profile (id),
-    CONSTRAINT fk_bank_identity_user_profile FOREIGN KEY (user_id) REFERENCES user_profile (id)
+    FOREIGN KEY (user_id) REFERENCES user_profile (id)
 );
 
 -- Changeset Unknown:3
@@ -32,8 +31,7 @@ CREATE TABLE bank_account (
     swift VARCHAR(255) NOT NULL,
     iban VARCHAR(255) NOT NULL,
     bank_id UUID NOT NULL,
-    FOREIGN KEY (bank_id) REFERENCES bank_identity (id),
-    CONSTRAINT fk_bank_account_bank_identity FOREIGN KEY (bank_id) REFERENCES bank_identity (id)
+    FOREIGN KEY (bank_id) REFERENCES bank_identity (id)
 );
 
 -- Changeset Unknown:4
@@ -48,8 +46,7 @@ CREATE TABLE card (
     start_date DATE NOT NULL,
     expiration_date DATE NOT NULL,
     account_id UUID NOT NULL,
-    FOREIGN KEY (account_id) REFERENCES bank_account (id),
-    CONSTRAINT fk_card_bank_account FOREIGN KEY (account_id) REFERENCES bank_account (id)
+    FOREIGN KEY (account_id) REFERENCES bank_account (id)
 );
 
 -- Changeset Unknown:5
@@ -67,11 +64,8 @@ CREATE TABLE payment (
     recipient_account_id UUID,
     sender_card_id UUID,
     FOREIGN KEY (sender_account_id) REFERENCES bank_account (id),
-    CONSTRAINT fk_payment_sender_account FOREIGN KEY (sender_account_id) REFERENCES bank_account (id),
     FOREIGN KEY (recipient_account_id) REFERENCES bank_account (id),
-    CONSTRAINT fk_payment_recipient_account FOREIGN KEY (recipient_account_id) REFERENCES bank_account (id),
-    FOREIGN KEY (sender_card_id) REFERENCES card (id),
-    CONSTRAINT fk_payment_sender_card FOREIGN KEY (sender_card_id) REFERENCES card (id)
+    FOREIGN KEY (sender_card_id) REFERENCES card (id)
 );
 
 -- Changeset Unknown:6
@@ -82,9 +76,7 @@ CREATE TABLE message (
     sender_id UUID,
     receiver_id UUID,
     FOREIGN KEY (sender_id) REFERENCES user_profile (id),
-    CONSTRAINT fk_message_sender FOREIGN KEY (sender_id) REFERENCES user_profile (id),
-    FOREIGN KEY (receiver_id) REFERENCES user_profile (id),
-    CONSTRAINT fk_message_receiver FOREIGN KEY (receiver_id) REFERENCES user_profile (id)
+    FOREIGN KEY (receiver_id) REFERENCES user_profile (id)
 );
 
 -- Changeset Unknown:7
@@ -98,22 +90,16 @@ CREATE TABLE currency_data (
 CREATE TABLE access_token (
     id UUID PRIMARY KEY,
     token VARCHAR(1024) NOT NULL,
-    expiration_date DATE,
+    expiration_date TIMESTAMP NOT NULL,
     user_id UUID NOT NULL,
-    bank_id UUID,
-    FOREIGN KEY (user_id) REFERENCES user_profile (id),
-    CONSTRAINT fk_access_token_user_profile FOREIGN KEY (user_id) REFERENCES user_profile (id),
-    FOREIGN KEY (bank_id) REFERENCES bank_identity (id),
-    CONSTRAINT fk_access_token_bank_identity FOREIGN KEY (bank_id) REFERENCES bank_identity (id)
+    FOREIGN KEY (user_id) REFERENCES user_profile (id)
 );
 
 -- Changeset Unknown:9
-CREATE TABLE user_currency (
-    user_id UUID,
+CREATE TABLE user_profile_currency_data (
+    users_id UUID,
     currency_data_id UUID,
-    PRIMARY KEY (user_id, currency_data_id),
-    FOREIGN KEY (user_id) REFERENCES user_profile (id),
-    CONSTRAINT fk_user_currency_user_profile FOREIGN KEY (user_id) REFERENCES user_profile (id),
-    FOREIGN KEY (currency_data_id) REFERENCES currency_data (id),
-    CONSTRAINT fk_user_currency_currency_data FOREIGN KEY (currency_data_id) REFERENCES currency_data (id)
+    PRIMARY KEY (users_id, currency_data_id),
+    FOREIGN KEY (users_id) REFERENCES user_profile (id),
+    FOREIGN KEY (currency_data_id) REFERENCES currency_data (id)
 );

@@ -4,18 +4,20 @@ server:
     whitelabel:
       enabled: true
 spring:
+  application:
+    name: mpba-api
   datasource:
-    password: # enter your password here
-    username: # enter your username here
-    url: # enter your url here
+    username: postgres
+    password: postgres
+    url: jdbc:postgresql://localhost:5432/postgres
   jpa:
     hibernate:
       ddl-auto: none
     open-in-view: false
   security:
     user:
-      name: # enter your username here
-      password: # enter your password here
+      name: postgres
+      password: postgres
   mvc:
     servlet:
       path: /
@@ -24,14 +26,13 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yml
     default-schema: public
-    url: # enter you database url here
-    user: # enter your database username here
-    password: # enter your database password here
+    user: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/postgres
 api:
-  key: # enter your api key here
+  key: 2d03edf7aa4c0318731708ae
 security:
   jwt:
-    # plain text: cvutfelsit2025, key: dmitriyrastvorov
-    secret-key: # enter your secret key here
+    secret-key: 7d9e1b591dfcbcf28483189062bf531ad8a06702062601784c7f1f6e75566b78
     expiration-time: 3600000
