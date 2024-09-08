@@ -11,17 +11,16 @@ import api.mpba.rastvdmy.repository.UserRepository;
 import api.mpba.rastvdmy.service.BankAccountService;
 import api.mpba.rastvdmy.service.BankIdentityService;
 import api.mpba.rastvdmy.service.JwtService;
-import api.mpba.rastvdmy.service.component.Generator;
+import api.mpba.rastvdmy.service.component.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
 @Service
-public class BankIdentityServiceImpl extends Generator implements BankIdentityService {
+public class BankIdentityServiceImpl extends FinancialDataGenerator implements BankIdentityService {
     private final BankIdentityRepository identityRepository;
     private final UserRepository userRepository;
     private final JwtService jwtService;
@@ -29,11 +28,9 @@ public class BankIdentityServiceImpl extends Generator implements BankIdentitySe
 
     @Autowired
     public BankIdentityServiceImpl(BankIdentityRepository identityRepository,
-                                   RestTemplate restTemplate,
                                    UserRepository userRepository,
                                    JwtService jwtService,
                                    BankAccountService accountService) {
-        super(restTemplate);
         this.identityRepository = identityRepository;
         this.userRepository = userRepository;
         this.jwtService = jwtService;

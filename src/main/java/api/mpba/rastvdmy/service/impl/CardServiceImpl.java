@@ -14,12 +14,11 @@ import api.mpba.rastvdmy.repository.BankIdentityRepository;
 import api.mpba.rastvdmy.repository.CardRepository;
 import api.mpba.rastvdmy.service.CardService;
 import api.mpba.rastvdmy.service.JwtService;
-import api.mpba.rastvdmy.service.component.Generator;
+import api.mpba.rastvdmy.service.component.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.SecretKey;
 import java.time.LocalDate;
@@ -29,7 +28,7 @@ import java.util.stream.IntStream;
 import static api.mpba.rastvdmy.entity.enums.CardStatus.*;
 
 @Service
-public class CardServiceImpl extends Generator implements CardService {
+public class CardServiceImpl extends FinancialDataGenerator implements CardService {
     public static final int MAX_AVAILABLE_CARDS = 3;
     public static final int MIN_AVAILABLE_CARDS = 1;
     private final CardRepository cardRepository;
@@ -39,10 +38,8 @@ public class CardServiceImpl extends Generator implements CardService {
 
     @Autowired
     public CardServiceImpl(CardRepository cardRepository,
-                           RestTemplate restTemplate,
                            BankIdentityRepository bankIdentityRepository,
                            BankAccountRepository bankAccountRepository, JwtService jwtService) {
-        super(restTemplate);
         this.cardRepository = cardRepository;
         this.bankIdentityRepository = bankIdentityRepository;
         this.bankAccountRepository = bankAccountRepository;

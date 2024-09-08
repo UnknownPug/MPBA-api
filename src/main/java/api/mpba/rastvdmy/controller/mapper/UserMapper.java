@@ -18,11 +18,12 @@ public interface UserMapper {
      */
     @Mapping(target = "name", source = "name")
     @Mapping(target = "surname", source = "surname")
-    @Mapping(target = "dateOfBirth", source = "dateOfBirth")
+    @Mapping(target = "dateOfBirth", source = "dateOfBirth", dateFormat = "yyyy-MM-dd")
     @Mapping(target = "countryOfOrigin", source = "countryOfOrigin")
     @Mapping(target = "email", source = "email")
     @Mapping(target = "password", source = "password")
     @Mapping(target = "phoneNumber", source = "phoneNumber")
+
     UserRequest toRequest(UserResponse userResponse);
 
     /**
@@ -37,5 +38,6 @@ public interface UserMapper {
     @Mapping(target = "email", source = "email")
     @Mapping(target = "password", source = "password")
     @Mapping(target = "phoneNumber", source = "phoneNumber")
+    @Mapping(target = "avatar", source = "avatar")
     UserResponse toResponse(UserRequest userRequest);
 }

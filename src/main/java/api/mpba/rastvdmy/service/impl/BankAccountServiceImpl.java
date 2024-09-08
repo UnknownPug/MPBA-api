@@ -9,12 +9,11 @@ import api.mpba.rastvdmy.repository.BankIdentityRepository;
 import api.mpba.rastvdmy.service.BankAccountService;
 import api.mpba.rastvdmy.service.CardService;
 import api.mpba.rastvdmy.service.JwtService;
-import api.mpba.rastvdmy.service.component.Generator;
+import api.mpba.rastvdmy.service.component.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -23,7 +22,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Service
-public class BankAccountServiceImpl extends Generator implements BankAccountService {
+public class BankAccountServiceImpl extends FinancialDataGenerator implements BankAccountService {
     private static final int MIN_BALANCE = 100;
     private static final int MAX_BALANCE = 10000;
     private static final int MAX_AVAILABLE_ACCOUNTS = 4;
@@ -35,11 +34,9 @@ public class BankAccountServiceImpl extends Generator implements BankAccountServ
 
     @Autowired
     public BankAccountServiceImpl(BankAccountRepository accountRepository,
-                                  RestTemplate restTemplate,
                                   BankIdentityRepository bankIdentityRepository,
                                   JwtService jwtService,
                                   CardService cardService) {
-        super(restTemplate);
         this.accountRepository = accountRepository;
         this.bankIdentityRepository = bankIdentityRepository;
         this.jwtService = jwtService;

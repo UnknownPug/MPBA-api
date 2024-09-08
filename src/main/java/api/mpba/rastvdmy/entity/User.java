@@ -96,7 +96,7 @@ public class User implements UserDetails, Serializable {
     @ToString.Exclude
     private List<AccessToken> accessTokens;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonIgnore
     @ToString.Exclude
     private List<BankIdentity> bankIdentities;

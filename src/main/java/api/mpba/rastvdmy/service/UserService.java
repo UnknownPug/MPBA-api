@@ -1,15 +1,16 @@
 package api.mpba.rastvdmy.service;
 
-import api.mpba.rastvdmy.dto.request.UserRequest;
+import api.mpba.rastvdmy.dto.request.AdminUpdateUserRequest;
+import api.mpba.rastvdmy.dto.request.UserUpdateRequest;
 import api.mpba.rastvdmy.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Service for managing users
@@ -32,31 +33,25 @@ public interface UserService {
 
     User getUser(HttpServletRequest request);
 
-    User getUserById(UUID id);
+    User getUserByEmail(String email);
 
-    User updateUser(HttpServletRequest request, UserRequest userRequest) throws Exception;
+    User updateUser(HttpServletRequest request, UserUpdateRequest userRequest) throws Exception;
+
+    User updateUserSpecificCredentials(String email, @Valid AdminUpdateUserRequest userRequest);
 
     void uploadUserAvatar(HttpServletRequest request, MultipartFile userAvatar);
 
-    /**
-     * Remove user avatar
-     */
     void removeUserAvatar(HttpServletRequest request);
 
-    void updateUserRole(UUID id);
+    void updateUserRole(HttpServletRequest request, String email);
 
-    void updateUserStatus(UUID id, String status);
+    void updateUserStatus(HttpServletRequest request, String email);
 
-    /**
-     * Delete user
-     */
     void deleteUser(HttpServletRequest request);
 
-    void deleteUserById(UUID id);
+    void deleteUserById(HttpServletRequest request, String email);
 
-    /**
-     * Get user details service
-     * @return user details service
-     */
     UserDetailsService userDetailsService();
+
+    String generateToken(User user);
 }

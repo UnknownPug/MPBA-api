@@ -1,8 +1,11 @@
 package api.mpba.rastvdmy.controller;
 
 import api.mpba.rastvdmy.controller.mapper.UserMapper;
+import api.mpba.rastvdmy.dto.request.AdminUpdateUserRequest;
 import api.mpba.rastvdmy.dto.request.UserRequest;
+import api.mpba.rastvdmy.dto.request.UserUpdateRequest;
 import api.mpba.rastvdmy.dto.response.UserResponse;
+import api.mpba.rastvdmy.dto.response.UserTokenResponse;
 import api.mpba.rastvdmy.entity.User;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.service.UserService;
@@ -22,8 +25,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
+
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -53,7 +56,8 @@ public class UserController {
                         user.getCountryOrigin(),
                         user.getEmail(),
                         user.getPassword(),
-                        user.getPhoneNumber()))
+                        user.getPhoneNumber(),
+                        user.getAvatar()))
         ).toList();
         return ResponseEntity.ok(userResponses);
     }
@@ -86,7 +90,8 @@ public class UserController {
                         user.getCountryOrigin(),
                         user.getEmail(),
                         user.getPassword(),
-                        user.getPhoneNumber()))
+                        user.getPhoneNumber(),
+                        user.getAvatar()))
         );
         return ResponseEntity.ok(userResponses);
     }
@@ -113,7 +118,8 @@ public class UserController {
                         user.getCountryOrigin(),
                         user.getEmail(),
                         user.getPassword(),
-                        user.getPhoneNumber()
+                        user.getPhoneNumber(),
+                        user.getAvatar()
                 )
         );
         return ResponseEntity.ok(userResponse);
@@ -121,10 +127,10 @@ public class UserController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path = "/{id}", produces = "application/json")
-    public ResponseEntity<UserResponse> getUserInfo(@PathVariable("id") UUID id) {
+    @GetMapping(path = "/{email}", produces = "application/json")
+    public ResponseEntity<UserResponse> getUserInfo(@PathVariable("email") String email) {
         logInfo("Getting user info ...");
-        User user = userService.getUserById(id);
+        User user = userService.getUserByEmail(email);
         UserResponse userResponse = userMapper.toResponse(
                 new UserRequest(
                         user.getName(),
@@ -133,67 +139,84 @@ public class UserController {
                         user.getCountryOrigin(),
                         user.getEmail(),
                         user.getPassword(),
-                        user.getPhoneNumber()
+                        user.getPhoneNumber(),
+                        user.getAvatar()
                 )
         );
         return ResponseEntity.ok(userResponse);
     }
 
     @PreAuthorize("hasRole('ROLE_DEFAULT')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.OK)
     @PatchMapping(path = "/me", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<UserResponse> updateUser(HttpServletRequest request,
-                                                   @Valid @RequestBody UserRequest userRequest) throws Exception {
-        logInfo("Updating user: {} ...", userRequest.name());
-        User user = userService.updateUser(request, userRequest);
-        UserResponse userResponse = userMapper.toResponse(
-                new UserRequest(
-                        user.getName(),
-                        user.getSurname(),
-                        user.getDateOfBirth(),
-                        user.getCountryOrigin(),
-                        user.getEmail(),
-                        user.getPassword(),
-                        user.getPhoneNumber()
-                )
-        );
-        return ResponseEntity.ok(userResponse);
+    public ResponseEntity<UserTokenResponse> updateUser(HttpServletRequest request,
+                                                        @Valid @RequestBody
+                                                        UserUpdateRequest updateRequest) throws Exception {
+        logInfo("Updating user data ...");
+        User user = userService.updateUser(request, updateRequest);
+        return generateUserTokenResponse(user);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping(path = "/{email}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<UserTokenResponse> updateUserSpecificCredentials(@PathVariable("email") String email,
+                                                                           @Valid @RequestBody
+                                                                           AdminUpdateUserRequest updateRequest) {
+        logInfo("Updating specific user credentials ...");
+        User user = userService.updateUserSpecificCredentials(email, updateRequest);
+        return generateUserTokenResponse(user);
     }
 
     @PreAuthorize("hasRole('ROLE_DEFAULT')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PatchMapping(path = "/me/avatar", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Void> manageUserAvatar(HttpServletRequest request,
-                                                 @RequestParam("action") String action,
-                                                 @RequestBody(required = false) MultipartFile userAvatar) {
-        if ("upload".equalsIgnoreCase(action)) {
-            logInfo("Uploading user avatar...");
-            userService.uploadUserAvatar(request, userAvatar);
-        } else if ("remove".equalsIgnoreCase(action)) {
-            logInfo("Deleting user avatar...");
-            userService.removeUserAvatar(request);
-        } else {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid action specified.");
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping(path = "/me/avatar", consumes = "multipart/form-data", produces = "application/json")
+    public ResponseEntity<UserTokenResponse> manageUserAvatar(HttpServletRequest request,
+                                                              @RequestParam("action") String action,
+                                                              @RequestParam(value = "user_avatar", required = false)
+                                                              MultipartFile userAvatar) {
+        handleUserAvatarAction(request, action, userAvatar);
+        User user = userService.getUser(request);
+        return generateUserTokenResponse(user);
+    }
+
+    private ResponseEntity<UserTokenResponse> generateUserTokenResponse(User user) {
+        String token = userService.generateToken(user);
+        UserTokenResponse userResponse = new UserTokenResponse(token);
+        return ResponseEntity.ok(userResponse);
+    }
+
+    private void handleUserAvatarAction(HttpServletRequest request, String action, MultipartFile userAvatar) {
+        switch (action.toLowerCase()) {
+            case "upload" -> {
+                logInfo("Uploading user avatar...");
+                userService.uploadUserAvatar(request, userAvatar);
+            }
+            case "remove" -> {
+                logInfo("Deleting user avatar...");
+                userService.removeUserAvatar(request);
+            }
+            default -> throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid action specified.");
         }
-        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PatchMapping(path = "/role/{id}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Void> updateUserRole(@PathVariable(value = "id") UUID id) {
-        logInfo("Granting user new role ...");
-        userService.updateUserRole(id);
-        return ResponseEntity.noContent().build();
+    @PatchMapping(path = "/role/{email}", produces = "application/json")
+    public ResponseEntity<Void> updateUserRole(HttpServletRequest request,
+                                                            @PathVariable("email") String email) {
+            logInfo("Updating user role ...");
+            userService.updateUserRole(request, email);
+            return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PatchMapping(path = "/status/{id}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Void> updateUserStatus(@PathVariable("id") UUID id,
-                                                 @RequestParam(value = "status") String status) {
-        logInfo("Updating user status to: {} ...", status);
-        userService.updateUserStatus(id, status);
+    @PatchMapping(path = "/status/{email}", produces = "application/json")
+    public ResponseEntity<Void> updateUserStatus(HttpServletRequest request,
+                                                 @PathVariable("email") String email) {
+        logInfo("Updating user status ...");
+        userService.updateUserStatus(request, email);
         return ResponseEntity.noContent().build();
     }
 
@@ -208,10 +231,10 @@ public class UserController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping(path = "/{id}")
-    public ResponseEntity<Void> deleteUserProfile(@PathVariable("id") UUID id) {
+    @DeleteMapping(path = "/{email}")
+    public ResponseEntity<Void> deleteUserProfile(HttpServletRequest request, @PathVariable("email") String email) {
         logInfo("Deleting user ...");
-        userService.deleteUserById(id);
+        userService.deleteUserById(request, email);
         return ResponseEntity.noContent().build();
     }
 
