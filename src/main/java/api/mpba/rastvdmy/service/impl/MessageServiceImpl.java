@@ -11,13 +11,17 @@ import api.mpba.rastvdmy.repository.UserRepository;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
+@Slf4j
 @Service
 public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
@@ -31,17 +35,11 @@ public class MessageServiceImpl implements MessageService {
         this.jwtService = jwtService;
     }
 
-    public List<Message> getMessages(HttpServletRequest request, String username) {
-        User sender = getSender(request);
-        return messageRepository.findAllBySenderIdAndReceiverName(sender.getId(), username);
-    }
+    public List<Message> getMessages() {
+    return messageRepository.findAll();
+}
 
-    public Message getMessageByContent(HttpServletRequest request, String content) {
-        User sender = getSender(request);
-        return messageRepository.findBySenderIdAndContent(sender.getId(), content);
-    }
-
-    public Message sendMessageById(HttpServletRequest request, String receiverName, String content) throws Exception {
+    public Message sendMessage(HttpServletRequest request, String receiverEmail, String content) throws Exception {
         User sender = getSender(request);
 
         if (content.isEmpty()) {
@@ -51,20 +49,27 @@ public class MessageServiceImpl implements MessageService {
 
         String encryptedContent = EncryptionUtil.encrypt(content, secretKey, EncryptionUtil.generateIv());
 
+
+        User receiver = userRepository.findByEmail(receiverEmail).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified receiver not found.")
+        );
+
         Message message = Message.builder()
-                        .sender(sender)
-                        .receiver(userRepository.findByName(receiverName))
-                        .content(encryptedContent)
-                        .build();
+                .id(UUID.randomUUID())
+                .sender(sender)
+                .receiver(receiver)
+                .timestamp(LocalDateTime.now())
+                .content(encryptedContent)
+                .build();
 
         return messageRepository.save(message);
     }
 
     private User getSender(HttpServletRequest request) {
         final String token = jwtService.extractToken(request);
-        final String senderId = jwtService.extractSubject(token); //FIXME: Don't forget that this is users' email!
+        final String senderEmail = jwtService.extractSubject(token);
 
-        User sender = userRepository.findById(senderId).orElseThrow(
+        User sender = userRepository.findByEmail(senderEmail).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified sender not found.")
         );
 

@@ -23,7 +23,6 @@ public interface UserMapper {
     @Mapping(target = "email", source = "email")
     @Mapping(target = "password", source = "password")
     @Mapping(target = "phoneNumber", source = "phoneNumber")
-
     UserRequest toRequest(UserResponse userResponse);
 
     /**

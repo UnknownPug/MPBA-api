@@ -14,14 +14,7 @@ public interface MessageService {
      * Get all messages
      * @return list of messages
      */
-    List<Message> getMessages(HttpServletRequest request, String username);
+    List<Message> getMessages();
 
-    /**
-     * Get a message by content
-     * @param content content of the message
-     * @return message
-     */
-    Message getMessageByContent(HttpServletRequest request, String content);
-
-    Message sendMessageById(HttpServletRequest request, String receiverName, String content) throws Exception;
+    Message sendMessage(HttpServletRequest request, String receiverName, String content) throws Exception;
 }

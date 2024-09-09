@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,28 +51,15 @@ public class MessageController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = "application/json")
-    public ResponseEntity<List<MessageResponse>> getMessages(HttpServletRequest request, @RequestBody String username) {
+    public ResponseEntity<List<MessageResponse>> getMessages() {
         logInfo("Getting messages ...");
-        List<Message> messages = messageService.getMessages(request, username);
+        List<Message> messages = messageService.getMessages();
         List<MessageResponse> messagesResponses = messages.stream()
                 .map(message -> messageMapper.toResponse(
-                        new MessageRequest(message.getReceiver().getName(), message.getContent()))
-                ).collect(Collectors.toList());
+                        new MessageRequest(message.getReceiver().getEmail(), message.getContent(), message.getSender().getEmail())
+                )).collect(Collectors.toList());
         return ResponseEntity.ok(messagesResponses);
     }
-
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path = "/content", produces = "application/json")
-    public ResponseEntity<MessageRequest> getMessage(HttpServletRequest request,
-                                                     @Valid @RequestBody MessageRequest messageRequest) {
-        logInfo("Getting message by text ...");
-        Message message = messageService.getMessageByContent(request, messageRequest.content());
-        MessageResponse messageResponse = messageMapper.toResponse(
-                new MessageRequest(message.getReceiver().getName(), message.getContent())
-        );
-        return ResponseEntity.ok(messageMapper.toRequest(messageResponse));
-    }
-
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(consumes = "application/json", produces = "application/json")
@@ -79,13 +67,13 @@ public class MessageController {
             HttpServletRequest request, @Valid @RequestBody MessageRequest messageRequest) throws Exception {
         logInfo("Sending message ...");
 
-        kafkaTemplate.send("messages", messageRequest.receiverName(), messageRequest.content());
+        kafkaTemplate.send("messages", messageRequest.receiverEmail(), messageRequest.content());
 
-        Message message = messageService.sendMessageById(request, messageRequest.receiverName(),
+        Message message = messageService.sendMessage(request, messageRequest.receiverEmail(),
                 messageRequest.content());
 
         MessageResponse response = messageMapper.toResponse(
-                new MessageRequest(message.getReceiver().getName(), message.getContent())
+                new MessageRequest(message.getReceiver().getEmail(), message.getContent(), message.getSender().getEmail())
         );
         return ResponseEntity.accepted().body(response);
     }

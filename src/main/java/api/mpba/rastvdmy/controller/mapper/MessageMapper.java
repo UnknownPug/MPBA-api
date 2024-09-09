@@ -16,8 +16,9 @@ public interface MessageMapper {
      * @param messageResponse MessageResponse
      * @return MessageRequest
      */
-    @Mapping(target = "receiverName", source = "receiverName")
+    @Mapping(target = "receiverEmail", source = "receiverEmail")
     @Mapping(target = "content", source = "content")
+    @Mapping(target = "senderEmail", ignore = true)
     MessageRequest toRequest(MessageResponse messageResponse);
 
     /**
@@ -25,7 +26,8 @@ public interface MessageMapper {
      * @param messageRequest MessageRequest
      * @return MessageResponse
      */
-    @Mapping(target = "receiverName", source = "receiverName")
+    @Mapping(target = "receiverEmail", source = "receiverEmail")
     @Mapping(target = "content", source = "content")
+    @Mapping(target = "senderEmail", source = "senderEmail")
     MessageResponse toResponse(MessageRequest messageRequest);
 }
