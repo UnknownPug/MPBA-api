@@ -1,7 +1,6 @@
 package api.mpba.rastvdmy.service.impl;
 
 import api.mpba.rastvdmy.dto.request.BankIdentityRequest;
-import api.mpba.rastvdmy.entity.BankAccount;
 import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.entity.User;
 import api.mpba.rastvdmy.entity.enums.UserStatus;
@@ -11,14 +10,18 @@ import api.mpba.rastvdmy.repository.UserRepository;
 import api.mpba.rastvdmy.service.BankAccountService;
 import api.mpba.rastvdmy.service.BankIdentityService;
 import api.mpba.rastvdmy.service.JwtService;
-import api.mpba.rastvdmy.service.component.FinancialDataGenerator;
+import api.mpba.rastvdmy.service.utils.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
+@Slf4j
 @Service
 public class BankIdentityServiceImpl extends FinancialDataGenerator implements BankIdentityService {
     private final BankIdentityRepository identityRepository;
@@ -38,62 +41,74 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
     }
 
     public List<BankIdentity> getBanks(HttpServletRequest request) {
-        final String token = jwtService.extractToken(request);
-        final String userId = jwtService.extractSubject(token); //FIXME: Don't forget that this is users' email!
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found."));
-        return identityRepository.findAllByUserId(user.getId());
+        User user = getUser(request);
+        return identityRepository.findAllByUserId(user.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User doesn't have any connected bank accounts.")
+        );
     }
 
-    public BankIdentity getBank(HttpServletRequest request) {
-        final String token = jwtService.extractToken(request);
-        final String bankId = jwtService.extractSubject(token); //FIXME: Don't forget that this is users' email!
-        return identityRepository.findById(bankId)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested bank not found."));
+    public BankIdentity getBankByName(HttpServletRequest request, String name) {
+        User user = getUser(request);
+        return identityRepository.findByNameAndConnectedToUserId(name, user.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User doesn't have this specific bank."));
     }
 
-    public BankIdentity addBank(HttpServletRequest request, BankIdentityRequest identityRequest) {
-        final String token = jwtService.extractToken(request);
-        final String userId = jwtService.extractSubject(token); //FIXME: Don't forget that this is users' email!
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found."));
-
-        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
-            throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked, operation is not available.");
-        }
-
-        if (identityRepository.findByBankName(identityRequest.bankName()) != null) {
-            throw new ApplicationException(HttpStatus.CONFLICT, "Bank with the same name already added.");
-        }
+    @Transactional
+    public BankIdentity addBank(HttpServletRequest request, BankIdentityRequest identityRequest) throws Exception {
+        User user = validateUserData(request, identityRequest);
 
         BankIdentity bankIdentity = BankIdentity.builder()
+                .id(UUID.randomUUID())
                 .bankName(identityRequest.bankName())
                 .bankNumber(generateBankNumber())
                 .user(user)
                 .build();
 
+        bankIdentity = identityRepository.save(bankIdentity);
 
-        List<BankAccount> accounts = accountService.generateAccounts(bankIdentity);
-        bankIdentity.setBankAccounts(accounts);
-
-        return identityRepository.save(bankIdentity);
+        accountService.connectAccounts(bankIdentity); // Calling Bank Account Service ...
+        return bankIdentity;
     }
 
-    public void deleteBank(HttpServletRequest request) {
-        final String token = jwtService.extractToken(request);
-        final String bankId = jwtService.extractSubject(token); //FIXME: Don't forget that this is users' email!
-        BankIdentity bankIdentity = identityRepository.findById(bankId)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested bank not found."));
+    private User validateUserData(HttpServletRequest request, BankIdentityRequest identityRequest) {
+        User user = getUser(request);
+
+        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked, operation is not available.");
+        }
+        if (identityRepository.findByUserIdAndBankName(user.getId(), identityRequest.bankName()).isPresent()) {
+            throw new ApplicationException(HttpStatus.CONFLICT, "Bank with the same name already added.");
+        }
+        return user;
+    }
+
+    public void deleteBank(HttpServletRequest request, String bankName) {
+        User user = getUser(request);
+
+        BankIdentity bankIdentity = identityRepository.findByUserIdAndBankName(user.getId(), bankName).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND,
+                        "User is not found or bank with the given name is not connected to the user."
+                )
+        );
 
         if (bankIdentity.getUser().getStatus() == UserStatus.STATUS_BLOCKED) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked, operation is not available.");
         }
 
         if (!bankIdentity.getBankAccounts().isEmpty()) {
+            log.debug("Bank accounts are not empty, deleting all bank accounts first.");
+            log.debug("Bank accounts: {}", bankIdentity.getBankAccounts());
             throw new ApplicationException(HttpStatus.CONFLICT, "Make sure to delete all bank accounts first.");
         }
+        log.debug("Deleting bank identity: {}", bankIdentity);
 
         identityRepository.delete(bankIdentity);
+    }
+
+    private User getUser(HttpServletRequest request) {
+        final String token = jwtService.extractToken(request);
+        final String userEmail = jwtService.extractSubject(token);
+        return userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found."));
     }
 }

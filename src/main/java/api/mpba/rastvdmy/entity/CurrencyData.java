@@ -30,15 +30,9 @@ public class CurrencyData implements Serializable {
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    /**
-     * The currency of the currency data.
-     */
     @Column(name = "currency", nullable = false)
     private String currency;
 
-    /**
-     * The rate of the currency.
-     */
     @Column(name = "rate", nullable = false)
     private BigDecimal rate;
 

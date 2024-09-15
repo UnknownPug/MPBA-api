@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface BankAccountRepository extends JpaRepository<BankAccount, String> {
+public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> {
 
     List<BankAccount> findAllByBankIdentityId(UUID bankIdentityId);
 
@@ -17,5 +17,6 @@ public interface BankAccountRepository extends JpaRepository<BankAccount, String
 
     Optional<BankAccount> findByBankIdentityId(UUID id);
 
-    Optional<BankAccount> findByAccountNumber(String recipientNumber);
+    // FIXME: account number will be encoded. Use Account id instead!
+    Optional<BankAccount> findByAccountNumber(String accountNumber);
 }

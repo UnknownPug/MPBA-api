@@ -16,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,16 +42,22 @@ public class BankIdentityController {
         List<BankIdentity> identities = identityService.getBanks(request);
         List<BankIdentityResponse> response = identities.stream()
                 .map(identity -> identityMapper.toResponse(
-                        new BankIdentityRequest(identity.getBankName()))).collect(Collectors.toList());
+                        new BankIdentityRequest(
+                                identity.getBankName(),
+                                identity.getBankNumber())
+                )).collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path = "/me", produces = "application/json")
-    public ResponseEntity<BankIdentityResponse> getBank(HttpServletRequest request) {
+    @GetMapping(path = "/{name}", produces = "application/json")
+    public ResponseEntity<BankIdentityResponse> getBank(HttpServletRequest request, @PathVariable("name") String name) {
         logInfo("Getting bank info ...");
-        BankIdentity identity = identityService.getBank(request);
-        BankIdentityResponse response = identityMapper.toResponse(new BankIdentityRequest(identity.getBankName()));
+        BankIdentity identity = identityService.getBankByName(request, name);
+        BankIdentityResponse response = identityMapper.toResponse(new BankIdentityRequest(
+                identity.getBankName(),
+                identity.getBankNumber())
+        );
         return ResponseEntity.ok(response);
     }
 
@@ -58,18 +65,22 @@ public class BankIdentityController {
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<BankIdentityResponse> addBank(
             HttpServletRequest request,
-            @Valid @RequestBody BankIdentityRequest identityRequest) {
+            @Valid @RequestBody BankIdentityRequest identityRequest) throws Exception {
         logInfo("Connecting to the bank API to add bank ...");
         BankIdentity identity = identityService.addBank(request, identityRequest);
-        BankIdentityResponse response = identityMapper.toResponse(new BankIdentityRequest(identity.getBankName()));
+        BankIdentityResponse response = identityMapper.toResponse(new BankIdentityRequest(
+                identity.getBankName(),
+                identity.getBankNumber())
+        );
         return ResponseEntity.accepted().body(response);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping(path = "/me")
-    public ResponseEntity<Void> removeMyBank(HttpServletRequest request) {
+    @DeleteMapping(path = "/me/{name}")
+    public ResponseEntity<Void> removeMyBank(HttpServletRequest request,
+                                             @PathVariable("name") String bankName) {
         logInfo("Removing bank identity ...");
-        identityService.deleteBank(request);
+        identityService.deleteBank(request, bankName);
         return ResponseEntity.noContent().build();
     }
 

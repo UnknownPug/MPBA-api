@@ -1,4 +1,4 @@
-package api.mpba.rastvdmy.service.component;
+package api.mpba.rastvdmy.service.utils;
 
 public enum PurchaseCategory {
     GROCERIES("GROCERIES"),

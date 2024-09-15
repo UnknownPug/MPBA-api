@@ -17,6 +17,7 @@ public interface BankIdentityMapper {
      * @return BankIdentityRequest
      */
     @Mapping(target = "bankName", source = "bankName")
+    @Mapping(target = "bankNumber", source = "bankNumber")
     BankIdentityRequest toRequest(BankIdentityResponse bankIdentityResponse);
 
     /**
@@ -25,5 +26,6 @@ public interface BankIdentityMapper {
      * @return BankIdentityResponse
      */
     @Mapping(target = "bankName", source = "bankName")
+    @Mapping(target = "bankNumber", source = "bankNumber")
     BankIdentityResponse toResponse(BankIdentityRequest bankIdentityRequest);
 }

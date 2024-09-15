@@ -20,9 +20,9 @@ public interface BankAccountService {
 
     Map<String, BigDecimal> getTotalBalance();
 
-    BankAccount addAccount(HttpServletRequest request);
+    BankAccount addAccount(HttpServletRequest request) throws Exception;
 
-    List<BankAccount> generateAccounts(BankIdentity bankIdentity);
+    void connectAccounts(BankIdentity bankIdentity) throws Exception;
 
     void removeAccount(UUID accountId, HttpServletRequest request);
 

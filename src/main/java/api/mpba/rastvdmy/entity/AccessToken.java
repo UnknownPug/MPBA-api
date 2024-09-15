@@ -24,19 +24,12 @@ public class AccessToken implements Serializable {
      * The id of the access token.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    /**
-     * The token of the access token.
-     */
     @Column(name = "token", nullable = false)
     private String token;
 
-    /**
-     * The expiration date of the access token.
-     */
     @DateTimeFormat(pattern = "yyyy-MM-dd", iso = DateTimeFormat.ISO.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "expiration_date", nullable = false)

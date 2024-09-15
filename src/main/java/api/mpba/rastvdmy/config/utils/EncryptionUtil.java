@@ -43,6 +43,13 @@ public class EncryptionUtil {
         return Base64.getEncoder().encodeToString(encryptedData);
     }
 
+    public static String decrypt(String encryptedData, SecretKey key, IvParameterSpec iv) throws Exception {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, key, iv);
+        byte[] decryptedData = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
+        return new String(decryptedData);
+    }
+
     public static IvParameterSpec generateIv() {
         byte[] iv = new byte[16];
         new SecureRandom().nextBytes(iv);

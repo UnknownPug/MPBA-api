@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -29,21 +28,13 @@ public class Message implements Serializable {
      * The id of the message.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    /**
-     * The content of the message.
-     */
-    @NotBlank(message = "Content is mandatory")
     @Size(min = 1, max = 255, message = "Message content must be between 1 and 255 characters")
     @Column(name = "content", nullable = false)
     private String content;
 
-    /**
-     * The timestamp of when the message was sent.
-     */
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm", iso = DateTimeFormat.ISO.DATE_TIME)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     @Column(name = "timestamp", nullable = false)

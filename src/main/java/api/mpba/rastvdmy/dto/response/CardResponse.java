@@ -1,5 +1,7 @@
 package api.mpba.rastvdmy.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDate;
 
 /**
@@ -9,13 +11,16 @@ import java.time.LocalDate;
  * @param pin The pin of the card.
  */
 public record CardResponse(
+        @JsonProperty("card_number")
         String cardNumber,
 
         String cvv,
 
         String pin,
 
+        @JsonProperty("start_date")
         LocalDate startDate,
 
+        @JsonProperty("expiration_date")
         LocalDate expirationDate
 ) {}

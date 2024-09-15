@@ -1,4 +1,4 @@
-package api.mpba.rastvdmy.service.component;
+package api.mpba.rastvdmy.service.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

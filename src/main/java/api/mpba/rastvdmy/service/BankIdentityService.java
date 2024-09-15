@@ -13,10 +13,9 @@ public interface BankIdentityService {
 
     List<BankIdentity> getBanks(HttpServletRequest request);
 
-    BankIdentity getBank(HttpServletRequest request);
+    BankIdentity getBankByName(HttpServletRequest request, String name);
 
+    BankIdentity addBank(HttpServletRequest request, BankIdentityRequest identityRequest) throws Exception;
 
-    BankIdentity addBank(HttpServletRequest request, BankIdentityRequest identityRequest);
-
-    void deleteBank(HttpServletRequest request);
+    void deleteBank(HttpServletRequest request, String bankName);
 }

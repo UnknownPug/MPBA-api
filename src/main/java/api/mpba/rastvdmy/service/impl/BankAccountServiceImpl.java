@@ -1,25 +1,28 @@
 package api.mpba.rastvdmy.service.impl;
 
+import api.mpba.rastvdmy.config.utils.EncryptionUtil;
 import api.mpba.rastvdmy.entity.BankAccount;
 import api.mpba.rastvdmy.entity.BankIdentity;
+import api.mpba.rastvdmy.entity.User;
 import api.mpba.rastvdmy.entity.enums.Currency;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.BankAccountRepository;
 import api.mpba.rastvdmy.repository.BankIdentityRepository;
+import api.mpba.rastvdmy.repository.UserRepository;
 import api.mpba.rastvdmy.service.BankAccountService;
 import api.mpba.rastvdmy.service.CardService;
 import api.mpba.rastvdmy.service.JwtService;
-import api.mpba.rastvdmy.service.component.FinancialDataGenerator;
+import api.mpba.rastvdmy.service.utils.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.SecretKey;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.stream.*;
 
 @Service
 public class BankAccountServiceImpl extends FinancialDataGenerator implements BankAccountService {
@@ -31,16 +34,18 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
     private final BankIdentityRepository bankIdentityRepository;
     private final JwtService jwtService;
     private final CardService cardService;
+    private final UserRepository userRepository;
 
     @Autowired
     public BankAccountServiceImpl(BankAccountRepository accountRepository,
                                   BankIdentityRepository bankIdentityRepository,
                                   JwtService jwtService,
-                                  CardService cardService) {
+                                  CardService cardService, UserRepository userRepository) {
         this.accountRepository = accountRepository;
         this.bankIdentityRepository = bankIdentityRepository;
         this.jwtService = jwtService;
         this.cardService = cardService;
+        this.userRepository = userRepository;
     }
 
     public List<BankAccount> getUserAccounts(HttpServletRequest request) {
@@ -73,62 +78,76 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         return totalBalances;
     }
 
-    public BankAccount addAccount(HttpServletRequest request) {
+    @Transactional
+    public BankAccount addAccount(HttpServletRequest request) throws Exception {
         BankIdentity bankIdentity = getBankIdentity(request);
-
         Random generateBalance = new Random();
 
-        BankAccount account = BankAccount.builder()
-                .balance(BigDecimal.valueOf(generateBalance.nextInt(MAX_BALANCE) + MIN_BALANCE))
-                .accountNumber(generateAccountNumber())
-                .currency(Currency.getRandomCurrency())
-                .swift(generateSwift())
-                .iban(generateIban())
-                .bankIdentity(bankIdentity)
-                .build();
-        account.setCards(cardService.generateCards(account.getId()));
-        return accountRepository.save(account);
+        BankAccount account = generateAccountData(generateBalance, Currency.getRandomCurrency(), bankIdentity);
+        cardService.connectCards(account);
+        return account;
     }
 
-    public List<BankAccount> generateAccounts(BankIdentity identity) {
+    @Transactional
+    public void connectAccounts(BankIdentity bankIdentity) throws Exception {
         List<Currency> availableCurrencies = new ArrayList<>(Arrays.asList(Currency.values()));
         Collections.shuffle(availableCurrencies);
 
-        List<BankAccount> accounts = new ArrayList<>();
+
         Random generateBalance = new Random();
+        BankAccount mainAccount = generateAccountData(generateBalance, Currency.CZK, bankIdentity);
 
-        // Ensure at least ibe account with CZK currency
-        BankAccount account = BankAccount.builder()
-                .balance(BigDecimal.valueOf(generateBalance.nextInt(MAX_BALANCE) + MIN_BALANCE))
-                .accountNumber(generateAccountNumber())
-                .currency(Currency.CZK)
-                .swift(generateSwift())
-                .iban(generateIban())
-                .bankIdentity(identity)
-                .build();
+        try {
+            cardService.connectCards(mainAccount);
+        } catch (Exception e) {
+            throw new ApplicationException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Error while connecting cards: " + e.getMessage()
+            );
+        }
 
-        account.setCards(cardService.generateCards(account.getId()));
-        accounts.add(account);
+
         availableCurrencies.remove(Currency.CZK);
 
-        int numberOfAccounts = generateBalance.nextInt(
-                Math.min(availableCurrencies.size(), MAX_AVAILABLE_ACCOUNTS) + MIN_AVAILABLE_ACCOUNTS
+        int numberOfAccounts = generateBalance.nextInt(Math.min(availableCurrencies.size(),
+                        MAX_AVAILABLE_ACCOUNTS - MIN_AVAILABLE_ACCOUNTS)) + MIN_AVAILABLE_ACCOUNTS;
+
+        for (int i = 0; i < numberOfAccounts; i++) {
+            BankAccount account = generateAccountData(
+                    generateBalance,
+                    availableCurrencies.remove(i % availableCurrencies.size()), bankIdentity);
+            try {
+                cardService.connectCards(account); // Connect cards to the saved account
+            } catch (Exception e) {
+                throw new ApplicationException(
+                        HttpStatus.INTERNAL_SERVER_ERROR, "Error while connecting cards: " + e.getMessage()
+                );
+            }
+        }
+    }
+
+    @Transactional
+    protected BankAccount generateAccountData(Random generateBalance,
+                                              Currency accountCurrency, BankIdentity bankIdentity) throws Exception {
+        SecretKey secretKey = EncryptionUtil.getSecretKey();
+
+        String encodedAccountNumber = EncryptionUtil.encrypt(
+                generateAccountNumber(), secretKey, EncryptionUtil.generateIv()
         );
 
-        accounts.addAll(
-                IntStream.range(0, numberOfAccounts)
-                        .mapToObj(i -> BankAccount.builder()
-                                .balance(BigDecimal.valueOf(generateBalance.nextInt(MAX_BALANCE) + MIN_BALANCE))
-                                .accountNumber(generateAccountNumber())
-                                .currency(availableCurrencies.remove(i))
-                                .swift(generateSwift())
-                                .iban(generateIban())
-                                .bankIdentity(identity)
-                                .cards(cardService.generateCards(account.getId()))
-                                .build()
-                        ).toList()
+        String encodedIban = EncryptionUtil.encrypt(
+                generateIban(), secretKey, EncryptionUtil.generateIv()
         );
-        return accountRepository.saveAll(accounts);
+
+        BankAccount account = BankAccount.builder()
+                .id(UUID.randomUUID())
+                .balance(BigDecimal.valueOf(generateBalance.nextInt(MAX_BALANCE) + MIN_BALANCE))
+                .accountNumber(encodedAccountNumber)
+                .currency(accountCurrency)
+                .swift(generateSwift())
+                .iban(encodedIban)
+                .bankIdentity(bankIdentity)
+                .build();
+        return accountRepository.save(account);
     }
 
     public void removeAccount(UUID accountId, HttpServletRequest request) {
@@ -155,8 +174,13 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
 
     private BankIdentity getBankIdentity(HttpServletRequest request) {
         final String token = jwtService.extractToken(request);
-        final String bankIdentityId = jwtService.extractSubject(token); //FIXME: Don't forget that this is users' email!
-        return bankIdentityRepository.findById(bankIdentityId).orElseThrow(
+        final String userEmail = jwtService.extractSubject(token);
+
+        User user = userRepository.findByEmail(userEmail).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
+        );
+
+        return bankIdentityRepository.findByUserId(user.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")
         );
     }

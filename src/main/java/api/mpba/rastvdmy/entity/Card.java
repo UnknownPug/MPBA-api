@@ -9,7 +9,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
@@ -36,7 +35,6 @@ public class Card implements Serializable {
      * The id of the card.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private UUID id;
 
@@ -58,43 +56,23 @@ public class Card implements Serializable {
     @Enumerated(EnumType.STRING)
     private CardStatus status;
 
-    /**
-     * The card number.
-     */
-    @NotBlank
     @Column(name = "card_number", nullable = false)
     private String cardNumber;
 
-    /**
-     * The CVV of the card.
-     */
-    @NotBlank
     @Column(name = "cvv", nullable = false)
     private String cvv;
 
-    /**
-     * The PIN of the card.
-     */
-    @NotBlank
     @Column(name = "pin", nullable = false)
     private String pin;
 
-    /**
-     * The start date of the card.
-     */
-    @NotBlank
     @DateTimeFormat(pattern = "yyyy-MM-dd", iso = DateTimeFormat.ISO.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    @Column(name = "start_date")
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    /**
-     * The expiration date of the card.
-     */
-    @NotBlank
     @DateTimeFormat(pattern = "yyyy-MM-dd", iso = DateTimeFormat.ISO.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    @Column(name = "expiration_date")
+    @Column(name = "expiration_date", nullable = false)
     private LocalDate expirationDate;
 
     /**

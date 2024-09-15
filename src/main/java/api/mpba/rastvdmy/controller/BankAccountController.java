@@ -79,7 +79,7 @@ public class BankAccountController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<BankAccountResponse> addBankAccount(HttpServletRequest request) {
+    public ResponseEntity<BankAccountResponse> addBankAccount(HttpServletRequest request) throws Exception {
         logInfo("Connecting to the bank to connect a bank account ...");
         BankAccount account = accountService.addAccount(request);
         BankAccountResponse response = accountMapper.toResponse(

@@ -9,7 +9,7 @@ CREATE TABLE user_profile (
     country_of_origin VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    avatar VARCHAR(255) NOT NULL,
+    avatar VARCHAR(255),
     phone_number VARCHAR(255) UNIQUE NOT NULL
 );
 
@@ -17,7 +17,7 @@ CREATE TABLE user_profile (
 CREATE TABLE bank_identity (
     id UUID PRIMARY KEY,
     bank_name VARCHAR(255) NOT NULL,
-    bank_number VARCHAR(255) NOT NULL,
+    bank_number VARCHAR(255) NOT NULL UNIQUE,
     user_id UUID NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user_profile (id)
 );
@@ -27,9 +27,9 @@ CREATE TABLE bank_account (
     id UUID PRIMARY KEY,
     currency VARCHAR(255),
     balance DECIMAL(19,2) NOT NULL,
-    account_number VARCHAR(255) NOT NULL,
-    swift VARCHAR(255) NOT NULL,
-    iban VARCHAR(255) NOT NULL,
+    account_number VARCHAR(255) NOT NULL UNIQUE,
+    swift VARCHAR(255) NOT NULL UNIQUE,
+    iban VARCHAR(255) NOT NULL UNIQUE,
     bank_id UUID NOT NULL,
     FOREIGN KEY (bank_id) REFERENCES bank_identity (id)
 );
@@ -40,7 +40,7 @@ CREATE TABLE card (
     category VARCHAR(255),
     type VARCHAR(255),
     status VARCHAR(255),
-    card_number VARCHAR(255) NOT NULL,
+    card_number VARCHAR(255) NOT NULL UNIQUE,
     cvv VARCHAR(255) NOT NULL,
     pin VARCHAR(255) NOT NULL,
     start_date DATE NOT NULL,
@@ -82,14 +82,14 @@ CREATE TABLE message (
 -- Changeset Unknown:7
 CREATE TABLE currency_data (
     id UUID PRIMARY KEY,
-    currency VARCHAR(255) NOT NULL,
+    currency VARCHAR(255) NOT NULL UNIQUE,
     rate DECIMAL(19,2) NOT NULL
 );
 
 -- Changeset Unknown:8
 CREATE TABLE access_token (
     id UUID PRIMARY KEY,
-    token VARCHAR(1024) NOT NULL,
+    token VARCHAR(1024) NOT NULL UNIQUE,
     expiration_date TIMESTAMP NOT NULL,
     user_id UUID NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user_profile (id)

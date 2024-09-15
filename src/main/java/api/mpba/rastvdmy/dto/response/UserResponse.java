@@ -1,5 +1,7 @@
 package api.mpba.rastvdmy.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * This class represents a response for a user.
  *
@@ -16,14 +18,17 @@ public record UserResponse(
 
         String surname,
 
+        @JsonProperty("date_of_birth")
         String dateOfBirth,
 
+        @JsonProperty("country_of_origin")
         String countryOfOrigin,
 
         String email,
 
         String password,
 
+        @JsonProperty("phone_number")
         String phoneNumber,
 
         String avatar

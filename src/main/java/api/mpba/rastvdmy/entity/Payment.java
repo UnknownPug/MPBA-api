@@ -6,12 +6,13 @@ import api.mpba.rastvdmy.entity.enums.PaymentType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -33,7 +34,6 @@ public class Payment implements Serializable {
      * The id of the payment.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private UUID id;
 
@@ -55,44 +55,25 @@ public class Payment implements Serializable {
     @Enumerated(EnumType.STRING)
     private PaymentType type;
 
-    /**
-     * The sender name of the payment.
-     */
-    @NotBlank
     @Column(name = "sender_name", nullable = false)
     private String senderName;
 
-    /**
-     * The recipient name of the payment.
-     */
-    @NotBlank
     @Column(name = "recipient_name", nullable = false)
     private String recipientName;
 
-    /**
-     * The date and time of the payment.
-     */
-    @NotBlank
     @Column(name = "date_time", nullable = false)
     @DateTimeFormat(pattern = "yyyy-MM-dd", iso = DateTimeFormat.ISO.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dateTime;
 
-    /**
-     * The description of the payment.
-     */
+    @Size(max = 255, message = "Description can contain maximum 255 characters")
     @Column(name = "description")
     private String description;
 
-    /**
-     * The amount of the payment.
-     */
+    @Positive(message = "Amount should be positive")
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
-    /**
-     * The sender account of the payment.
-     */
     @ManyToOne
     @JsonIgnore
     @ToString.Exclude

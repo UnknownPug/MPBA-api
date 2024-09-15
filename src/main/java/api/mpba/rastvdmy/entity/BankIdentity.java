@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
@@ -27,27 +26,15 @@ public class BankIdentity implements Serializable {
      * The id of the bank identity.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    /**
-     * The name of the bank.
-     */
-    @NotBlank
     @Column(name = "bank_name", nullable = false)
     private String bankName;
 
-    /**
-     * The number of the bank.
-     */
-    @NotBlank
     @Column(name = "bank_number", nullable = false)
     private String bankNumber;
 
-    /**
-     * The user of the bank identity.
-     */
     @ManyToOne
     @JsonIgnore
     @ToString.Exclude
@@ -57,7 +44,7 @@ public class BankIdentity implements Serializable {
     /**
      * The bank accounts of the bank identity.
      */
-    @OneToMany(mappedBy = "bankIdentity", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "bankIdentity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonIgnore
     @ToString.Exclude
     private List<BankAccount> bankAccounts;

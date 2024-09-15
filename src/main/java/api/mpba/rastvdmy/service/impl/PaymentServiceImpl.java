@@ -17,7 +17,7 @@ import api.mpba.rastvdmy.repository.PaymentRepository;
 import api.mpba.rastvdmy.service.CurrencyDataService;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.PaymentService;
-import api.mpba.rastvdmy.service.component.PurchaseCategory;
+import api.mpba.rastvdmy.service.utils.PurchaseCategory;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

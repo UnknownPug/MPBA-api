@@ -1,6 +1,7 @@
 package api.mpba.rastvdmy.service;
 
 import api.mpba.rastvdmy.dto.request.CardRequest;
+import api.mpba.rastvdmy.entity.BankAccount;
 import api.mpba.rastvdmy.entity.Card;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -33,7 +34,7 @@ public interface CardService {
      */
     Card addAccountCard(UUID id, HttpServletRequest request, CardRequest cardRequest) throws Exception;
 
-    List<Card> generateCards(UUID accountId);
+    void connectCards(BankAccount account) throws Exception;
 
     /**
      * Update card status

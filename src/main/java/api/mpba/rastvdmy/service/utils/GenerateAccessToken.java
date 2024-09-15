@@ -1,5 +1,5 @@
 // src/main/java/api/mpba/rastvdmy/service/component/GenerateAccessToken.java
-package api.mpba.rastvdmy.service.component;
+package api.mpba.rastvdmy.service.utils;
 
 import api.mpba.rastvdmy.entity.AccessToken;
 import api.mpba.rastvdmy.entity.User;

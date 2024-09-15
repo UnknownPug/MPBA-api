@@ -1,7 +1,6 @@
-package api.mpba.rastvdmy.service.component;
+package api.mpba.rastvdmy.service.utils;
 
 import api.mpba.rastvdmy.exception.ApplicationException;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
@@ -28,7 +27,7 @@ public class UserDataValidator {
         }
     }
 
-    public static void isInvalidDateOfBirth(@NotBlank(message = "Date of birth is mandatory") String dateOfBirth) {
+    public static void isInvalidDateOfBirth(String dateOfBirth) {
 
         if (dateOfBirth == null || dateOfBirth.trim().isEmpty() ||
                 !dateOfBirth.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
