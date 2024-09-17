@@ -42,7 +42,6 @@ public class CurrencyDataController {
         List<CurrencyData> currencies = currencyDataService.findAllCurrencies(request);
         List<CurrencyDataResponse> currencyDataResponses = currencies.stream()
                 .map(currencyData -> currencyDataMapper.toResponse(new CurrencyDataRequest(
-                                currencyData.getId(),
                                 currencyData.getCurrency(),
                                 currencyData.getRate()
                         ))
@@ -59,7 +58,6 @@ public class CurrencyDataController {
         currencyDataService.findAllExchangeRates();
         CurrencyData currencyData = currencyDataService.findByCurrency(request, currencyType);
         CurrencyDataResponse currencyDataResponse = currencyDataMapper.toResponse(new CurrencyDataRequest(
-                currencyData.getId(),
                 currencyData.getCurrency(),
                 currencyData.getRate()
         ));

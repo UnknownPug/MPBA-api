@@ -52,7 +52,8 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
 
     public List<Card> getAccountCards(UUID id, HttpServletRequest request) {
         validateBankIdentityFromToken(request);
-        return cardRepository.findAllByBankAccountId(id);
+
+        return cardRepository.findAllByAccountId(id);
     }
 
     public Card getAccountCardById(UUID accountId, UUID cardId, HttpServletRequest request) {
@@ -67,6 +68,7 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         validateBankIdentityFromToken(request);
         BankAccount account = bankAccountRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified bank account not found."));
+
         return generateCard(cardRequest.cardNumber(), cardRequest.cvv(), cardRequest.pin(), account);
     }
 
@@ -91,10 +93,8 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
     protected Card generateCard(String cardNumber, String cvv, String pin, BankAccount account) throws Exception {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
 
-        String encryptedCardNumber = EncryptionUtil.encrypt(cardNumber, secretKey, EncryptionUtil.generateIv());
-
-        String encryptedCvv = EncryptionUtil.encrypt(cvv, secretKey, EncryptionUtil.generateIv());
-
+        String encryptedCardNumber = EncryptionUtil.encrypt(cardNumber, secretKey);
+        String encryptedCvv = EncryptionUtil.encrypt(cvv, secretKey);
         String hashPin = EncryptionUtil.hash(pin);
 
         LocalDate startDate = getRandomStartDate();
@@ -137,6 +137,19 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         Card card = cardRepository.findByAccountIdAndId(accountId, cardId)
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified card not found."));
         cardRepository.delete(card);
+    }
+
+    @Transactional
+    public void removeAllCards(BankAccount account) {
+        List<Card> cards = cardRepository.findAllByAccountId(account.getId());
+        if (cards.isEmpty()) {
+            throw new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.");
+        }
+        try {
+            cardRepository.deleteAll(cards);
+        } catch (Exception e) {
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while removing all cards.");
+        }
     }
 
     private void validateBankIdentityFromToken(HttpServletRequest request) {

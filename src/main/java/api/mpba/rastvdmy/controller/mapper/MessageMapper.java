@@ -18,7 +18,8 @@ public interface MessageMapper {
      */
     @Mapping(target = "receiverEmail", source = "receiverEmail")
     @Mapping(target = "content", source = "content")
-    @Mapping(target = "senderEmail", ignore = true)
+    @Mapping(target = "senderEmail", source = "senderEmail")
+    @Mapping(target = "timestamp", source = "timestamp")
     MessageRequest toRequest(MessageResponse messageResponse);
 
     /**
@@ -29,5 +30,6 @@ public interface MessageMapper {
     @Mapping(target = "receiverEmail", source = "receiverEmail")
     @Mapping(target = "content", source = "content")
     @Mapping(target = "senderEmail", source = "senderEmail")
+    @Mapping(target = "timestamp", source = "timestamp")
     MessageResponse toResponse(MessageRequest messageRequest);
 }

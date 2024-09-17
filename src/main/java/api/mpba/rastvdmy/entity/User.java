@@ -72,12 +72,12 @@ public class User implements UserDetails, Serializable {
     @ToString.Exclude
     private List<CurrencyData> currencyData;
 
-    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
     @JsonIgnore
     @ToString.Exclude
     private List<Message> senderMessages;
 
-    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL)
     @JsonIgnore
     @ToString.Exclude
     private List<Message> receiverMessages;
@@ -87,7 +87,7 @@ public class User implements UserDetails, Serializable {
     @ToString.Exclude
     private List<AccessToken> accessTokens;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
     private List<BankIdentity> bankIdentities;

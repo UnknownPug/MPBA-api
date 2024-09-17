@@ -44,7 +44,7 @@ public class BankIdentity implements Serializable {
     /**
      * The bank accounts of the bank identity.
      */
-    @OneToMany(mappedBy = "bankIdentity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "bankIdentity", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
     private List<BankAccount> bankAccounts;

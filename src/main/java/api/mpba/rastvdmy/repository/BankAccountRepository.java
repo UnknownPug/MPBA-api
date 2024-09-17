@@ -11,12 +11,9 @@ import java.util.UUID;
 @Repository
 public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> {
 
-    List<BankAccount> findAllByBankIdentityId(UUID bankIdentityId);
-
-    BankAccount findByBankIdentityIdAndId(UUID bankIdentity, UUID id);
+    Optional<List<BankAccount>> findAllByBankIdentityId(UUID bankIdentityId);
 
     Optional<BankAccount> findByBankIdentityId(UUID id);
 
-    // FIXME: account number will be encoded. Use Account id instead!
     Optional<BankAccount> findByAccountNumber(String accountNumber);
 }

@@ -56,7 +56,12 @@ public class MessageController {
         List<Message> messages = messageService.getMessages();
         List<MessageResponse> messagesResponses = messages.stream()
                 .map(message -> messageMapper.toResponse(
-                        new MessageRequest(message.getReceiver().getEmail(), message.getContent(), message.getSender().getEmail())
+                        new MessageRequest(
+                                message.getReceiver().getEmail(),
+                                message.getContent(),
+                                message.getSender().getEmail(),
+                                message.getTimestamp()
+                        )
                 )).collect(Collectors.toList());
         return ResponseEntity.ok(messagesResponses);
     }
@@ -73,8 +78,12 @@ public class MessageController {
                 messageRequest.content());
 
         MessageResponse response = messageMapper.toResponse(
-                new MessageRequest(message.getReceiver().getEmail(), message.getContent(), message.getSender().getEmail())
-        );
+                new MessageRequest(
+                        message.getReceiver().getEmail(),
+                        message.getContent(),
+                        message.getSender().getEmail(),
+                        message.getTimestamp()
+        ));
         return ResponseEntity.accepted().body(response);
     }
 

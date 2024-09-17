@@ -40,7 +40,8 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
     public BankAccountServiceImpl(BankAccountRepository accountRepository,
                                   BankIdentityRepository bankIdentityRepository,
                                   JwtService jwtService,
-                                  CardService cardService, UserRepository userRepository) {
+                                  CardService cardService,
+                                  UserRepository userRepository) {
         this.accountRepository = accountRepository;
         this.bankIdentityRepository = bankIdentityRepository;
         this.jwtService = jwtService;
@@ -48,19 +49,38 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         this.userRepository = userRepository;
     }
 
-    public List<BankAccount> getUserAccounts(HttpServletRequest request) {
-        BankIdentity bankIdentity = getBankIdentity(request);
-        return accountRepository.findAllByBankIdentityId(bankIdentity.getId());
+    public List<BankAccount> getUserAccounts(HttpServletRequest request, String bankName) {
+        BankIdentity bankIdentity = getBankIdentity(request, bankName);
+        List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "No accounts found.")
+        );
+        return accounts.stream().filter(this::decryptAccountData).collect(Collectors.toList());
     }
 
-    public BankAccount getAccountById(UUID id, HttpServletRequest request) {
-        BankIdentity bankIdentity = getBankIdentity(request);
+    public BankAccount getAccountByNumber(HttpServletRequest request, String bankName, String accountNumber) {
+        BankIdentity bankIdentity = getBankIdentity(request, bankName);
 
-        BankAccount account = accountRepository.findByBankIdentityIdAndId(bankIdentity.getId(), id);
-        if (account == null) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Account not found.");
+        List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested account not found.")
+        );
+
+        return accounts.stream()
+                .filter(this::decryptAccountData)
+                .filter(acc -> acc.getAccountNumber().equals(accountNumber))
+                .findFirst().orElseThrow(
+                        () -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested account not found.")
+                );
+    }
+
+    private boolean decryptAccountData(BankAccount account) {
+        SecretKey secretKey = EncryptionUtil.getSecretKey();
+        try {
+            account.setAccountNumber(EncryptionUtil.decrypt(account.getAccountNumber(), secretKey));
+            account.setIban(EncryptionUtil.decrypt(account.getIban(), secretKey));
+            return true;
+        } catch (Exception e) {
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while decrypting account data.");
         }
-        return account;
     }
 
     public Map<String, BigDecimal> getTotalBalance() {
@@ -79,12 +99,13 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
     }
 
     @Transactional
-    public BankAccount addAccount(HttpServletRequest request) throws Exception {
-        BankIdentity bankIdentity = getBankIdentity(request);
+    public BankAccount addAccount(HttpServletRequest request, String bankName) throws Exception {
+        BankIdentity bankIdentity = getBankIdentity(request, bankName);
         Random generateBalance = new Random();
 
         BankAccount account = generateAccountData(generateBalance, Currency.getRandomCurrency(), bankIdentity);
         cardService.connectCards(account);
+
         return account;
     }
 
@@ -93,35 +114,20 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         List<Currency> availableCurrencies = new ArrayList<>(Arrays.asList(Currency.values()));
         Collections.shuffle(availableCurrencies);
 
-
         Random generateBalance = new Random();
         BankAccount mainAccount = generateAccountData(generateBalance, Currency.CZK, bankIdentity);
 
-        try {
-            cardService.connectCards(mainAccount);
-        } catch (Exception e) {
-            throw new ApplicationException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Error while connecting cards: " + e.getMessage()
-            );
-        }
-
-
+        cardService.connectCards(mainAccount);
         availableCurrencies.remove(Currency.CZK);
 
         int numberOfAccounts = generateBalance.nextInt(Math.min(availableCurrencies.size(),
-                        MAX_AVAILABLE_ACCOUNTS - MIN_AVAILABLE_ACCOUNTS)) + MIN_AVAILABLE_ACCOUNTS;
+                MAX_AVAILABLE_ACCOUNTS - MIN_AVAILABLE_ACCOUNTS)) + MIN_AVAILABLE_ACCOUNTS;
 
         for (int i = 0; i < numberOfAccounts; i++) {
             BankAccount account = generateAccountData(
-                    generateBalance,
-                    availableCurrencies.remove(i % availableCurrencies.size()), bankIdentity);
-            try {
-                cardService.connectCards(account); // Connect cards to the saved account
-            } catch (Exception e) {
-                throw new ApplicationException(
-                        HttpStatus.INTERNAL_SERVER_ERROR, "Error while connecting cards: " + e.getMessage()
-                );
-            }
+                    generateBalance, availableCurrencies.remove(i % availableCurrencies.size()), bankIdentity);
+
+            cardService.connectCards(account);
         }
     }
 
@@ -130,13 +136,8 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
                                               Currency accountCurrency, BankIdentity bankIdentity) throws Exception {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
 
-        String encodedAccountNumber = EncryptionUtil.encrypt(
-                generateAccountNumber(), secretKey, EncryptionUtil.generateIv()
-        );
-
-        String encodedIban = EncryptionUtil.encrypt(
-                generateIban(), secretKey, EncryptionUtil.generateIv()
-        );
+        String encodedAccountNumber = EncryptionUtil.encrypt(generateAccountNumber(), secretKey);
+        String encodedIban = EncryptionUtil.encrypt(generateIban(), secretKey);
 
         BankAccount account = BankAccount.builder()
                 .id(UUID.randomUUID())
@@ -147,32 +148,58 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
                 .iban(encodedIban)
                 .bankIdentity(bankIdentity)
                 .build();
+
         return accountRepository.save(account);
     }
 
-    public void removeAccount(UUID accountId, HttpServletRequest request) {
-        BankIdentity bankIdentity = getBankIdentity(request);
+    @Transactional
+    public void removeAccount(HttpServletRequest request, String bankName, String accountNumber) {
+        BankIdentity bankIdentity = getBankIdentity(request, bankName);
 
-        BankAccount account = accountRepository.findByBankIdentityIdAndId(bankIdentity.getId(), accountId);
+        List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested account not found.")
+        );
+        SecretKey secretKey = EncryptionUtil.getSecretKey();
 
-        if (account == null) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "Account not found.");
+        BankAccount account = accounts.stream()
+                .filter(acc -> {
+                    try {
+                        String decryptedAccountNumber = EncryptionUtil.decrypt(acc.getAccountNumber(), secretKey);
+                        return decryptedAccountNumber.equals(accountNumber);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
+                .findFirst().orElseThrow(
+                        () -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested account not found."));
+
+        if (!account.getCards().isEmpty()) {
+            cardService.removeAllCards(account);
         }
         accountRepository.delete(account);
     }
 
-    public void removeAllAccounts(HttpServletRequest request) {
-        BankIdentity bankIdentity = getBankIdentity(request);
+    @Transactional
+    public void removeAllAccounts(HttpServletRequest request, String bankName) {
+        BankIdentity bankIdentity = getBankIdentity(request, bankName);
 
-        List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId());
-
+        List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
+        );
         if (accounts.isEmpty()) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "No accounts found.");
+            throw new ApplicationException(HttpStatus.NOT_FOUND,
+                    "No accounts are found for the specified bank identity.");
+        } else {
+            accounts.forEach(account -> {
+                if (!account.getCards().isEmpty()) {
+                    cardService.removeAllCards(account);
+                }
+            });
         }
         accountRepository.deleteAll(accounts);
     }
 
-    private BankIdentity getBankIdentity(HttpServletRequest request) {
+    private BankIdentity getBankIdentity(HttpServletRequest request, String bankName) {
         final String token = jwtService.extractToken(request);
         final String userEmail = jwtService.extractSubject(token);
 
@@ -180,7 +207,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
         );
 
-        return bankIdentityRepository.findByUserId(user.getId()).orElseThrow(
+        return bankIdentityRepository.findByUserIdAndBankName(user.getId(), bankName).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")
         );
     }

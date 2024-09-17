@@ -57,7 +57,9 @@ public class UserController {
                         user.getEmail(),
                         user.getPassword(),
                         user.getPhoneNumber(),
-                        user.getAvatar()))
+                        user.getAvatar(),
+                        user.getStatus(),
+                        user.getRole()))
         ).toList();
         return ResponseEntity.ok(userResponses);
     }
@@ -91,7 +93,9 @@ public class UserController {
                         user.getEmail(),
                         user.getPassword(),
                         user.getPhoneNumber(),
-                        user.getAvatar()))
+                        user.getAvatar(),
+                        user.getStatus(),
+                        user.getRole()))
         );
         return ResponseEntity.ok(userResponses);
     }
@@ -119,7 +123,9 @@ public class UserController {
                         user.getEmail(),
                         user.getPassword(),
                         user.getPhoneNumber(),
-                        user.getAvatar()
+                        user.getAvatar(),
+                        user.getStatus(),
+                        user.getRole()
                 )
         );
         return ResponseEntity.ok(userResponse);
@@ -140,7 +146,9 @@ public class UserController {
                         user.getEmail(),
                         user.getPassword(),
                         user.getPhoneNumber(),
-                        user.getAvatar()
+                        user.getAvatar(),
+                        user.getStatus(),
+                        user.getRole()
                 )
         );
         return ResponseEntity.ok(userResponse);
@@ -234,7 +242,7 @@ public class UserController {
     @DeleteMapping(path = "/{email}")
     public ResponseEntity<Void> deleteUserProfile(HttpServletRequest request, @PathVariable("email") String email) {
         logInfo("Deleting user ...");
-        userService.deleteUserById(request, email);
+        userService.deleteUserByEmail(request, email);
         return ResponseEntity.noContent().build();
     }
 

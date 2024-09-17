@@ -11,7 +11,6 @@ import api.mpba.rastvdmy.repository.UserRepository;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @Service
 public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
@@ -36,8 +34,19 @@ public class MessageServiceImpl implements MessageService {
     }
 
     public List<Message> getMessages() {
-    return messageRepository.findAll();
-}
+        List<Message> messages = messageRepository.findAll();
+        return messages.stream().filter(this::decryptMessageData).toList();
+    }
+
+    private boolean decryptMessageData(Message message) {
+        SecretKey secretKey = EncryptionUtil.getSecretKey();
+        try {
+            message.setContent(EncryptionUtil.decrypt(message.getContent(), secretKey));
+            return true;
+        } catch (Exception e) {
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while decrypting account data.");
+        }
+    }
 
     public Message sendMessage(HttpServletRequest request, String receiverEmail, String content) throws Exception {
         User sender = getSender(request);
@@ -47,8 +56,7 @@ public class MessageServiceImpl implements MessageService {
         }
         SecretKey secretKey = EncryptionUtil.getSecretKey();
 
-        String encryptedContent = EncryptionUtil.encrypt(content, secretKey, EncryptionUtil.generateIv());
-
+        String encryptedContent = EncryptionUtil.encrypt(content, secretKey);
 
         User receiver = userRepository.findByEmail(receiverEmail).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified receiver not found.")

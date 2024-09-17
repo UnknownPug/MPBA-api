@@ -23,6 +23,9 @@ public interface UserMapper {
     @Mapping(target = "email", source = "email")
     @Mapping(target = "password", source = "password")
     @Mapping(target = "phoneNumber", source = "phoneNumber")
+    @Mapping(target = "avatar", source = "avatar")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "role", source = "role")
     UserRequest toRequest(UserResponse userResponse);
 
     /**
@@ -38,5 +41,7 @@ public interface UserMapper {
     @Mapping(target = "password", source = "password")
     @Mapping(target = "phoneNumber", source = "phoneNumber")
     @Mapping(target = "avatar", source = "avatar")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "role", source = "role")
     UserResponse toResponse(UserRequest userRequest);
 }

@@ -49,4 +49,6 @@ public interface CardService {
      * @param cardId Card number
      */
     void removeAccountCard(UUID accountId, UUID cardId, HttpServletRequest request);
+
+    void removeAllCards(BankAccount account);
 }

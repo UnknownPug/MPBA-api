@@ -12,7 +12,6 @@ import api.mpba.rastvdmy.service.BankIdentityService;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.utils.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @Service
 public class BankIdentityServiceImpl extends FinancialDataGenerator implements BankIdentityService {
     private final BankIdentityRepository identityRepository;
@@ -42,6 +40,7 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
 
     public List<BankIdentity> getBanks(HttpServletRequest request) {
         User user = getUser(request);
+
         return identityRepository.findAllByUserId(user.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User doesn't have any connected bank accounts.")
         );
@@ -49,6 +48,7 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
 
     public BankIdentity getBankByName(HttpServletRequest request, String name) {
         User user = getUser(request);
+
         return identityRepository.findByNameAndConnectedToUserId(name, user.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User doesn't have this specific bank."));
     }
@@ -65,8 +65,8 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
                 .build();
 
         bankIdentity = identityRepository.save(bankIdentity);
-
         accountService.connectAccounts(bankIdentity); // Calling Bank Account Service ...
+
         return bankIdentity;
     }
 
@@ -79,28 +79,25 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
         if (identityRepository.findByUserIdAndBankName(user.getId(), identityRequest.bankName()).isPresent()) {
             throw new ApplicationException(HttpStatus.CONFLICT, "Bank with the same name already added.");
         }
+
         return user;
     }
 
     public void deleteBank(HttpServletRequest request, String bankName) {
         User user = getUser(request);
 
-        BankIdentity bankIdentity = identityRepository.findByUserIdAndBankName(user.getId(), bankName).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND,
+        BankIdentity bankIdentity = identityRepository.findByUserIdAndBankNameWithAccounts(user.getId(), bankName)
+                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND,
                         "User is not found or bank with the given name is not connected to the user."
-                )
-        );
+                ));
 
         if (bankIdentity.getUser().getStatus() == UserStatus.STATUS_BLOCKED) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked, operation is not available.");
         }
 
         if (!bankIdentity.getBankAccounts().isEmpty()) {
-            log.debug("Bank accounts are not empty, deleting all bank accounts first.");
-            log.debug("Bank accounts: {}", bankIdentity.getBankAccounts());
             throw new ApplicationException(HttpStatus.CONFLICT, "Make sure to delete all bank accounts first.");
         }
-        log.debug("Deleting bank identity: {}", bankIdentity);
 
         identityRepository.delete(bankIdentity);
     }

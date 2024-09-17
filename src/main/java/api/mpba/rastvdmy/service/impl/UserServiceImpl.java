@@ -1,5 +1,6 @@
 package api.mpba.rastvdmy.service.impl;
 
+import api.mpba.rastvdmy.config.utils.EncryptionUtil;
 import api.mpba.rastvdmy.dto.request.AdminUpdateUserRequest;
 import api.mpba.rastvdmy.dto.request.UserUpdateRequest;
 import api.mpba.rastvdmy.entity.User;
@@ -23,9 +24,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.crypto.SecretKey;
 import java.util.List;
 
 //@CacheConfig(cacheNames = {"users"})
@@ -51,26 +54,38 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
     }
 
     public List<User> getUsers() {
-        return userRepository.findAll();
+        List<User> users = userRepository.findAll();
+        return users.stream().filter(this::decryptUserData).toList();
     }
 
     public Page<User> filterAndSortUsers(Pageable pageable) {
-        return userRepository.findAll(pageable);
+        Page<User> usersPage = userRepository.findAll(pageable);
+        usersPage.forEach(this::decryptUserData);
+        return usersPage;
     }
 
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist."));
+        decryptUserData(user);
+        return user;
     }
 
     public User getUser(HttpServletRequest request) {
-        return userRepository.findByEmail(request.getUserPrincipal().getName())
+        User user = userRepository.findByEmail(request.getUserPrincipal().getName())
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist."));
+        decryptUserData(user);
+        return user;
     }
 
-    private String getUserFromToken(HttpServletRequest request) {
-        final String token = jwtService.extractToken(request);
-        return jwtService.extractSubject(token);
+    private boolean decryptUserData(User user) {
+        try {
+            SecretKey secretKey = EncryptionUtil.getSecretKey(); // Ensure this retrieves the same key used for encryption
+            user.setDateOfBirth(EncryptionUtil.decrypt(user.getDateOfBirth(), secretKey));
+            return true;
+        } catch (Exception e) {
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while decrypting account data.");
+        }
     }
 
     public User updateUser(HttpServletRequest request, UserUpdateRequest userRequest) {
@@ -208,6 +223,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
         }
     }
 
+    @Transactional
     public void deleteUser(HttpServletRequest request) {
         final String userEmail = getUserFromToken(request);
 
@@ -219,15 +235,14 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
-        if (user.getBankIdentities().isEmpty()) {
-            userRepository.delete(user);
-        } else {
+        if (!user.getBankIdentities().isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Make sure to delete all bank accounts first.");
         }
-
+        userRepository.delete(user);
     }
 
-    public void deleteUserById(HttpServletRequest request, String email) {
+    @Transactional
+    public void deleteUserByEmail(HttpServletRequest request, String email) {
         User user = userRepository.findByEmail(email).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
@@ -236,16 +251,20 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "You cannot delete yourself.");
         }
 
-        if (user.getBankIdentities().isEmpty()) {
-            userRepository.delete(user);
-        } else {
+        if (!user.getBankIdentities().isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Make sure to delete all bank accounts first.");
         }
+        userRepository.delete(user);
     }
 
     public UserDetailsService userDetailsService() {
         return userData -> (UserDetails) userRepository.findByEmail(userData).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
+    }
+
+    private String getUserFromToken(HttpServletRequest request) {
+        final String token = jwtService.extractToken(request);
+        return jwtService.extractSubject(token);
     }
 }

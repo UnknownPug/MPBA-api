@@ -49,7 +49,7 @@ public class BankAccount implements Serializable {
     @Column(name = "iban", nullable = false)
     private String iban;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
     private List<Card> cards;

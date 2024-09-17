@@ -60,10 +60,8 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         UserDataValidator.isInvalidDateOfBirth(request.dateOfBirth());
         validateUserData(request);
 
-        SecretKey secretKey = EncryptionUtil.generateKey();
-        String encodedDateOfBirth = EncryptionUtil.encrypt(
-                request.dateOfBirth(), secretKey, EncryptionUtil.generateIv()
-        );
+        SecretKey secretKey = EncryptionUtil.getSecretKey();
+        String encodedDateOfBirth = EncryptionUtil.encrypt(request.dateOfBirth(), secretKey);
 
         List<CurrencyData> currencyData = currencyDataRepository.findAll();
 
@@ -84,6 +82,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         userRepository.save(user);
 
         GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(user);
+
         return JwtAuthResponse.builder()
                 .token(generatedToken.token())
                 .expiresIn(generatedToken.tokenExpiration())
@@ -107,8 +106,8 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         } catch (Exception e) {
             throw new ApplicationException(HttpStatus.UNAUTHORIZED, "Invalid email or password. Please try again.");
         }
-
         GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(user);
+
         return JwtAuthResponse.builder()
                 .token(generatedToken.token())
                 .expiresIn(generatedToken.tokenExpiration())

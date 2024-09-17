@@ -2,6 +2,8 @@ package api.mpba.rastvdmy.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.LocalDateTime;
+
 /**
  * This class represents a message in the banking system.
  * @param receiverEmail The name of the receiver.
@@ -14,5 +16,6 @@ public record MessageRequest(
         String content,
 
         @JsonProperty("sender_email")
-        String senderEmail
-) {}
+        String senderEmail,
+
+        LocalDateTime timestamp) {}

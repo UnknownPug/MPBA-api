@@ -49,7 +49,7 @@ public interface UserService {
 
     void deleteUser(HttpServletRequest request);
 
-    void deleteUserById(HttpServletRequest request, String email);
+    void deleteUserByEmail(HttpServletRequest request, String email);
 
     UserDetailsService userDetailsService();
 

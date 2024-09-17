@@ -7,24 +7,23 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * This interface represents the service for managing bank accounts.
  */
 public interface BankAccountService {
 
-    List<BankAccount> getUserAccounts(HttpServletRequest request);
+    List<BankAccount> getUserAccounts(HttpServletRequest request, String bankName);
 
-    BankAccount getAccountById(UUID accountId, HttpServletRequest request);
+    BankAccount getAccountByNumber(HttpServletRequest request, String bankName, String accountNumber);
 
     Map<String, BigDecimal> getTotalBalance();
 
-    BankAccount addAccount(HttpServletRequest request) throws Exception;
+    BankAccount addAccount(HttpServletRequest request, String bankName) throws Exception;
 
     void connectAccounts(BankIdentity bankIdentity) throws Exception;
 
-    void removeAccount(UUID accountId, HttpServletRequest request);
+    void removeAccount(HttpServletRequest request, String bankName, String accountNumber);
 
-    void removeAllAccounts(HttpServletRequest request);
+    void removeAllAccounts(HttpServletRequest request, String bankName);
 }

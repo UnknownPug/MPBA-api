@@ -1,5 +1,6 @@
 package api.mpba.rastvdmy.dto.response;
 
+import api.mpba.rastvdmy.entity.enums.Currency;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
@@ -13,6 +14,8 @@ public record BankAccountResponse(
         String accountNumber,
 
         BigDecimal balance,
+
+        Currency currency,
 
         String swift,
 

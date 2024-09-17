@@ -1,5 +1,7 @@
 package api.mpba.rastvdmy.dto.response;
 
+import api.mpba.rastvdmy.entity.enums.UserRole;
+import api.mpba.rastvdmy.entity.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -31,5 +33,9 @@ public record UserResponse(
         @JsonProperty("phone_number")
         String phoneNumber,
 
-        String avatar
+        String avatar,
+
+        UserStatus status,
+
+        UserRole role
 ) {}

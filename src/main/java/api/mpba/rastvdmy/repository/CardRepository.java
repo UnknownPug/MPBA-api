@@ -2,7 +2,6 @@ package api.mpba.rastvdmy.repository;
 
 import api.mpba.rastvdmy.entity.Card;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,8 +18,10 @@ import java.util.UUID;
 @Repository
 public interface CardRepository extends JpaRepository<Card, String> {
 
-    @Query("SELECT c FROM Card c WHERE c.account.id = :accountId")
-    List<Card> findAllByBankAccountId(UUID accountId);
+//    @Query("SELECT c FROM Card c WHERE c.account.id = :accountId")
+//    List<Card> findAllByBankAccountId(UUID accountId);
+
+    List<Card> findAllByAccountId(UUID id);
 
     Optional<Card> findByAccountIdAndId(UUID accountId, UUID id);
 
