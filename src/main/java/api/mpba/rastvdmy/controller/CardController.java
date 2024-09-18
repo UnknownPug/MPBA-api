@@ -16,15 +16,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
 @PreAuthorize("hasRole('ROLE_DEFAULT')")
-@RequestMapping(path = "/api/v1/{accountId}/cards")
+@RequestMapping(path = "/api/v1/{bankName}/{number}/cards")
 public class CardController {
     private static final Logger LOG = LoggerFactory.getLogger(CardController.class);
     private final CardMapper cardMapper;
@@ -38,70 +36,74 @@ public class CardController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = "application/json")
-    public ResponseEntity<List<CardResponse>> getAccountCards(@PathVariable("accountId") UUID id,
+    public ResponseEntity<List<CardResponse>> getAccountCards(@PathVariable("bankName") String bankName,
+                                                              @PathVariable("number") String accountNumber,
                                                               HttpServletRequest request) {
         logInfo("Getting all cards ...");
-        List<Card> cards = cardService.getAccountCards(id, request);
+        List<Card> cards = cardService.getAccountCards(bankName, accountNumber, request);
         List<CardResponse> cardResponses = cards.stream()
                 .map(card -> cardMapper.toResponse(new CardRequest(
                         card.getCardNumber(),
                         card.getCvv(),
                         card.getPin(),
                         card.getStartDate(),
-                        card.getExpirationDate())
+                        card.getExpirationDate(),
+                        card.getCategory(),
+                        card.getType(),
+                        card.getStatus())
                 )).collect(Collectors.toList());
         return ResponseEntity.ok(cardResponses);
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path = "/{id}", produces = "application/json")
-    public ResponseEntity<CardResponse> getCard(@PathVariable("accountId") UUID accountId,
-                                                @PathVariable(name = "id") UUID cardId,
+    @GetMapping(path = "/{cardNumber}", produces = "application/json")
+    public ResponseEntity<CardResponse> getCard(@PathVariable("bankName") String bankName,
+                                                @PathVariable("number") String accountNumber,
+                                                @PathVariable("cardNumber") String cardNumber,
                                                 HttpServletRequest request) {
         logInfo("Getting card ...");
-        Card card = cardService.getAccountCardById(accountId, cardId, request);
+        Card card = cardService.getAccountCardByNumber(bankName, accountNumber, cardNumber, request);
         CardResponse cardResponse = cardMapper.toResponse(new CardRequest(
                 card.getCardNumber(),
                 card.getCvv(),
                 card.getPin(),
                 card.getStartDate(),
-                card.getExpirationDate()));
+                card.getExpirationDate(),
+                card.getCategory(),
+                card.getType(),
+                card.getStatus()));
         return ResponseEntity.ok(cardResponse);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<CardResponse> addAccountCard(@PathVariable("accountId") UUID id, HttpServletRequest request,
-                                                @Valid @RequestBody CardRequest cardRequest) throws Exception {
+    @PostMapping(produces = "application/json")
+    public ResponseEntity<CardResponse> addAccountCard(@PathVariable("bankName") String bankName,
+                                                       @PathVariable("number") String accountNumber,
+                                                       HttpServletRequest request) throws Exception {
         logInfo("Creating new card ...");
-        Card card = cardService.addAccountCard(id, request, cardRequest);
+        Card card = cardService.addAccountCard(bankName, accountNumber, request);
         CardResponse cardResponse = cardMapper.toResponse(new CardRequest(
                 card.getCardNumber(),
                 card.getCvv(),
                 card.getPin(),
                 card.getStartDate(),
-                card.getExpirationDate()));
+                card.getExpirationDate(),
+                card.getCategory(),
+                card.getType(),
+                card.getStatus()));
+
         return ResponseEntity.status(HttpStatus.CREATED).body(cardResponse);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PatchMapping(path = "/{id}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Void> updateAccountCardStatus(@PathVariable("accountId") UUID accountId,
-                                                 @PathVariable(name = "id") UUID cardId,
-                                                 HttpServletRequest request) {
-        logInfo("Updating card status...");
-        cardService.updateAccountCardStatus(accountId, cardId, request);
-        return ResponseEntity.noContent().build();
-    }
-
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping(path = "/{id}")
+    @DeleteMapping(path = "/{cardNumber}")
     public ResponseEntity<Void> removeAccountCard(
-            @PathVariable("accountId") UUID accountId,
-            @PathVariable(name = "id") UUID cardId,
+            @PathVariable(name = "bankName") String bankName,
+            @PathVariable(name = "number") String accountNumber,
+            @PathVariable(name = "cardNumber") String cardNumber,
             HttpServletRequest request) {
-        logInfo("Removing card...", cardId);
-        cardService.removeAccountCard(accountId, cardId, request);
+        logInfo("Removing card...", cardNumber);
+        cardService.removeAccountCard(bankName, accountNumber, cardNumber, request);
         return ResponseEntity.noContent().build();
     }
 

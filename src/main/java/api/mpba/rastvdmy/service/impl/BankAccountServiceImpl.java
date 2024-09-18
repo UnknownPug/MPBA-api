@@ -162,14 +162,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         SecretKey secretKey = EncryptionUtil.getSecretKey();
 
         BankAccount account = accounts.stream()
-                .filter(acc -> {
-                    try {
-                        String decryptedAccountNumber = EncryptionUtil.decrypt(acc.getAccountNumber(), secretKey);
-                        return decryptedAccountNumber.equals(accountNumber);
-                    } catch (Exception e) {
-                        return false;
-                    }
-                })
+                .filter(acc -> validateAccountNumber(accountNumber, acc, secretKey))
                 .findFirst().orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested account not found."));
 
@@ -177,6 +170,15 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
             cardService.removeAllCards(account);
         }
         accountRepository.delete(account);
+    }
+
+    private static boolean validateAccountNumber(String accountNumber, BankAccount acc, SecretKey secretKey) {
+        try {
+            String decryptedAccountNumber = EncryptionUtil.decrypt(acc.getAccountNumber(), secretKey);
+            return decryptedAccountNumber.equals(accountNumber);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Transactional

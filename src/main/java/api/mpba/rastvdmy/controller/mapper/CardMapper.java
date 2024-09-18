@@ -19,8 +19,11 @@ public interface CardMapper {
     @Mapping(target = "cardNumber", source = "cardNumber")
     @Mapping(target = "cvv", source = "cvv")
     @Mapping(target = "pin", source = "pin")
-    @Mapping(target = "startDate", ignore = true)
-    @Mapping(target = "expirationDate", ignore = true)
+    @Mapping(target = "startDate", source = "startDate")
+    @Mapping(target = "expirationDate", source = "expirationDate")
+    @Mapping(target = "cardCategory", source = "cardCategory")
+    @Mapping(target = "cardType", source = "cardType")
+    @Mapping(target = "cardStatus", source = "cardStatus")
     CardRequest toRequest(CardResponse cardResponse);
 
     /**
@@ -31,7 +34,10 @@ public interface CardMapper {
     @Mapping(target = "cardNumber", source = "cardNumber")
     @Mapping(target = "cvv", source = "cvv")
     @Mapping(target = "pin", source = "pin")
-    @Mapping(target = "startDate", ignore = true)
-    @Mapping(target = "expirationDate", ignore = true)
+    @Mapping(target = "startDate", source = "startDate")
+    @Mapping(target = "expirationDate", source = "expirationDate")
+    @Mapping(target = "cardCategory", source = "cardCategory")
+    @Mapping(target = "cardType", source = "cardType")
+    @Mapping(target = "cardStatus", source = "cardStatus")
     CardResponse toResponse(CardRequest cardRequest);
 }

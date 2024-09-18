@@ -1,8 +1,8 @@
 package api.mpba.rastvdmy.service.impl;
 
 import api.mpba.rastvdmy.config.utils.EncryptionUtil;
-import api.mpba.rastvdmy.dto.request.CardRequest;
 import api.mpba.rastvdmy.entity.BankAccount;
+import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.entity.Card;
 import api.mpba.rastvdmy.entity.User;
 import api.mpba.rastvdmy.entity.enums.CardCategory;
@@ -50,26 +50,45 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         this.userRepository = userRepository;
     }
 
-    public List<Card> getAccountCards(UUID id, HttpServletRequest request) {
-        validateBankIdentityFromToken(request);
+    public List<Card> getAccountCards(String bankName, String accountNumber, HttpServletRequest request) {
+        BankAccount account = getBankAccount(bankName, accountNumber, request);
 
-        return cardRepository.findAllByAccountId(id);
+        List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
+        );
+        return cards.stream().filter(this::decryptCardData).toList();
     }
 
-    public Card getAccountCardById(UUID accountId, UUID cardId, HttpServletRequest request) {
-        validateBankIdentityFromToken(request);
+    public Card getAccountCardByNumber(String bankName, String accountNumber, String cardNumber, HttpServletRequest request) {
+        BankAccount account = getBankAccount(bankName, accountNumber, request);
 
-        return cardRepository.findByAccountIdAndId(accountId, cardId)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified card not found."));
+        List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
+        );
+
+        return cards.stream()
+                .filter(this::decryptCardData)
+                .filter(card -> card.getCardNumber().equals(cardNumber))
+                .findFirst().orElseThrow(
+                        () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified card not found.")
+                );
+    }
+
+    public boolean decryptCardData(Card card) {
+        SecretKey secretKey = EncryptionUtil.getSecretKey();
+        try {
+            card.setCardNumber(EncryptionUtil.decrypt(card.getCardNumber(), secretKey));
+            card.setCvv(EncryptionUtil.decrypt(card.getCvv(), secretKey));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Transactional
-    public Card addAccountCard(UUID id, HttpServletRequest request, CardRequest cardRequest) throws Exception {
-        validateBankIdentityFromToken(request);
-        BankAccount account = bankAccountRepository.findById(id)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified bank account not found."));
-
-        return generateCard(cardRequest.cardNumber(), cardRequest.cvv(), cardRequest.pin(), account);
+    public Card addAccountCard(String bankName, String accountNumber, HttpServletRequest request) throws Exception {
+        BankAccount account = getBankAccount(bankName, accountNumber, request);
+        return generateCard(generateCardNumber(), generateCvv(), generatePin(), account);
     }
 
     @Transactional
@@ -116,35 +135,38 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         return cardRepository.save(card);
     }
 
-    public void updateAccountCardStatus(UUID accountId, UUID cardId, HttpServletRequest request) {
-        validateBankIdentityFromToken(request);
-        Card card = cardRepository.findByAccountIdAndId(accountId, cardId)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified card not found."));
-        switch (card.getStatus()) {
-            case STATUS_CARD_DEFAULT, STATUS_CARD_UNBLOCKED -> {
-                card.setStatus(STATUS_CARD_BLOCKED);
-                cardRepository.save(card);
-            }
-            case STATUS_CARD_BLOCKED -> {
-                card.setStatus(STATUS_CARD_UNBLOCKED);
-                cardRepository.save(card);
-            }
-        }
+    public void removeAccountCard(String bankName, String accountNumber, String cardNumber, HttpServletRequest request) {
+        BankAccount account = getBankAccount(bankName, accountNumber, request);
+
+        List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
+        );
+
+        SecretKey secretKey = EncryptionUtil.getSecretKey();
+        Card card = cards.stream()
+                .filter(cc -> validateCardData(cardNumber, cc, secretKey))
+                .findFirst().orElseThrow(
+                        () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified card not found.")
+                );
+
+        cardRepository.delete(card);
     }
 
-    public void removeAccountCard(UUID accountId, UUID cardId, HttpServletRequest request) {
-        validateBankIdentityFromToken(request);
-        Card card = cardRepository.findByAccountIdAndId(accountId, cardId)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified card not found."));
-        cardRepository.delete(card);
+    private boolean validateCardData(String cardNumber, Card cc, SecretKey secretKey) {
+        try {
+            String decryptedCardNumber = EncryptionUtil.decrypt(cc.getCardNumber(), secretKey);
+            return decryptedCardNumber.equals(cardNumber);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Transactional
     public void removeAllCards(BankAccount account) {
-        List<Card> cards = cardRepository.findAllByAccountId(account.getId());
-        if (cards.isEmpty()) {
-            throw new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.");
-        }
+        List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
+        );
+
         try {
             cardRepository.deleteAll(cards);
         } catch (Exception e) {
@@ -152,12 +174,35 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         }
     }
 
-    private void validateBankIdentityFromToken(HttpServletRequest request) {
+    private BankAccount getBankAccount(String bankName, String accountNumber, HttpServletRequest request) {
         final String token = jwtService.extractToken(request);
         final String userEmail = jwtService.extractSubject(token);
+
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found."));
-        bankIdentityRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified bank identity not found."));
+
+        BankIdentity identity = bankIdentityRepository.findByUserIdAndBankName(user.getId(), bankName).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")
+        );
+
+        List<BankAccount> bankAccounts = bankAccountRepository.findAllByBankIdentityId(identity.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "No accounts found for specified bank identity.")
+        );
+
+        return bankAccounts.stream()
+                .filter(account -> validateAccountNumber(accountNumber, account))
+                .findFirst().orElseThrow(() -> new ApplicationException(
+                        HttpStatus.NOT_FOUND, "Specified bank account not found.")
+                );
+    }
+
+    private static boolean validateAccountNumber(String accountNumber, BankAccount account) {
+        try {
+            SecretKey secretKey = EncryptionUtil.getSecretKey();
+            String decryptedAccountNumber = EncryptionUtil.decrypt(account.getAccountNumber(), secretKey);
+            return decryptedAccountNumber.equals(accountNumber);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
