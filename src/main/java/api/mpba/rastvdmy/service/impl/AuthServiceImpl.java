@@ -62,6 +62,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
 
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         String encodedDateOfBirth = EncryptionUtil.encrypt(request.dateOfBirth(), secretKey);
+        String encodedPhoneNumber = EncryptionUtil.encrypt(request.phoneNumber(), secretKey);
 
         List<CurrencyData> currencyData = currencyDataRepository.findAll();
 
@@ -76,7 +77,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .avatar("https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1")
-                .phoneNumber(request.phoneNumber())
+                .phoneNumber(encodedPhoneNumber)
                 .currencyData(currencyData)
                 .build();
         userRepository.save(user);
@@ -95,7 +96,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
         );
 
-        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked. Authentication is forbidden.");
         }
 
@@ -129,10 +130,23 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
     }
 
     private void checkIfUserExistsByPhoneNumber(UserRequest request) {
-        if (userRepository.findByPhoneNumber(request.phoneNumber()).isPresent()) {
+        List<User> users = userRepository.findAll();
+        boolean phoneNumberExists = users.stream()
+                .anyMatch(u -> isPhoneNumberExists(u, request));
+        if (phoneNumberExists) {
             throw new ApplicationException(
                     HttpStatus.BAD_REQUEST, "User with phone number " + request.phoneNumber() + " already exists."
             );
+        }
+    }
+
+    private boolean isPhoneNumberExists(User user, UserRequest request) {
+        SecretKey secretKey = EncryptionUtil.getSecretKey();
+        try {
+            String decryptedPhoneNumber = EncryptionUtil.decrypt(user.getPhoneNumber(), secretKey);
+            return decryptedPhoneNumber.equals(request.phoneNumber());
+        } catch (Exception e) {
+            return false;
         }
     }
 

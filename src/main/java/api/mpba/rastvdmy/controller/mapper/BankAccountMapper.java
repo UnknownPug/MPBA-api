@@ -11,14 +11,12 @@ public interface BankAccountMapper {
     @Mapping(target = "accountNumber", source = "accountNumber")
     @Mapping(target = "balance", source = "balance")
     @Mapping(target = "currency", source = "currency")
-    @Mapping(target = "swift", source = "swift")
     @Mapping(target = "iban", source = "iban")
     BankAccountRequest toRequest(BankAccountResponse accountNumber);
 
     @Mapping(target = "accountNumber", source = "accountNumber")
     @Mapping(target = "balance", source = "balance")
     @Mapping(target = "currency", source = "currency")
-    @Mapping(target = "swift", source = "swift")
     @Mapping(target = "iban", source = "iban")
     BankAccountResponse toResponse(BankAccountRequest accountNumber);
 

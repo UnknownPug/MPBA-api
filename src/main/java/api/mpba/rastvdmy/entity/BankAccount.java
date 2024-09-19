@@ -43,9 +43,6 @@ public class BankAccount implements Serializable {
     @Column(name = "account_number", nullable = false)
     private String accountNumber;
 
-    @Column(name = "swift", nullable = false)
-    private String swift;
-
     @Column(name = "iban", nullable = false)
     private String iban;
 

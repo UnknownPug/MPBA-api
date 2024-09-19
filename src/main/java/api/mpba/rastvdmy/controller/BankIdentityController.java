@@ -44,7 +44,8 @@ public class BankIdentityController {
                 .map(identity -> identityMapper.toResponse(
                         new BankIdentityRequest(
                                 identity.getBankName(),
-                                identity.getBankNumber())
+                                identity.getBankNumber(),
+                                identity.getSwift())
                 )).collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
@@ -56,7 +57,8 @@ public class BankIdentityController {
         BankIdentity identity = identityService.getBankByName(request, name);
         BankIdentityResponse response = identityMapper.toResponse(new BankIdentityRequest(
                 identity.getBankName(),
-                identity.getBankNumber())
+                identity.getBankNumber(),
+                identity.getSwift())
         );
         return ResponseEntity.ok(response);
     }
@@ -70,7 +72,8 @@ public class BankIdentityController {
         BankIdentity identity = identityService.addBank(request, identityRequest);
         BankIdentityResponse response = identityMapper.toResponse(new BankIdentityRequest(
                 identity.getBankName(),
-                identity.getBankNumber())
+                identity.getBankNumber(),
+                identity.getSwift())
         );
         return ResponseEntity.accepted().body(response);
     }

@@ -11,5 +11,7 @@ public record BankIdentityRequest(
         String bankName,
 
         @JsonProperty("bank_number")
-        String bankNumber
+        String bankNumber,
+
+        String swift
 ) {}

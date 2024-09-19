@@ -46,7 +46,6 @@ public class BankAccountController {
                                 account.getAccountNumber(),
                                 account.getBalance(),
                                 account.getCurrency(),
-                                account.getSwift(),
                                 account.getIban()
                         )
                 )).collect(Collectors.toList());
@@ -65,7 +64,6 @@ public class BankAccountController {
                         account.getAccountNumber(),
                         account.getBalance(),
                         account.getCurrency(),
-                        account.getSwift(),
                         account.getIban()
                 )
         );
@@ -91,7 +89,6 @@ public class BankAccountController {
                         account.getAccountNumber(),
                         account.getBalance(),
                         account.getCurrency(),
-                        account.getSwift(),
                         account.getIban()
                 )
         );

@@ -18,6 +18,7 @@ CREATE TABLE bank_identity (
     id UUID PRIMARY KEY,
     bank_name VARCHAR(255) NOT NULL,
     bank_number VARCHAR(255) NOT NULL UNIQUE,
+    swift VARCHAR(255) NOT NULL UNIQUE,
     user_id UUID NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user_profile (id)
 );
@@ -28,7 +29,6 @@ CREATE TABLE bank_account (
     currency VARCHAR(255),
     balance DECIMAL(19,2) NOT NULL,
     account_number VARCHAR(255) NOT NULL UNIQUE,
-    swift VARCHAR(255) NOT NULL UNIQUE,
     iban VARCHAR(255) NOT NULL UNIQUE,
     bank_id UUID NOT NULL,
     FOREIGN KEY (bank_id) REFERENCES bank_identity (id)

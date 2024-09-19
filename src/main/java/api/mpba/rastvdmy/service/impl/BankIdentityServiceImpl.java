@@ -41,6 +41,10 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
     public List<BankIdentity> getBanks(HttpServletRequest request) {
         User user = getUser(request);
 
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
+
         return identityRepository.findAllByUserId(user.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User doesn't have any connected bank accounts.")
         );
@@ -48,6 +52,10 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
 
     public BankIdentity getBankByName(HttpServletRequest request, String name) {
         User user = getUser(request);
+
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
 
         return identityRepository.findByNameAndConnectedToUserId(name, user.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User doesn't have this specific bank."));
@@ -57,10 +65,15 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
     public BankIdentity addBank(HttpServletRequest request, BankIdentityRequest identityRequest) throws Exception {
         User user = validateUserData(request, identityRequest);
 
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
+
         BankIdentity bankIdentity = BankIdentity.builder()
                 .id(UUID.randomUUID())
                 .bankName(identityRequest.bankName())
                 .bankNumber(generateBankNumber())
+                .swift(generateSwift())
                 .user(user)
                 .build();
 
@@ -73,9 +86,10 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
     private User validateUserData(HttpServletRequest request, BankIdentityRequest identityRequest) {
         User user = getUser(request);
 
-        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
-            throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked, operation is not available.");
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
+
         if (identityRepository.findByUserIdAndBankName(user.getId(), identityRequest.bankName()).isPresent()) {
             throw new ApplicationException(HttpStatus.CONFLICT, "Bank with the same name already added.");
         }
@@ -86,14 +100,14 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
     public void deleteBank(HttpServletRequest request, String bankName) {
         User user = getUser(request);
 
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
+
         BankIdentity bankIdentity = identityRepository.findByUserIdAndBankNameWithAccounts(user.getId(), bankName)
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND,
                         "User is not found or bank with the given name is not connected to the user."
                 ));
-
-        if (bankIdentity.getUser().getStatus() == UserStatus.STATUS_BLOCKED) {
-            throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked, operation is not available.");
-        }
 
         if (!bankIdentity.getBankAccounts().isEmpty()) {
             throw new ApplicationException(HttpStatus.CONFLICT, "Make sure to delete all bank accounts first.");

@@ -35,6 +35,9 @@ public class BankIdentity implements Serializable {
     @Column(name = "bank_number", nullable = false)
     private String bankNumber;
 
+    @Column(name = "swift", nullable = false)
+    private String swift;
+
     @ManyToOne
     @JsonIgnore
     @ToString.Exclude

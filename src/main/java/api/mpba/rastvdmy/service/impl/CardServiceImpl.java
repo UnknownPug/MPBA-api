@@ -175,11 +175,7 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
     }
 
     private BankAccount getBankAccount(String bankName, String accountNumber, HttpServletRequest request) {
-        final String token = jwtService.extractToken(request);
-        final String userEmail = jwtService.extractSubject(token);
-
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found."));
+        User user = BankAccountServiceImpl.getUserData(request, jwtService, userRepository);
 
         BankIdentity identity = bankIdentityRepository.findByUserIdAndBankName(user.getId(), bankName).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")

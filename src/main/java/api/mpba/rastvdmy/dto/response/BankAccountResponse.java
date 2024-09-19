@@ -17,7 +17,5 @@ public record BankAccountResponse(
 
         Currency currency,
 
-        String swift,
-
         String iban
 ) {}

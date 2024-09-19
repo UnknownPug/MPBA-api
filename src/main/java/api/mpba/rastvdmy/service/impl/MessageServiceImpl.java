@@ -49,7 +49,11 @@ public class MessageServiceImpl implements MessageService {
     }
 
     public Message sendMessage(HttpServletRequest request, String receiverEmail, String content) throws Exception {
-        User sender = getSender(request);
+        User sender = BankAccountServiceImpl.getUserData(request, jwtService, userRepository);
+
+        if (sender.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
 
         if (content.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Message must contain a text.");
@@ -71,19 +75,5 @@ public class MessageServiceImpl implements MessageService {
                 .build();
 
         return messageRepository.save(message);
-    }
-
-    private User getSender(HttpServletRequest request) {
-        final String token = jwtService.extractToken(request);
-        final String senderEmail = jwtService.extractSubject(token);
-
-        User sender = userRepository.findByEmail(senderEmail).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified sender not found.")
-        );
-
-        if (sender.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
-            throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked. Opperation is forbidden.");
-        }
-        return sender;
     }
 }

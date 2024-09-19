@@ -72,10 +72,10 @@ public class MessageController {
             HttpServletRequest request, @Valid @RequestBody MessageRequest messageRequest) throws Exception {
         logInfo("Sending message ...");
 
-        kafkaTemplate.send("messages", messageRequest.receiverEmail(), messageRequest.content());
-
         Message message = messageService.sendMessage(request, messageRequest.receiverEmail(),
                 messageRequest.content());
+
+        kafkaTemplate.send("messages", messageRequest.receiverEmail(), messageRequest.content());
 
         MessageResponse response = messageMapper.toResponse(
                 new MessageRequest(

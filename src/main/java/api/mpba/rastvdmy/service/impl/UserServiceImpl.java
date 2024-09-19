@@ -16,6 +16,7 @@ import api.mpba.rastvdmy.service.utils.GenerateAccessToken;
 import api.mpba.rastvdmy.service.utils.UserDataValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +33,7 @@ import javax.crypto.SecretKey;
 import java.util.List;
 
 //@CacheConfig(cacheNames = {"users"})
+@Slf4j
 @Service
 public class UserServiceImpl extends FinancialDataGenerator implements UserService {
     private final UserRepository userRepository;
@@ -74,6 +76,11 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
     public User getUser(HttpServletRequest request) {
         User user = userRepository.findByEmail(request.getUserPrincipal().getName())
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist."));
+
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
+
         decryptUserData(user);
         return user;
     }
@@ -82,8 +89,10 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
         try {
             SecretKey secretKey = EncryptionUtil.getSecretKey(); // Ensure this retrieves the same key used for encryption
             user.setDateOfBirth(EncryptionUtil.decrypt(user.getDateOfBirth(), secretKey));
+            user.setPhoneNumber(EncryptionUtil.decrypt(user.getPhoneNumber(), secretKey));
             return true;
         } catch (Exception e) {
+            log.error("Error while decrypting account data: {}", e.getMessage());
             throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while decrypting account data.");
         }
     }
@@ -94,7 +103,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist."));
 
-        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
@@ -123,7 +132,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
 
-        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
@@ -154,7 +163,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
 
-        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
@@ -173,7 +182,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
 
-        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
@@ -187,7 +196,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
 
-        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
@@ -231,7 +240,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
 
-        if (user.getStatus() == UserStatus.STATUS_BLOCKED) {
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 

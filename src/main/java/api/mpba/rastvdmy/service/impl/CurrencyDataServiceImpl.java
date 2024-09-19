@@ -99,11 +99,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
     }
 
     private void isUserValid(HttpServletRequest request) {
-        final String token = jwtService.extractToken(request);
-        final String userEmail = jwtService.extractSubject(token);
-        userRepository.findByEmail(userEmail).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
-        );
+        BankAccountServiceImpl.getUserData(request, jwtService, userRepository);
     }
 
     /**

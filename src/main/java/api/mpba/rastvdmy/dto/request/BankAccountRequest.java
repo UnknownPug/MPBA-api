@@ -13,7 +13,5 @@ public record BankAccountRequest(
 
         Currency currency,
 
-        String swift,
-
         String iban
 ) {}

@@ -5,6 +5,7 @@ import api.mpba.rastvdmy.entity.BankAccount;
 import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.entity.User;
 import api.mpba.rastvdmy.entity.enums.Currency;
+import api.mpba.rastvdmy.entity.enums.UserStatus;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.BankAccountRepository;
 import api.mpba.rastvdmy.repository.BankIdentityRepository;
@@ -144,7 +145,6 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
                 .balance(BigDecimal.valueOf(generateBalance.nextInt(MAX_BALANCE) + MIN_BALANCE))
                 .accountNumber(encodedAccountNumber)
                 .currency(accountCurrency)
-                .swift(generateSwift())
                 .iban(encodedIban)
                 .bankIdentity(bankIdentity)
                 .build();
@@ -202,6 +202,14 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
     }
 
     private BankIdentity getBankIdentity(HttpServletRequest request, String bankName) {
+        User user = getUserData(request, jwtService, userRepository);
+
+        return bankIdentityRepository.findByUserIdAndBankName(user.getId(), bankName).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")
+        );
+    }
+
+    public static User getUserData(HttpServletRequest request, JwtService jwtService, UserRepository userRepository) {
         final String token = jwtService.extractToken(request);
         final String userEmail = jwtService.extractSubject(token);
 
@@ -209,8 +217,9 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
         );
 
-        return bankIdentityRepository.findByUserIdAndBankName(user.getId(), bankName).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")
-        );
+        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
+        }
+        return user;
     }
 }
