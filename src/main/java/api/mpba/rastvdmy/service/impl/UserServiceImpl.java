@@ -16,7 +16,6 @@ import api.mpba.rastvdmy.service.utils.GenerateAccessToken;
 import api.mpba.rastvdmy.service.utils.UserDataValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +32,6 @@ import javax.crypto.SecretKey;
 import java.util.List;
 
 //@CacheConfig(cacheNames = {"users"})
-@Slf4j
 @Service
 public class UserServiceImpl extends FinancialDataGenerator implements UserService {
     private final UserRepository userRepository;
@@ -92,7 +90,6 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
             user.setPhoneNumber(EncryptionUtil.decrypt(user.getPhoneNumber(), secretKey));
             return true;
         } catch (Exception e) {
-            log.error("Error while decrypting account data: {}", e.getMessage());
             throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while decrypting account data.");
         }
     }
