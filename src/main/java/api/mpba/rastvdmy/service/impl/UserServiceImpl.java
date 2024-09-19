@@ -94,7 +94,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
         }
     }
 
-    public User updateUser(HttpServletRequest request, UserUpdateRequest userRequest) {
+    public User updateUser(HttpServletRequest request, UserUpdateRequest userRequest) throws Exception {
         final String userEmail = getUserFromToken(request);
 
         User user = userRepository.findByEmail(userEmail)
@@ -111,16 +111,32 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
 
         user.setEmail(userRequest.email());
         user.setPassword(passwordEncoder.encode(userRequest.password()));
-        user.setPhoneNumber(userRequest.phoneNumber());
+
+        SecretKey secretKey = EncryptionUtil.getSecretKey();
+        String encodedPhoneNumber = EncryptionUtil.encrypt(userRequest.phoneNumber(), secretKey);
+        user.setPhoneNumber(encodedPhoneNumber);
 
         return userRepository.save(user);
     }
 
     private void checkIfUserExistsByPhoneNumber(UserUpdateRequest request) {
-        if (userRepository.findByPhoneNumber(request.phoneNumber()).isPresent()) {
+        List<User> users = userRepository.findAll();
+        boolean isPhoneUsed = users.stream()
+                .anyMatch(u -> checkIsNumberUsed(u, request));
+        if (isPhoneUsed) {
             throw new ApplicationException(
                     HttpStatus.BAD_REQUEST, "User with phone number " + request.phoneNumber() + " already exists."
             );
+        }
+    }
+
+    private boolean checkIsNumberUsed(User user, UserUpdateRequest request) {
+        try {
+            SecretKey secretKey = EncryptionUtil.getSecretKey();
+            String decryptedPhoneNumber = EncryptionUtil.decrypt(user.getPhoneNumber(), secretKey);
+            return decryptedPhoneNumber.equals(request.phoneNumber());
+        } catch (Exception e) {
+            return false;
         }
     }
 
