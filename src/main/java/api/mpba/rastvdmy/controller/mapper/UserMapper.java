@@ -11,11 +11,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    /**
-     * Maps UserResponse to UserRequest
-     * @param userResponse UserResponse
-     * @return UserRequest
-     */
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
     @Mapping(target = "surname", source = "surname")
     @Mapping(target = "dateOfBirth", source = "dateOfBirth", dateFormat = "yyyy-MM-dd")
@@ -28,11 +24,7 @@ public interface UserMapper {
     @Mapping(target = "role", source = "role")
     UserRequest toRequest(UserResponse userResponse);
 
-    /**
-     * Maps UserRequest to UserResponse
-     * @param userRequest UserRequest
-     * @return UserResponse
-     */
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
     @Mapping(target = "surname", source = "surname")
     @Mapping(target = "dateOfBirth", source = "dateOfBirth")

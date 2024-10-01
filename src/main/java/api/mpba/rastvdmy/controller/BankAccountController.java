@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,6 +44,7 @@ public class BankAccountController {
         List<BankAccountResponse> response = accounts.stream()
                 .map(account -> accountMapper.toResponse(
                         new BankAccountRequest(
+                                account.getId(),
                                 account.getAccountNumber(),
                                 account.getBalance(),
                                 account.getCurrency(),
@@ -53,14 +55,15 @@ public class BankAccountController {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path = "/{name}/{number}", produces = "application/json")
-    public ResponseEntity<BankAccountResponse> getAccount(HttpServletRequest request,
-                                                          @PathVariable("name") String bankName,
-                                                          @PathVariable("number") String accountNumber) {
+    @GetMapping(path = "/{name}/{accountId}", produces = "application/json")
+    public ResponseEntity<BankAccountResponse> getAccountById(HttpServletRequest request,
+                                                              @PathVariable("name") String bankName,
+                                                              @PathVariable("accountId") UUID accountId) {
         logInfo("Getting account info ...");
-        BankAccount account = accountService.getAccountByNumber(request, bankName, accountNumber);
+        BankAccount account = accountService.getAccountById(request, bankName, accountId);
         BankAccountResponse response = accountMapper.toResponse(
                 new BankAccountRequest(
+                        account.getId(),
                         account.getAccountNumber(),
                         account.getBalance(),
                         account.getCurrency(),
@@ -72,20 +75,21 @@ public class BankAccountController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/total", produces = "application/json")
-    public ResponseEntity<Map<String, BigDecimal>> getTotalBalance() {
+    public ResponseEntity<Map<String, BigDecimal>> getTotalBalance(HttpServletRequest request) {
         logInfo("Getting total balances for all bank accounts ...");
-        Map<String, BigDecimal> totalBalances = accountService.getTotalBalance();
+        Map<String, BigDecimal> totalBalances = accountService.getTotalBalance(request);
         return ResponseEntity.ok(totalBalances);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(path = "/{name}", produces = "application/json")
-    public ResponseEntity<BankAccountResponse> addBankAccount(HttpServletRequest request,
-                                                              @PathVariable("name") String bankName) throws Exception {
+    public ResponseEntity<BankAccountResponse> addAccount(HttpServletRequest request,
+                                                          @PathVariable("name") String bankName) throws Exception {
         logInfo("Connecting to the bank to connect a bank account ...");
         BankAccount account = accountService.addAccount(request, bankName);
         BankAccountResponse response = accountMapper.toResponse(
                 new BankAccountRequest(
+                        account.getId(),
                         account.getAccountNumber(),
                         account.getBalance(),
                         account.getCurrency(),
@@ -96,17 +100,17 @@ public class BankAccountController {
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping(path = "/{name}/{number}")
+    @DeleteMapping(path = "/{name}/{accountId}")
     public ResponseEntity<Void> removeAccount(HttpServletRequest request,
                                               @PathVariable("name") String bankName,
-                                              @PathVariable("number") String accountNumber) {
+                                              @PathVariable("accountId") UUID accountId) {
         logInfo("Removing account for bank identity ...");
-        accountService.removeAccount(request, bankName, accountNumber);
+        accountService.removeAccount(request, bankName, accountId);
         return ResponseEntity.noContent().build();
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping(path="/{name}")
+    @DeleteMapping(path = "/{name}")
     public ResponseEntity<Void> removeAllAccounts(HttpServletRequest request,
                                                   @PathVariable("name") String bankName) {
         logInfo("Removing all accounts ...");

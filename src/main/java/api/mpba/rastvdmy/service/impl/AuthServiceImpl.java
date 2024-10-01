@@ -55,6 +55,9 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
     public JwtAuthResponse signUp(UserRequest request) throws Exception {
 
         // Validate user data
+        UserDataValidator.isInvalidName(request.name());
+        UserDataValidator.isInvalidSurname(request.surname());
+        UserDataValidator.isInvalidEmail(request.email());
         UserDataValidator.isInvalidPassword(request.password());
         UserDataValidator.isInvalidPhoneNumber(request.phoneNumber());
         UserDataValidator.isInvalidDateOfBirth(request.dateOfBirth());
@@ -124,7 +127,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
     private void checkIfUserExistsByEmail(UserRequest request) {
         if (userRepository.findByEmail(request.email()).isPresent()) {
             throw new ApplicationException(
-                    HttpStatus.BAD_REQUEST, "User with email " + request.email() + " already exists."
+                    HttpStatus.BAD_REQUEST, "User with this email already exists."
             );
         }
     }
@@ -135,7 +138,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 .anyMatch(u -> isPhoneNumberExists(u, request));
         if (phoneNumberExists) {
             throw new ApplicationException(
-                    HttpStatus.BAD_REQUEST, "User with phone number " + request.phoneNumber() + " already exists."
+                    HttpStatus.BAD_REQUEST, "User with this phone number already exists."
             );
         }
     }

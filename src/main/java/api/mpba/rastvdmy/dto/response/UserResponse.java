@@ -3,19 +3,26 @@ package api.mpba.rastvdmy.dto.response;
 import api.mpba.rastvdmy.entity.enums.UserRole;
 import api.mpba.rastvdmy.entity.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-/**
- * This class represents a response for a user.
- *
- * @param name            The name of the user.
- * @param surname         The surname of the user.
- * @param dateOfBirth     The date of birth of the user.
- * @param countryOfOrigin The country of origin of the user.
- * @param email           The email of the user.
- * @param password        The password of the user.
- * @param phoneNumber     The phone number of the user.
- */
+import java.util.UUID;
+
+@JsonPropertyOrder({
+        "id",
+        "name",
+        "surname",
+        "date_of_birth",
+        "country_of_origin",
+        "email",
+        "password",
+        "phone_number",
+        "avatar",
+        "status",
+        "role"
+})
 public record UserResponse(
+        UUID id,
+
         String name,
 
         String surname,

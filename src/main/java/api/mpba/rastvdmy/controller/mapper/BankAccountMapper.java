@@ -8,12 +8,14 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface BankAccountMapper {
 
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "accountNumber", source = "accountNumber")
     @Mapping(target = "balance", source = "balance")
     @Mapping(target = "currency", source = "currency")
     @Mapping(target = "iban", source = "iban")
     BankAccountRequest toRequest(BankAccountResponse accountNumber);
 
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "accountNumber", source = "accountNumber")
     @Mapping(target = "balance", source = "balance")
     @Mapping(target = "currency", source = "currency")

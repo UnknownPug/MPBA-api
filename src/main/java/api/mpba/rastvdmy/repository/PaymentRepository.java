@@ -1,20 +1,25 @@
 package api.mpba.rastvdmy.repository;
 
 import api.mpba.rastvdmy.entity.Payment;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface PaymentRepository extends JpaRepository<Payment, String> {
+public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
-    List<Payment> findAllBySenderAccountId(UUID accountId);
+    @Query("SELECT p.senderCard.id FROM Payment p WHERE p.id = :paymentId")
+    Optional<UUID> findCardIdByPaymentId(@Param("paymentId") UUID paymentId);
 
-    Page<Payment> findAllBySenderAccountId(UUID accountId, Pageable pageable);
+    @Query("SELECT p FROM Payment p WHERE p.senderAccount.id = :accountId OR p.senderCard.id IN :cardsIds")
+    Optional<List<Payment>> findAllBySenderAccountIdOrSenderCardId(@Param("accountId") UUID accountId,
+                                                                   @Param("cardsIds") List<UUID> cardsIds);
 
-    Payment findBySenderAccountId(UUID id);
+    Optional<Payment> findBySenderAccountIdOrSenderCardIdAndId(UUID accountId, UUID cardId, UUID paymentId);
+
 }

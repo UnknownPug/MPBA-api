@@ -50,8 +50,8 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         this.userRepository = userRepository;
     }
 
-    public List<Card> getAccountCards(String bankName, String accountNumber, HttpServletRequest request) {
-        BankAccount account = getBankAccount(bankName, accountNumber, request);
+    public List<Card> getAccountCards(String bankName, UUID accountId, HttpServletRequest request) {
+        BankAccount account = getBankAccount(bankName, accountId, request);
 
         List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
@@ -59,16 +59,16 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         return cards.stream().filter(this::decryptCardData).toList();
     }
 
-    public Card getAccountCardByNumber(String bankName, String accountNumber, String cardNumber, HttpServletRequest request) {
-        BankAccount account = getBankAccount(bankName, accountNumber, request);
+    public Card getAccountCardById(String bankName, UUID accountId, UUID cardId, HttpServletRequest request) {
+        BankAccount account = getBankAccount(bankName, accountId, request);
 
         List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
         );
 
         return cards.stream()
+                .filter(card -> card.getId().equals(cardId))
                 .filter(this::decryptCardData)
-                .filter(card -> card.getCardNumber().equals(cardNumber))
                 .findFirst().orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified card not found.")
                 );
@@ -86,8 +86,8 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
     }
 
     @Transactional
-    public Card addAccountCard(String bankName, String accountNumber, HttpServletRequest request) throws Exception {
-        BankAccount account = getBankAccount(bankName, accountNumber, request);
+    public Card addAccountCard(String bankName, UUID accountId, HttpServletRequest request) throws Exception {
+        BankAccount account = getBankAccount(bankName, accountId, request);
         return generateCard(generateCardNumber(), generateCvv(), generatePin(), account);
     }
 
@@ -135,30 +135,19 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         return cardRepository.save(card);
     }
 
-    public void removeAccountCard(String bankName, String accountNumber, String cardNumber, HttpServletRequest request) {
-        BankAccount account = getBankAccount(bankName, accountNumber, request);
+    public void removeAccountCard(String bankName, UUID accountId, UUID cardId, HttpServletRequest request) {
+        BankAccount account = getBankAccount(bankName, accountId, request);
 
         List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
         );
-
-        SecretKey secretKey = EncryptionUtil.getSecretKey();
         Card card = cards.stream()
-                .filter(cc -> validateCardData(cardNumber, cc, secretKey))
+                .filter(cc -> cc.getId().equals(cardId))
                 .findFirst().orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified card not found.")
                 );
 
         cardRepository.delete(card);
-    }
-
-    private boolean validateCardData(String cardNumber, Card cc, SecretKey secretKey) {
-        try {
-            String decryptedCardNumber = EncryptionUtil.decrypt(cc.getCardNumber(), secretKey);
-            return decryptedCardNumber.equals(cardNumber);
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     @Transactional
@@ -174,7 +163,7 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         }
     }
 
-    private BankAccount getBankAccount(String bankName, String accountNumber, HttpServletRequest request) {
+    private BankAccount getBankAccount(String bankName, UUID accountId, HttpServletRequest request) {
         User user = BankAccountServiceImpl.getUserData(request, jwtService, userRepository);
 
         BankIdentity identity = bankIdentityRepository.findByUserIdAndBankName(user.getId(), bankName).orElseThrow(
@@ -186,19 +175,9 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         );
 
         return bankAccounts.stream()
-                .filter(account -> validateAccountNumber(accountNumber, account))
+                .filter(account -> account.getId().equals(accountId))
                 .findFirst().orElseThrow(() -> new ApplicationException(
                         HttpStatus.NOT_FOUND, "Specified bank account not found.")
                 );
-    }
-
-    private static boolean validateAccountNumber(String accountNumber, BankAccount account) {
-        try {
-            SecretKey secretKey = EncryptionUtil.getSecretKey();
-            String decryptedAccountNumber = EncryptionUtil.decrypt(account.getAccountNumber(), secretKey);
-            return decryptedAccountNumber.equals(accountNumber);
-        } catch (Exception e) {
-            return false;
-        }
     }
 }

@@ -2,6 +2,7 @@ package api.mpba.rastvdmy.repository;
 
 import api.mpba.rastvdmy.entity.BankAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,7 +14,6 @@ public interface BankAccountRepository extends JpaRepository<BankAccount, UUID> 
 
     Optional<List<BankAccount>> findAllByBankIdentityId(UUID bankIdentityId);
 
-    Optional<BankAccount> findByBankIdentityId(UUID id);
-
-    Optional<BankAccount> findByAccountNumber(String accountNumber);
+    @Query("SELECT a FROM BankAccount a WHERE a.bankIdentity.id IN :bankIdentitiesIds")
+    List<BankAccount> findAllByBankIdentitiesId(List<UUID> bankIdentitiesIds);
 }

@@ -5,21 +5,22 @@ import api.mpba.rastvdmy.entity.Card;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Card service interface
  */
 public interface CardService {
 
-    List<Card> getAccountCards(String bankName, String accountNumber, HttpServletRequest request);
+    List<Card> getAccountCards(String bankName, UUID accountId, HttpServletRequest request);
 
-    Card getAccountCardByNumber(String bankName, String accountNumber, String cardNumber, HttpServletRequest request);
+    Card getAccountCardById(String bankName, UUID accountId, UUID cardId, HttpServletRequest request);
 
-    Card addAccountCard(String bankName, String accountNumber, HttpServletRequest request) throws Exception;
+    Card addAccountCard(String bankName, UUID accountId, HttpServletRequest request) throws Exception;
 
     void connectCards(BankAccount account) throws Exception;
 
-     void removeAccountCard(String bankName, String accountNumber, String cardNumber, HttpServletRequest request);
+     void removeAccountCard(String bankName, UUID accountId, UUID cardId, HttpServletRequest request);
 
     void removeAllCards(BankAccount account);
 }

@@ -11,37 +11,25 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PaymentMapper {
 
-    /**
-     * Maps PaymentResponse to PaymentRequest
-     * @param paymentResponse PaymentResponse
-     * @return PaymentRequest
-     */
-    @Mapping(target = "amount", source = "amount")
-    @Mapping(target = "dateTime", source = "dateTime")
-    @Mapping(target = "type", source = "paymentType")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "senderName", source = "senderName")
     @Mapping(target = "recipientName", source = "recipientName")
+    @Mapping(target = "dateTime", source = "dateTime")
     @Mapping(target = "description", source = "description")
-    @Mapping(target = "senderNumber", source = "senderNumber")
-    @Mapping(target = "recipientNumber", source = "recipientNumber")
-    @Mapping(target = "senderPin", source = "senderPin")
-    @Mapping(target = "senderCvv", source = "senderCvv")
+    @Mapping(target = "amount", source = "amount")
+    @Mapping(target = "type", source = "type")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "currency", source = "currency")
     PaymentRequest toRequest(PaymentResponse paymentResponse);
 
-    /**
-     * Maps PaymentRequest to PaymentResponse
-     * @param paymentRequest PaymentRequest
-     * @return PaymentResponse
-     */
-    @Mapping(target = "amount", source = "amount")
-    @Mapping(target = "dateTime", source = "dateTime")
-    @Mapping(target = "paymentType", source = "type")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "senderName", source = "senderName")
     @Mapping(target = "recipientName", source = "recipientName")
+    @Mapping(target = "dateTime", source = "dateTime")
     @Mapping(target = "description", source = "description")
-    @Mapping(target = "senderNumber", source = "senderNumber")
-    @Mapping(target = "recipientNumber", source = "recipientNumber")
-    @Mapping(target = "senderPin", source = "senderPin")
-    @Mapping(target = "senderCvv", source = "senderCvv")
+    @Mapping(target = "amount", source = "amount")
+    @Mapping(target = "type", source = "type")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "currency", source = "currency")
     PaymentResponse toResponse(PaymentRequest paymentRequest);
 }

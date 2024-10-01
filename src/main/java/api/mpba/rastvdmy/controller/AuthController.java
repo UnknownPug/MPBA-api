@@ -28,14 +28,14 @@ public class AuthController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(path = "/signup", consumes = "application/json", produces = "application/json")
     public ResponseEntity<JwtAuthResponse> signUp(@Valid @RequestBody UserRequest request) throws Exception {
-        logInfo("Signing up user: {} ...", request.email());
+        logInfo("Signing up user ...");
         return ResponseEntity.ok(authService.signUp(request));
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(path = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<JwtAuthResponse> authenticate(@Valid @RequestBody UserLoginRequest userLoginRequest) {
-        logInfo("Authenticating user: {} ...", userLoginRequest.email());
+        logInfo("Authenticating user ...");
         return ResponseEntity.ok(authService.authenticate(userLoginRequest));
     }
 

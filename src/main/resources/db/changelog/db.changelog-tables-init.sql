@@ -52,14 +52,14 @@ CREATE TABLE card (
 -- Changeset Unknown:5
 CREATE TABLE payment (
     id UUID PRIMARY KEY,
-    currency VARCHAR(255),
     status VARCHAR(255),
     type VARCHAR(255),
+    currency VARCHAR(255),
+    amount DECIMAL(19,2) NOT NULL,
     sender_name VARCHAR(255) NOT NULL,
     recipient_name VARCHAR(255) NOT NULL,
-    date_time DATE NOT NULL,
     description VARCHAR(255),
-    amount DECIMAL(19,2) NOT NULL,
+    date_time DATE NOT NULL,
     sender_account_id UUID,
     recipient_account_id UUID,
     sender_card_id UUID,

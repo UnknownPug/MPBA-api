@@ -26,7 +26,7 @@ $$
                     'admin@mpba.com',
                     '$2a$12$15j07jN5lfXbRrewQGwW/OAW3yjUXDK.ubMrAm8y8Gowc9WPbiI0.', -- decrypt: admin
                     'https://www.shareicon.net/data/2015/09/18/103157_man_512x512.png',
-                    'nh4U0ZZXTgFk3H0YsGvyri69dp3b7jeYcdP576khIBI='); -- decrypt: +420111222333
+                    'v75ySFMAY5Cjz4msGwFKVl046szL9Kk3wIypTmJOorA='); -- decrypt: +420111222333
         END IF;
     END
 $$;

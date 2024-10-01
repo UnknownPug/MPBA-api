@@ -11,45 +11,36 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Service for managing users
  */
 public interface UserService {
 
-    /**
-     * Get all users
-     *
-     * @return list of users
-     */
-    List<User> getUsers();
+    List<User> getUsers(HttpServletRequest request);
 
-    /**
-     * Get all users with pagination and sorting
-     * @param pageable page and sort options
-     * @return page of users
-     */
-    Page<User> filterAndSortUsers(Pageable pageable);
+    Page<User> filterAndSortUsers(HttpServletRequest request, Pageable pageable);
 
     User getUser(HttpServletRequest request);
 
-    User getUserByEmail(String email);
+    User getUserById(HttpServletRequest request, UUID userId);
 
     User updateUser(HttpServletRequest request, UserUpdateRequest userRequest) throws Exception;
 
-    User updateUserSpecificCredentials(String email, @Valid AdminUpdateUserRequest userRequest);
+    User updateUserSpecificCredentials(HttpServletRequest request, UUID userId, @Valid AdminUpdateUserRequest userRequest);
 
     void uploadUserAvatar(HttpServletRequest request, MultipartFile userAvatar);
 
     void removeUserAvatar(HttpServletRequest request);
 
-    void updateUserRole(HttpServletRequest request, String email);
+    void updateUserRole(HttpServletRequest request, UUID userId);
 
-    void updateUserStatus(HttpServletRequest request, String email);
+    void updateUserStatus(HttpServletRequest request, UUID userId);
 
     void deleteUser(HttpServletRequest request);
 
-    void deleteUserByEmail(HttpServletRequest request, String email);
+    void deleteUserByEmail(HttpServletRequest request, UUID userId);
 
     UserDetailsService userDetailsService();
 

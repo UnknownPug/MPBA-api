@@ -55,7 +55,7 @@ public class MessageServiceImpl implements MessageService {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
-        if (content.isEmpty()) {
+        if (content.isEmpty() || content.isBlank()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Message must contain a text.");
         }
         SecretKey secretKey = EncryptionUtil.getSecretKey();

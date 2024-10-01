@@ -58,7 +58,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         return accounts.stream().filter(this::decryptAccountData).collect(Collectors.toList());
     }
 
-    public BankAccount getAccountByNumber(HttpServletRequest request, String bankName, String accountNumber) {
+    public BankAccount getAccountById(HttpServletRequest request, String bankName, UUID accountId) {
         BankIdentity bankIdentity = getBankIdentity(request, bankName);
 
         List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId()).orElseThrow(
@@ -66,8 +66,8 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         );
 
         return accounts.stream()
+                .filter(acc -> acc.getId().equals(accountId))
                 .filter(this::decryptAccountData)
-                .filter(acc -> acc.getAccountNumber().equals(accountNumber))
                 .findFirst().orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested account not found.")
                 );
@@ -84,8 +84,15 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         }
     }
 
-    public Map<String, BigDecimal> getTotalBalance() {
-        List<BankAccount> allAccounts = accountRepository.findAll(); // Assume this method fetches all bank accounts
+    public Map<String, BigDecimal> getTotalBalance(HttpServletRequest request) {
+        User user = getUserData(request, jwtService, userRepository);
+        List<BankIdentity> bankIdentities = bankIdentityRepository.findAllByUserId(user.getId()).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "No bank identities found.")
+        );
+
+        List<UUID> bankIdentitiesIds = bankIdentities.stream().map(BankIdentity::getId).toList();
+
+        List<BankAccount> allAccounts = accountRepository.findAllByBankIdentitiesId(bankIdentitiesIds); // Assume this method fetches all bank accounts
 
         Map<String, BigDecimal> totalBalances = allAccounts.stream()
                 .collect(Collectors.groupingBy(
@@ -153,16 +160,15 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
     }
 
     @Transactional
-    public void removeAccount(HttpServletRequest request, String bankName, String accountNumber) {
+    public void removeAccount(HttpServletRequest request, String bankName, UUID accountId) {
         BankIdentity bankIdentity = getBankIdentity(request, bankName);
 
         List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested account not found.")
         );
-        SecretKey secretKey = EncryptionUtil.getSecretKey();
 
         BankAccount account = accounts.stream()
-                .filter(acc -> validateAccountNumber(accountNumber, acc, secretKey))
+                .filter(acc -> acc.getId().equals(accountId))
                 .findFirst().orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested account not found."));
 
@@ -170,15 +176,6 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
             cardService.removeAllCards(account);
         }
         accountRepository.delete(account);
-    }
-
-    private static boolean validateAccountNumber(String accountNumber, BankAccount acc, SecretKey secretKey) {
-        try {
-            String decryptedAccountNumber = EncryptionUtil.decrypt(acc.getAccountNumber(), secretKey);
-            return decryptedAccountNumber.equals(accountNumber);
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     @Transactional

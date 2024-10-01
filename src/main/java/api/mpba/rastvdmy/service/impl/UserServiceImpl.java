@@ -30,8 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.SecretKey;
 import java.util.List;
+import java.util.UUID;
 
-//@CacheConfig(cacheNames = {"users"})
 @Service
 public class UserServiceImpl extends FinancialDataGenerator implements UserService {
     private final UserRepository userRepository;
@@ -53,32 +53,39 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
         this.generateAccessToken = generateAccessToken;
     }
 
-    public List<User> getUsers() {
+    public List<User> getUsers(HttpServletRequest request) {
+        validateUserData(request);
         List<User> users = userRepository.findAll();
         return users.stream().filter(this::decryptUserData).toList();
     }
 
-    public Page<User> filterAndSortUsers(Pageable pageable) {
+    public Page<User> filterAndSortUsers(HttpServletRequest request, Pageable pageable) {
+        validateUserData(request);
         Page<User> usersPage = userRepository.findAll(pageable);
         usersPage.forEach(this::decryptUserData);
         return usersPage;
     }
 
-    public User getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist."));
+    public User getUserById(HttpServletRequest request, UUID id) {
+        validateUserData(request);
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist."));
         decryptUserData(user);
         return user;
     }
 
-    public User getUser(HttpServletRequest request) {
+    private User validateUserData(HttpServletRequest request) {
         User user = userRepository.findByEmail(request.getUserPrincipal().getName())
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist."));
 
         if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
+        return user;
+    }
 
+    public User getUser(HttpServletRequest request) {
+        User user = validateUserData(request);
         decryptUserData(user);
         return user;
     }
@@ -95,18 +102,13 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
     }
 
     public User updateUser(HttpServletRequest request, UserUpdateRequest userRequest) throws Exception {
-        final String userEmail = getUserFromToken(request);
-
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist."));
-
-        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
-            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
-        }
+        User user = validateUserData(request);
 
         // Validate user data
+        UserDataValidator.isInvalidEmail(userRequest.email());
         UserDataValidator.isInvalidPassword(userRequest.password());
         UserDataValidator.isInvalidPhoneNumber(userRequest.phoneNumber());
+        checkIfUserExistsByEmail(userRequest);
         checkIfUserExistsByPhoneNumber(userRequest);
 
         user.setEmail(userRequest.email());
@@ -117,6 +119,14 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
         user.setPhoneNumber(encodedPhoneNumber);
 
         return userRepository.save(user);
+    }
+
+    private void checkIfUserExistsByEmail(UserUpdateRequest request) {
+        if (userRepository.findByEmail(request.email()).isPresent()) {
+            throw new ApplicationException(
+                    HttpStatus.BAD_REQUEST, "User with this email already exists."
+            );
+        }
     }
 
     private void checkIfUserExistsByPhoneNumber(UserUpdateRequest request) {
@@ -140,8 +150,11 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
         }
     }
 
-    public User updateUserSpecificCredentials(String email, @Valid AdminUpdateUserRequest userRequest) {
-        User user = userRepository.findByEmail(email).orElseThrow(
+    public User updateUserSpecificCredentials(HttpServletRequest request, UUID userId,
+                                              @Valid AdminUpdateUserRequest userRequest) {
+        validateUserData(request);
+
+        User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
 
@@ -149,6 +162,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
+        UserDataValidator.isInvalidSurname(userRequest.surname());
         countryValidation(userRequest);
 
         user.setSurname(userRequest.surname());
@@ -170,15 +184,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
     }
 
     public void uploadUserAvatar(HttpServletRequest request, MultipartFile userAvatar) {
-        final String userEmail = getUserFromToken(request);
-
-        User user = userRepository.findByEmail(userEmail).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
-        );
-
-        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
-            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
-        }
+        User user = validateUserData(request);
 
         if (userAvatar.getContentType() == null || !userAvatar.getContentType().startsWith("image")) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "File must be an image.");
@@ -189,23 +195,16 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
     }
 
     public void removeUserAvatar(HttpServletRequest request) {
-        final String userEmail = getUserFromToken(request);
-
-        User user = userRepository.findByEmail(userEmail).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
-        );
-
-        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
-            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
-        }
-
+        User user = validateUserData(request);
         user.setAvatar("https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1");
 
         userRepository.save(user);
     }
 
-    public void updateUserRole(HttpServletRequest request, String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(
+    public void updateUserRole(HttpServletRequest request, UUID userId) {
+        validateUserData(request);
+
+        User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
 
@@ -213,7 +212,7 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
-        if (getUserFromToken(request).equals(email)) {
+        if (getUserFromToken(request).equals(userId.toString())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "You cannot change your own role.");
         }
 
@@ -224,12 +223,14 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
         userRepository.save(user);
     }
 
-    public void updateUserStatus(HttpServletRequest request, String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(
+    public void updateUserStatus(HttpServletRequest request, UUID userId) {
+        validateUserData(request);
+
+        User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
 
-        if (getUserFromToken(request).equals(email)) {
+        if (getUserFromToken(request).equals(userId.toString())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "You cannot change your own status.");
         }
 
@@ -247,29 +248,23 @@ public class UserServiceImpl extends FinancialDataGenerator implements UserServi
 
     @Transactional
     public void deleteUser(HttpServletRequest request) {
-        final String userEmail = getUserFromToken(request);
-
-        User user = userRepository.findByEmail(userEmail).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
-        );
-
-        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
-            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
-        }
+        User user = validateUserData(request);
 
         if (!user.getBankIdentities().isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Make sure to delete all bank accounts first.");
         }
+
         userRepository.delete(user);
     }
 
     @Transactional
-    public void deleteUserByEmail(HttpServletRequest request, String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(
+    public void deleteUserByEmail(HttpServletRequest request, UUID userId) {
+        validateUserData(request);
+        User user = userRepository.findById(userId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
 
-        if (getUserFromToken(request).equals(email)) {
+        if (getUserFromToken(request).equals(userId.toString())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "You cannot delete yourself.");
         }
 

@@ -69,6 +69,10 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
+        if (identityRequest.bankName().isEmpty() || identityRequest.bankName().isBlank()) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Bank name must not be empty.");
+        }
+
         BankIdentity bankIdentity = BankIdentity.builder()
                 .id(UUID.randomUUID())
                 .bankName(identityRequest.bankName())

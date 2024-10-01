@@ -6,6 +6,7 @@ import api.mpba.rastvdmy.entity.enums.CardType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 /**
  * This class represents a card in the banking system.
@@ -15,6 +16,8 @@ import java.time.LocalDate;
  * @param pin        The pin of the card.
  */
 public record CardRequest(
+        UUID id,
+
         @JsonProperty("card_number")
         String cardNumber,
 

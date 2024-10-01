@@ -11,11 +11,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface CardMapper {
 
-    /**
-     * Maps CardResponse to CardRequest
-     * @param cardResponse CardResponse
-     * @return CardRequest
-     */
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "cardNumber", source = "cardNumber")
     @Mapping(target = "cvv", source = "cvv")
     @Mapping(target = "pin", source = "pin")
@@ -26,11 +22,7 @@ public interface CardMapper {
     @Mapping(target = "cardStatus", source = "cardStatus")
     CardRequest toRequest(CardResponse cardResponse);
 
-    /**
-     * Maps CardRequest to CardResponse
-     * @param cardRequest CardRequest
-     * @return CardResponse
-     */
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "cardNumber", source = "cardNumber")
     @Mapping(target = "cvv", source = "cvv")
     @Mapping(target = "pin", source = "pin")

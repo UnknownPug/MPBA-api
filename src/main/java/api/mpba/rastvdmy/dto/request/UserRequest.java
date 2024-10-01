@@ -4,7 +4,11 @@ import api.mpba.rastvdmy.entity.enums.UserRole;
 import api.mpba.rastvdmy.entity.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.UUID;
+
 public record UserRequest(
+        UUID id,
+
         String name,
 
         String surname,

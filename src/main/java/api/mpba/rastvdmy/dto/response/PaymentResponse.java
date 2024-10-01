@@ -1,18 +1,29 @@
 package api.mpba.rastvdmy.dto.response;
 
+
+import api.mpba.rastvdmy.entity.enums.FinancialStatus;
+import api.mpba.rastvdmy.entity.enums.PaymentType;
+import api.mpba.rastvdmy.entity.enums.Currency;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
+@JsonPropertyOrder({
+        "id",
+        "sender_name",
+        "recipient_name",
+        "currency",
+        "amount",
+        "description",
+        "date_time",
+        "type",
+        "status",
+})
 public record PaymentResponse(
-        BigDecimal amount,
-
-        @JsonProperty("date_time")
-        LocalDate dateTime,
-
-        @JsonProperty("payment_type")
-        String paymentType,
+        UUID id,
 
         @JsonProperty("sender_name")
         String senderName,
@@ -20,17 +31,16 @@ public record PaymentResponse(
         @JsonProperty("recipient_name")
         String recipientName,
 
+        @JsonProperty("date_time")
+        LocalDate dateTime,
+
         String description,
 
-        @JsonProperty("sender_number")
-        String senderNumber,
+        BigDecimal amount,
 
-        @JsonProperty("recipient_number")
-        String recipientNumber,
+        PaymentType type,
 
-        @JsonProperty("sender_pin")
-        String senderPin,
+        FinancialStatus status,
 
-        @JsonProperty("sender_cvv")
-        String senderCvv
+        Currency currency
 ) {}

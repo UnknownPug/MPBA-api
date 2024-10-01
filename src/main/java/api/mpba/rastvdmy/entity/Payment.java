@@ -8,9 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
@@ -27,7 +25,10 @@ import java.util.UUID;
 @Getter
 @ToString
 @Entity
+@Builder
 @Table(name = "payment")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Payment implements Serializable {
 
     /**

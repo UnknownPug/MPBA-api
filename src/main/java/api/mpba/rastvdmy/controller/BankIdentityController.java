@@ -52,7 +52,8 @@ public class BankIdentityController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{name}", produces = "application/json")
-    public ResponseEntity<BankIdentityResponse> getBank(HttpServletRequest request, @PathVariable("name") String name) {
+    public ResponseEntity<BankIdentityResponse> getBankByName(HttpServletRequest request,
+                                                              @PathVariable("name") String name) {
         logInfo("Getting bank info ...");
         BankIdentity identity = identityService.getBankByName(request, name);
         BankIdentityResponse response = identityMapper.toResponse(new BankIdentityRequest(
@@ -79,9 +80,8 @@ public class BankIdentityController {
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping(path = "/me/{name}")
-    public ResponseEntity<Void> removeMyBank(HttpServletRequest request,
-                                             @PathVariable("name") String bankName) {
+    @DeleteMapping(path = "/{name}")
+    public ResponseEntity<Void> deleteBank(HttpServletRequest request, @PathVariable("name") String bankName) {
         logInfo("Removing bank identity ...");
         identityService.deleteBank(request, bankName);
         return ResponseEntity.noContent().build();
