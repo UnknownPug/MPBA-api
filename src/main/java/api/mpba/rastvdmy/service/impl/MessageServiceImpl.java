@@ -3,14 +3,15 @@ package api.mpba.rastvdmy.service.impl;
 
 import api.mpba.rastvdmy.config.utils.EncryptionUtil;
 import api.mpba.rastvdmy.entity.Message;
-import api.mpba.rastvdmy.entity.User;
+import api.mpba.rastvdmy.entity.UserProfile;
 import api.mpba.rastvdmy.entity.enums.UserStatus;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.MessageRepository;
-import api.mpba.rastvdmy.repository.UserRepository;
+import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,13 +24,13 @@ import java.util.UUID;
 @Service
 public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
-    private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final JwtService jwtService;
 
     @Autowired
-    public MessageServiceImpl(MessageRepository messageRepository, UserRepository userRepository, JwtService jwtService) {
+    public MessageServiceImpl(MessageRepository messageRepository, UserProfileRepository userProfileRepository, JwtService jwtService) {
         this.messageRepository = messageRepository;
-        this.userRepository = userRepository;
+        this.userProfileRepository = userProfileRepository;
         this.jwtService = jwtService;
     }
 
@@ -49,7 +50,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     public Message sendMessage(HttpServletRequest request, String receiverEmail, String content) throws Exception {
-        User sender = BankAccountServiceImpl.getUserData(request, jwtService, userRepository);
+        UserProfile sender = BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository);
 
         if (sender.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
@@ -60,9 +61,10 @@ public class MessageServiceImpl implements MessageService {
         }
         SecretKey secretKey = EncryptionUtil.getSecretKey();
 
-        String encryptedContent = EncryptionUtil.encrypt(content, secretKey);
+        String sanitizedContent = StringEscapeUtils.escapeHtml4(content);
+        String encryptedContent = EncryptionUtil.encrypt(sanitizedContent, secretKey);
 
-        User receiver = userRepository.findByEmail(receiverEmail).orElseThrow(
+        UserProfile receiver = userProfileRepository.findByEmail(receiverEmail).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified receiver not found.")
         );
 

@@ -36,6 +36,7 @@ public class BankAccountController {
         this.accountService = accountService;
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{name}", produces = "application/json")
     public ResponseEntity<List<BankAccountResponse>> getUserAccounts(HttpServletRequest request,
                                                                      @PathVariable("name") String bankName) {
@@ -58,9 +59,11 @@ public class BankAccountController {
     @GetMapping(path = "/{name}/{accountId}", produces = "application/json")
     public ResponseEntity<BankAccountResponse> getAccountById(HttpServletRequest request,
                                                               @PathVariable("name") String bankName,
-                                                              @PathVariable("accountId") UUID accountId) {
+                                                              @PathVariable("accountId") UUID accountId,
+                                                              @RequestParam(value = "type",
+                                                                      defaultValue = "non-visible") String type) {
         logInfo("Getting account info ...");
-        BankAccount account = accountService.getAccountById(request, bankName, accountId);
+        BankAccount account = accountService.getAccountById(request, bankName, accountId, type);
         BankAccountResponse response = accountMapper.toResponse(
                 new BankAccountRequest(
                         account.getId(),

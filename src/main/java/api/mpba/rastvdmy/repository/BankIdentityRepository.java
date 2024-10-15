@@ -13,13 +13,13 @@ import java.util.UUID;
 @Repository
 public interface BankIdentityRepository extends JpaRepository<BankIdentity, UUID> {
 
-    Optional<List<BankIdentity>> findAllByUserId(UUID id);
+    Optional<List<BankIdentity>> findAllByUserProfileId(UUID id);
 
-    @Query("SELECT b FROM BankIdentity b JOIN b.user u WHERE b.bankName = :bankName AND u.id = :userId")
+    @Query("SELECT b FROM BankIdentity b JOIN b.userProfile u WHERE b.bankName = :bankName AND u.id = :userId")
     Optional<BankIdentity> findByNameAndConnectedToUserId(String bankName, UUID userId);
 
-    @Query("SELECT b FROM BankIdentity b LEFT JOIN FETCH b.bankAccounts WHERE b.user.id = :userId AND b.bankName = :bankName")
+    @Query("SELECT b FROM BankIdentity b LEFT JOIN FETCH b.bankAccounts WHERE b.userProfile.id = :userId AND b.bankName = :bankName")
     Optional<BankIdentity> findByUserIdAndBankNameWithAccounts(@Param("userId") UUID userId, @Param("bankName") String bankName);
 
-    Optional<BankIdentity> findByUserIdAndBankName(UUID userId, String bankName);
+    Optional<BankIdentity> findByUserProfileIdAndBankName(UUID userId, String bankName);
 }

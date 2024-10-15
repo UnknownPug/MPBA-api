@@ -16,7 +16,7 @@ public interface BankAccountService {
 
     List<BankAccount> getUserAccounts(HttpServletRequest request, String bankName);
 
-    BankAccount getAccountById(HttpServletRequest request, String bankName, UUID accountId);
+    BankAccount getAccountById(HttpServletRequest request, String bankName, UUID accountId, String type);
 
     Map<String, BigDecimal> getTotalBalance(HttpServletRequest request);
 

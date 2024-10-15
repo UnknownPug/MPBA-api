@@ -138,7 +138,7 @@ public class PaymentController {
             }
             default -> throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid payment type.");
         }
-        return ResponseEntity.ok(paymentResponse);
+        return ResponseEntity.status(HttpStatus.CREATED).body(paymentResponse);
     }
 
     private void logInfo(String message, Object... args) {

@@ -1,7 +1,7 @@
 package api.mpba.rastvdmy.config;
 
 import api.mpba.rastvdmy.service.JwtService;
-import api.mpba.rastvdmy.service.UserService;
+import api.mpba.rastvdmy.service.UserProfileService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,14 +21,14 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
-    private final UserService userService;
+    private final UserProfileService userProfileService;
     private final HandlerExceptionResolver resolver;
 
     public JwtAuthenticationFilter(JwtService jwtService,
-                                   @Lazy UserService userService,
+                                   @Lazy UserProfileService userProfileService,
                                    @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
         this.jwtService = jwtService;
-        this.userService = userService;
+        this.userProfileService = userProfileService;
         this.resolver = resolver;
     }
 
@@ -48,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             userEmail = jwtService.extractUsername(jwt);
             if (StringUtils.isNotEmpty(userEmail)
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userService.userDetailsService()
+                UserDetails userDetails = userProfileService.userDetailsService()
                         .loadUserByUsername(userEmail);
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     SecurityContext context = SecurityContextHolder.createEmptyContext();

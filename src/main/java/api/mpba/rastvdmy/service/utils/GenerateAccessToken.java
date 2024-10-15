@@ -2,7 +2,7 @@
 package api.mpba.rastvdmy.service.utils;
 
 import api.mpba.rastvdmy.entity.AccessToken;
-import api.mpba.rastvdmy.entity.User;
+import api.mpba.rastvdmy.entity.UserProfile;
 import api.mpba.rastvdmy.repository.AccessTokenRepository;
 import api.mpba.rastvdmy.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +24,14 @@ public class GenerateAccessToken {
         this.tokenRepository = tokenRepository;
     }
 
-    public TokenDetails generate(User user) {
-        String token = jwtService.generateToken(user);
+    public TokenDetails generate(UserProfile userProfile) {
+        String token = jwtService.generateToken(userProfile);
         long tokenExpiration = jwtService.getExpirationTime();
 
         AccessToken accessToken = AccessToken.builder()
                 .id(UUID.randomUUID())
                 .token(token)
-                .user(user)
+                .userProfile(userProfile)
                 .expirationDate(LocalDateTime.now().plus(tokenExpiration, ChronoUnit.MILLIS))
                 .build();
 

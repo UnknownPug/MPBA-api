@@ -42,5 +42,5 @@ public class AccessToken implements Serializable {
     @JsonIgnore
     @ToString.Exclude
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private UserProfile userProfile;
 }

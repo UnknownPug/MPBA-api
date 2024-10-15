@@ -2,7 +2,7 @@ package api.mpba.rastvdmy.service;
 
 import api.mpba.rastvdmy.dto.request.AdminUpdateUserRequest;
 import api.mpba.rastvdmy.dto.request.UserUpdateRequest;
-import api.mpba.rastvdmy.entity.User;
+import api.mpba.rastvdmy.entity.UserProfile;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -16,19 +16,19 @@ import java.util.UUID;
 /**
  * Service for managing users
  */
-public interface UserService {
+public interface UserProfileService {
 
-    List<User> getUsers(HttpServletRequest request);
+    List<UserProfile> getUsers(HttpServletRequest request);
 
-    Page<User> filterAndSortUsers(HttpServletRequest request, Pageable pageable);
+    Page<UserProfile> filterAndSortUsers(HttpServletRequest request, Pageable pageable);
 
-    User getUser(HttpServletRequest request);
+    UserProfile getUser(HttpServletRequest request);
 
-    User getUserById(HttpServletRequest request, UUID userId);
+    UserProfile getUserById(HttpServletRequest request, UUID userId);
 
-    User updateUser(HttpServletRequest request, UserUpdateRequest userRequest) throws Exception;
+    UserProfile updateUser(HttpServletRequest request, UserUpdateRequest userRequest) throws Exception;
 
-    User updateUserSpecificCredentials(HttpServletRequest request, UUID userId, @Valid AdminUpdateUserRequest userRequest);
+    UserProfile updateUserSpecificCredentials(HttpServletRequest request, UUID userId, @Valid AdminUpdateUserRequest userRequest);
 
     void uploadUserAvatar(HttpServletRequest request, MultipartFile userAvatar);
 
@@ -44,5 +44,5 @@ public interface UserService {
 
     UserDetailsService userDetailsService();
 
-    String generateToken(User user);
+    String generateToken(UserProfile userProfile);
 }

@@ -9,6 +9,7 @@ import api.mpba.rastvdmy.service.CurrencyDataService;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,20 +36,20 @@ public class PaymentServiceImpl implements PaymentService {
     private final CardRepository cardRepository;
     private final CurrencyDataService currencyDataService;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
 
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository,
                               BankAccountRepository accountRepository,
                               CardRepository cardRepository,
                               CurrencyDataService currencyDataService,
-                              JwtService jwtService, UserRepository userRepository) {
+                              JwtService jwtService, UserProfileRepository userProfileRepository) {
         this.paymentRepository = paymentRepository;
         this.accountRepository = accountRepository;
         this.cardRepository = cardRepository;
         this.currencyDataService = currencyDataService;
         this.jwtService = jwtService;
-        this.userRepository = userRepository;
+        this.userProfileRepository = userProfileRepository;
     }
 
     public List<Payment> getAllPayments(HttpServletRequest request, String bankName, UUID accountId) {
@@ -80,8 +81,14 @@ public class PaymentServiceImpl implements PaymentService {
 
         UUID cardId = paymentRepository.findCardIdByPaymentId(paymentId).orElse(null);
 
-        Payment payment = paymentRepository.findBySenderAccountIdOrSenderCardIdAndId(accountId, cardId, paymentId)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Payment not found."));
+        Payment payment;
+        if (cardId != null) {
+            payment = paymentRepository.findBySenderCardIdAndId(cardId, paymentId)
+                    .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Payment not found."));
+        } else {
+            payment = paymentRepository.findBySenderAccountIdAndId(accountId, paymentId)
+                    .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Payment not found."));
+        }
 
         decryptPaymentData(payment);
         return payment;
@@ -91,10 +98,10 @@ public class PaymentServiceImpl implements PaymentService {
         String token = jwtService.extractToken(request);
         String userEmail = jwtService.extractSubject(token);
 
-        User user = userRepository.findByEmail(userEmail).orElseThrow(
+        UserProfile userProfile = userProfileRepository.findByEmail(userEmail).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found."));
 
-        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+        if (userProfile.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. User is blocked.");
         }
 
@@ -160,14 +167,18 @@ public class PaymentServiceImpl implements PaymentService {
 
     private Payment initializeBankPayment(BankAccount senderAccount, String description,
                                           BankAccount recipientAccount) throws Exception {
+        if (senderAccount.getId().equals(recipientAccount.getId())) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Cannot send money to the same account.");
+        }
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         String encryptedSenderName = EncryptionUtil.encrypt(
-                senderAccount.getBankIdentity().getUser().getName() + " "
-                        + senderAccount.getBankIdentity().getUser().getSurname(), secretKey);
+                senderAccount.getBankIdentity().getUserProfile().getName() + " "
+                        + senderAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
         String encryptedRecipientName = EncryptionUtil.encrypt(
-                recipientAccount.getBankIdentity().getUser().getName() + " "
-                        + recipientAccount.getBankIdentity().getUser().getSurname(), secretKey);
-        String encryptedDescription = EncryptionUtil.encrypt(description, secretKey);
+                recipientAccount.getBankIdentity().getUserProfile().getName() + " "
+                        + recipientAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
+        String sanitizedDescription = StringEscapeUtils.escapeHtml4(description);
+        String encryptedDescription = EncryptionUtil.encrypt(sanitizedDescription, secretKey);
 
         return Payment.builder()
                 .id(UUID.randomUUID())
@@ -192,6 +203,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (senderAccount.getBalance().compareTo(amount) < 0) {
             payment.setStatus(DENIED);
+            payment.setAmount(amount.setScale(2, RoundingMode.HALF_UP));
+            payment.setCurrency(currency);
             return false;
         }
         // Subtract amount from sender account balance
@@ -255,8 +268,8 @@ public class PaymentServiceImpl implements PaymentService {
     private Payment initializeCardPayment(BankAccount senderAccount, Card card) throws Exception {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         String encryptedSenderName = EncryptionUtil.encrypt(
-                senderAccount.getBankIdentity().getUser().getName() + " "
-                        + senderAccount.getBankIdentity().getUser().getSurname(), secretKey);
+                senderAccount.getBankIdentity().getUserProfile().getName() + " "
+                        + senderAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
         String encryptedRecipientName = EncryptionUtil.encrypt(PurchaseCategory.getRandomCategory(), secretKey);
 
         return Payment.builder()

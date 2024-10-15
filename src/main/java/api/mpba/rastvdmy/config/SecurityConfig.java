@@ -1,6 +1,6 @@
 package api.mpba.rastvdmy.config;
 
-import api.mpba.rastvdmy.service.UserService;
+import api.mpba.rastvdmy.service.UserProfileService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,14 +26,14 @@ import org.springframework.security.web.header.writers.XXssProtectionHeaderWrite
 @EnableMethodSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
-    private final UserService userService;
+    private final UserProfileService userProfileService;
     private final AuthenticationEntryPoint authEntryPoint;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
-                          @Lazy UserService userService,
+                          @Lazy UserProfileService userProfileService,
                           @Qualifier("authenticationEntryPointImpl") AuthenticationEntryPoint authEntryPoint) {
         this.jwtAuthFilter = jwtAuthFilter;
-        this.userService = userService;
+        this.userProfileService = userProfileService;
         this.authEntryPoint = authEntryPoint;
     }
 
@@ -63,7 +63,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userService.userDetailsService());
+        authProvider.setUserDetailsService(userProfileService.userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

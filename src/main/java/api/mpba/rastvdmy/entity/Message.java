@@ -46,7 +46,7 @@ public class Message implements Serializable {
     @ManyToOne
     @ToString.Exclude
     @JoinColumn(name = "sender_id")
-    private User sender;
+    private UserProfile sender;
 
     /**
      * The receiver of the message.
@@ -54,5 +54,5 @@ public class Message implements Serializable {
     @ManyToOne
     @ToString.Exclude
     @JoinColumn(name = "receiver_id")
-    private User receiver;
+    private UserProfile receiver;
 }

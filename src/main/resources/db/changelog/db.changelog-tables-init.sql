@@ -97,9 +97,9 @@ CREATE TABLE access_token (
 
 -- Changeset Unknown:9
 CREATE TABLE user_profile_currency_data (
-    users_id UUID,
+    user_profiles_id UUID,
     currency_data_id UUID,
-    PRIMARY KEY (users_id, currency_data_id),
-    FOREIGN KEY (users_id) REFERENCES user_profile (id),
+    PRIMARY KEY (user_profiles_id, currency_data_id),
+    FOREIGN KEY (user_profiles_id) REFERENCES user_profile (id),
     FOREIGN KEY (currency_data_id) REFERENCES currency_data (id)
 );

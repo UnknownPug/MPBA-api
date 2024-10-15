@@ -2,9 +2,7 @@ package api.mpba.rastvdmy.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -19,6 +17,9 @@ import java.util.UUID;
 @Setter
 @ToString
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "currency_data")
 public class CurrencyData implements Serializable {
 
@@ -42,5 +43,5 @@ public class CurrencyData implements Serializable {
     @ManyToMany(mappedBy = "currencyData")
     @JsonIgnore
     @ToString.Exclude
-    private List<User> users;
+    private List<UserProfile> userProfiles;
 }

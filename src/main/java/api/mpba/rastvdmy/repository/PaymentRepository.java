@@ -20,6 +20,8 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     Optional<List<Payment>> findAllBySenderAccountIdOrSenderCardId(@Param("accountId") UUID accountId,
                                                                    @Param("cardsIds") List<UUID> cardsIds);
 
-    Optional<Payment> findBySenderAccountIdOrSenderCardIdAndId(UUID accountId, UUID cardId, UUID paymentId);
+    Optional<Payment> findBySenderAccountIdAndId(UUID accountId, UUID paymentId);
+
+    Optional<Payment> findBySenderCardIdAndId(UUID cardId, UUID paymentId);
 
 }

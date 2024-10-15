@@ -1,7 +1,7 @@
 package api.mpba.rastvdmy.controller.mapper;
 
-import api.mpba.rastvdmy.dto.request.UserRequest;
-import api.mpba.rastvdmy.dto.response.UserResponse;
+import api.mpba.rastvdmy.dto.request.UserProfileRequest;
+import api.mpba.rastvdmy.dto.response.UserProfileResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
  * Mapper for UserRequest and UserResponse
  */
 @Mapper(componentModel = "spring")
-public interface UserMapper {
+public interface UserProfileMapper {
 
     @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
@@ -22,7 +22,7 @@ public interface UserMapper {
     @Mapping(target = "avatar", source = "avatar")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "role", source = "role")
-    UserRequest toRequest(UserResponse userResponse);
+    UserProfileRequest toRequest(UserProfileResponse userProfileResponse);
 
     @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
@@ -35,5 +35,5 @@ public interface UserMapper {
     @Mapping(target = "avatar", source = "avatar")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "role", source = "role")
-    UserResponse toResponse(UserRequest userRequest);
+    UserProfileResponse toResponse(UserProfileRequest userProfileRequest);
 }

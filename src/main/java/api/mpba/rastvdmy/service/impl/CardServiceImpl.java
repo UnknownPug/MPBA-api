@@ -4,7 +4,7 @@ import api.mpba.rastvdmy.config.utils.EncryptionUtil;
 import api.mpba.rastvdmy.entity.BankAccount;
 import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.entity.Card;
-import api.mpba.rastvdmy.entity.User;
+import api.mpba.rastvdmy.entity.UserProfile;
 import api.mpba.rastvdmy.entity.enums.CardCategory;
 import api.mpba.rastvdmy.entity.enums.CardStatus;
 import api.mpba.rastvdmy.entity.enums.CardType;
@@ -12,7 +12,7 @@ import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.BankAccountRepository;
 import api.mpba.rastvdmy.repository.BankIdentityRepository;
 import api.mpba.rastvdmy.repository.CardRepository;
-import api.mpba.rastvdmy.repository.UserRepository;
+import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.CardService;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.utils.FinancialDataGenerator;
@@ -37,17 +37,17 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
     private final BankIdentityRepository bankIdentityRepository;
     private final BankAccountRepository bankAccountRepository;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
 
     @Autowired
     public CardServiceImpl(CardRepository cardRepository,
                            BankIdentityRepository bankIdentityRepository,
-                           BankAccountRepository bankAccountRepository, JwtService jwtService, UserRepository userRepository) {
+                           BankAccountRepository bankAccountRepository, JwtService jwtService, UserProfileRepository userProfileRepository) {
         this.cardRepository = cardRepository;
         this.bankIdentityRepository = bankIdentityRepository;
         this.bankAccountRepository = bankAccountRepository;
         this.jwtService = jwtService;
-        this.userRepository = userRepository;
+        this.userProfileRepository = userProfileRepository;
     }
 
     public List<Card> getAccountCards(String bankName, UUID accountId, HttpServletRequest request) {
@@ -77,12 +77,25 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
     public boolean decryptCardData(Card card) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
-            card.setCardNumber(EncryptionUtil.decrypt(card.getCardNumber(), secretKey));
-            card.setCvv(EncryptionUtil.decrypt(card.getCvv(), secretKey));
+            String decryptedCardNumber = EncryptionUtil.decrypt(card.getCardNumber(), secretKey);
+            String maskCardNumber = maskCardData(decryptedCardNumber);
+            card.setCardNumber(maskCardNumber);
+
+            String decryptedCVV = EncryptionUtil.decrypt(card.getCvv(), secretKey);
+            String maskCVV = "*".repeat(decryptedCVV.length());
+            card.setCvv(maskCVV);
             return true;
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private String maskCardData(String data) {
+        int length = data.length();
+        if (length <= 4) {
+            return data;
+        }
+        return "*".repeat(length - 4) + data.substring(length - 4);
     }
 
     @Transactional
@@ -164,10 +177,10 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
     }
 
     private BankAccount getBankAccount(String bankName, UUID accountId, HttpServletRequest request) {
-        User user = BankAccountServiceImpl.getUserData(request, jwtService, userRepository);
+        UserProfile userProfile = BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository);
 
-        BankIdentity identity = bankIdentityRepository.findByUserIdAndBankName(user.getId(), bankName).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")
+        BankIdentity identity = bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), bankName).orElseThrow(
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
         );
 
         List<BankAccount> bankAccounts = bankAccountRepository.findAllByBankIdentityId(identity.getId()).orElseThrow(

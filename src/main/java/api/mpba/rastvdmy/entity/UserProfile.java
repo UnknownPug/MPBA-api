@@ -26,7 +26,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user_profile")
-public class User implements UserDetails, Serializable {
+public class UserProfile implements UserDetails, Serializable {
 
     @Id
     @Column(name = "id", nullable = false)
@@ -82,12 +82,12 @@ public class User implements UserDetails, Serializable {
     @ToString.Exclude
     private List<Message> receiverMessages;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL)
     @JsonIgnore
     @ToString.Exclude
     private List<AccessToken> accessTokens;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @ToString.Exclude
     private List<BankIdentity> bankIdentities;

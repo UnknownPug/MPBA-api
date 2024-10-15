@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
-public record UserRequest(
+public record UserProfileRequest(
         UUID id,
 
         String name,

@@ -2,15 +2,15 @@ package api.mpba.rastvdmy.service.impl;
 
 import api.mpba.rastvdmy.config.utils.EncryptionUtil;
 import api.mpba.rastvdmy.dto.request.UserLoginRequest;
-import api.mpba.rastvdmy.dto.request.UserRequest;
+import api.mpba.rastvdmy.dto.request.UserProfileRequest;
 import api.mpba.rastvdmy.dto.response.JwtAuthResponse;
 import api.mpba.rastvdmy.entity.CurrencyData;
-import api.mpba.rastvdmy.entity.User;
+import api.mpba.rastvdmy.entity.UserProfile;
 import api.mpba.rastvdmy.entity.enums.UserRole;
 import api.mpba.rastvdmy.entity.enums.UserStatus;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.CurrencyDataRepository;
-import api.mpba.rastvdmy.repository.UserRepository;
+import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.AuthService;
 import api.mpba.rastvdmy.service.utils.CountryValidator;
 import api.mpba.rastvdmy.service.utils.FinancialDataGenerator;
@@ -32,19 +32,19 @@ import java.util.UUID;
 public class AuthServiceImpl extends FinancialDataGenerator implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
-    private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final CurrencyDataRepository currencyDataRepository;
     private final RestTemplate restTemplate;
     private final GenerateAccessToken generateAccessToken;
 
     public AuthServiceImpl(
-            UserRepository userRepository,
+            UserProfileRepository userProfileRepository,
             AuthenticationManager authenticationManager,
             PasswordEncoder passwordEncoder,
             CurrencyDataRepository currencyDataRepository,
             RestTemplate restTemplate, GenerateAccessToken generateAccessToken) {
         this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
+        this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.currencyDataRepository = currencyDataRepository;
         this.restTemplate = restTemplate;
@@ -52,7 +52,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
     }
 
     @Transactional
-    public JwtAuthResponse signUp(UserRequest request) throws Exception {
+    public JwtAuthResponse signUp(UserProfileRequest request) throws Exception {
 
         // Validate user data
         UserDataValidator.isInvalidName(request.name());
@@ -69,7 +69,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
 
         List<CurrencyData> currencyData = currencyDataRepository.findAll();
 
-        User user = User.builder()
+        UserProfile userProfile = UserProfile.builder()
                 .id(UUID.randomUUID())
                 .role(UserRole.ROLE_DEFAULT)
                 .status(UserStatus.STATUS_DEFAULT)
@@ -83,9 +83,9 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 .phoneNumber(encodedPhoneNumber)
                 .currencyData(currencyData)
                 .build();
-        userRepository.save(user);
+        userProfileRepository.save(userProfile);
 
-        GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(user);
+        GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(userProfile);
 
         return JwtAuthResponse.builder()
                 .token(generatedToken.token())
@@ -95,11 +95,11 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
 
     @Transactional
     public JwtAuthResponse authenticate(UserLoginRequest request) {
-        User user = userRepository.findByEmail(request.email()).orElseThrow(
+        UserProfile userProfile = userProfileRepository.findByEmail(request.email()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
         );
 
-        if (user.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
+        if (userProfile.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked. Authentication is forbidden.");
         }
 
@@ -110,7 +110,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         } catch (Exception e) {
             throw new ApplicationException(HttpStatus.UNAUTHORIZED, "Invalid email or password. Please try again.");
         }
-        GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(user);
+        GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(userProfile);
 
         return JwtAuthResponse.builder()
                 .token(generatedToken.token())
@@ -118,23 +118,23 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 .build();
     }
 
-    private void validateUserData(UserRequest request) {
+    private void validateUserData(UserProfileRequest request) {
         checkIfUserExistsByEmail(request);
         checkIfUserExistsByPhoneNumber(request);
         countryValidation(request);
     }
 
-    private void checkIfUserExistsByEmail(UserRequest request) {
-        if (userRepository.findByEmail(request.email()).isPresent()) {
+    private void checkIfUserExistsByEmail(UserProfileRequest request) {
+        if (userProfileRepository.findByEmail(request.email()).isPresent()) {
             throw new ApplicationException(
                     HttpStatus.BAD_REQUEST, "User with this email already exists."
             );
         }
     }
 
-    private void checkIfUserExistsByPhoneNumber(UserRequest request) {
-        List<User> users = userRepository.findAll();
-        boolean phoneNumberExists = users.stream()
+    private void checkIfUserExistsByPhoneNumber(UserProfileRequest request) {
+        List<UserProfile> userProfiles = userProfileRepository.findAll();
+        boolean phoneNumberExists = userProfiles.stream()
                 .anyMatch(u -> isPhoneNumberExists(u, request));
         if (phoneNumberExists) {
             throw new ApplicationException(
@@ -143,17 +143,17 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         }
     }
 
-    private boolean isPhoneNumberExists(User user, UserRequest request) {
+    private boolean isPhoneNumberExists(UserProfile userProfile, UserProfileRequest request) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
-            String decryptedPhoneNumber = EncryptionUtil.decrypt(user.getPhoneNumber(), secretKey);
+            String decryptedPhoneNumber = EncryptionUtil.decrypt(userProfile.getPhoneNumber(), secretKey);
             return decryptedPhoneNumber.equals(request.phoneNumber());
         } catch (Exception e) {
             return false;
         }
     }
 
-    private void countryValidation(UserRequest request) {
+    private void countryValidation(UserProfileRequest request) {
         CountryValidator countryValidator = new CountryValidator(restTemplate);
         if (countryValidator.countryExists(request.countryOfOrigin())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Country does not exist.");

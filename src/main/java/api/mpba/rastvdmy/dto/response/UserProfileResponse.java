@@ -20,7 +20,7 @@ import java.util.UUID;
         "status",
         "role"
 })
-public record UserResponse(
+public record UserProfileResponse(
         UUID id,
 
         String name,
