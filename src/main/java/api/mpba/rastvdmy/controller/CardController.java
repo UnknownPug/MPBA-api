@@ -62,9 +62,11 @@ public class CardController {
     public ResponseEntity<CardResponse> getAccountCardById(@PathVariable("bankName") String bankName,
                                                            @PathVariable("accountId") UUID accountId,
                                                            @PathVariable("cardId") UUID cardId,
+                                                           @RequestParam(value = "type",
+                                                                   defaultValue = "non-visible") String type,
                                                            HttpServletRequest request) {
         logInfo("Getting card ...");
-        Card card = cardService.getAccountCardById(bankName, accountId, cardId, request);
+        Card card = cardService.getAccountCardById(bankName, accountId, cardId, request, type);
         CardResponse cardResponse = cardMapper.toResponse(new CardRequest(
                 card.getId(),
                 card.getCardNumber(),

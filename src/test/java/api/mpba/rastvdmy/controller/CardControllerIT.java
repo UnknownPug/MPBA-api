@@ -160,7 +160,7 @@ public class CardControllerIT {
         UUID accountId = UUID.randomUUID();
         UUID cardId = UUID.randomUUID();
         Card card = Card.builder()
-                .id(UUID.randomUUID())
+                .id(cardId)
                 .cardNumber("1234567890123456")
                 .cvv("123")
                 .pin("1234")
@@ -171,7 +171,8 @@ public class CardControllerIT {
                 .status(CardStatus.STATUS_CARD_DEFAULT)
                 .build();
 
-        when(cardService.getAccountCardById(eq(bankName), eq(accountId), eq(cardId), any(HttpServletRequest.class))).thenReturn(card);
+        when(cardService.getAccountCardById(eq(bankName), eq(accountId), eq(cardId), any(HttpServletRequest.class), eq("visible"))).thenReturn(card);
+        when(cardService.getAccountCardById(eq(bankName), eq(accountId), eq(cardId), any(HttpServletRequest.class), eq("non-visible"))).thenReturn(card);
         when(cardMapper.toResponse(any(CardRequest.class))).thenReturn(new CardResponse(
                 card.getId(),
                 card.getCardNumber(),
@@ -184,9 +185,28 @@ public class CardControllerIT {
                 card.getStatus()
         ));
 
-        // Then
+        // Test case for type "visible"
         mockMvc.perform(
                         get("/api/v1/{bankName}/{accountId}/cards/{cardId}", bankName, accountId, cardId)
+                                .param("type", "visible")
+                                .header("Authorization", "Bearer " + jwtToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.card_number").value(card.getCardNumber()))
+                .andExpect(jsonPath("$.cvv").value(card.getCvv()))
+                .andExpect(jsonPath("$.pin").value(card.getPin()))
+                .andExpect(jsonPath("$.start_date").value(card.getStartDate().toString()))
+                .andExpect(jsonPath("$.expiration_date").value(card.getExpirationDate().toString()))
+                .andExpect(jsonPath("$.card_category").value(card.getCategory().toString()))
+                .andExpect(jsonPath("$.card_type").value(card.getType().toString()))
+                .andExpect(jsonPath("$.card_status").value(card.getStatus().toString()));
+
+        // Test case for type "non-visible"
+        mockMvc.perform(
+                        get("/api/v1/{bankName}/{accountId}/cards/{cardId}", bankName, accountId, cardId)
+                                .param("type", "non-visible")
                                 .header("Authorization", "Bearer " + jwtToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )

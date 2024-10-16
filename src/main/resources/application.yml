@@ -31,7 +31,7 @@ spring:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
 api:
-  key: 616d6b1fc4f8b59a2c80a733
+  key: 2d03edf7aa4c0318731708ae
 security:
   jwt:
     secret-key: 7d9e1b591dfcbcf28483189062bf531ad8a06702062601784c7f1f6e75566b78

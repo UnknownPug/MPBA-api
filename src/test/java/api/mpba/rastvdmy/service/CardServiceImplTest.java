@@ -141,9 +141,8 @@ class CardServiceImplTest {
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> {
-            cardService.getAccountCards("bankName", bankAccount.getId(), request);
-        });
+        ApplicationException exception = assertThrows(ApplicationException.class, () ->
+                cardService.getAccountCards("bankName", bankAccount.getId(), request));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("No cards found for specified account.", exception.getMessage());
@@ -158,9 +157,8 @@ class CardServiceImplTest {
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.of(List.of(card)));
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> {
-            cardService.getAccountCardById("bankName", bankAccount.getId(), UUID.randomUUID(), request);
-        });
+        ApplicationException exception = assertThrows(ApplicationException.class, () ->
+                cardService.getAccountCardById("bankName", bankAccount.getId(), UUID.randomUUID(), request, "visible"));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("Specified card not found.", exception.getMessage());
@@ -182,15 +180,14 @@ class CardServiceImplTest {
             encryptionMock.when(() -> EncryptionUtil.decrypt(card.getCardNumber(), mockKey)).thenReturn("1234567890");
             encryptionMock.when(() -> EncryptionUtil.decrypt(card.getCvv(), mockKey)).thenReturn("123");
 
-            Card retrievedCard = cardService.getAccountCardById("bankName", bankAccount.getId(), card.getId(), request);
+            Card retrievedCard = cardService.getAccountCardById("bankName", bankAccount.getId(), card.getId(), request, "visible");
 
             assertNotNull(retrievedCard);
             assertEquals(card.getId(), retrievedCard.getId());
-            assertEquals("******7890", retrievedCard.getCardNumber());
-            assertEquals("***", retrievedCard.getCvv());
+            assertEquals("1234567890", retrievedCard.getCardNumber());
+            assertEquals("123", retrievedCard.getCvv());
         }
     }
-
 
     @Test
     void getAccountCardById_ShouldThrowException_WhenNoCardsFound() {
@@ -201,9 +198,8 @@ class CardServiceImplTest {
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> {
-            cardService.getAccountCardById("bankName", bankAccount.getId(), UUID.randomUUID(), request);
-        });
+        ApplicationException exception = assertThrows(ApplicationException.class, () ->
+                cardService.getAccountCardById("bankName", bankAccount.getId(), UUID.randomUUID(), request, "visible"));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("No cards found for specified account.", exception.getMessage());
@@ -232,9 +228,8 @@ class CardServiceImplTest {
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> {
-            cardService.addAccountCard("bankName", UUID.randomUUID(), request);
-        });
+        ApplicationException exception = assertThrows(ApplicationException.class, () ->
+                cardService.addAccountCard("bankName", UUID.randomUUID(), request));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("No accounts found for specified bank identity.", exception.getMessage());
@@ -263,9 +258,8 @@ class CardServiceImplTest {
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> {
-            cardService.removeAccountCard("bankName", bankAccount.getId(), UUID.randomUUID(), request);
-        });
+        ApplicationException exception = assertThrows(ApplicationException.class, () ->
+                cardService.removeAccountCard("bankName", bankAccount.getId(), UUID.randomUUID(), request));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("No cards found for specified account.", exception.getMessage());
@@ -285,9 +279,8 @@ class CardServiceImplTest {
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.of(List.of(card)));
         doThrow(new RuntimeException("Database error")).when(cardRepository).deleteAll(anyList());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> {
-            cardService.removeAllCards(bankAccount);
-        });
+        ApplicationException exception = assertThrows(ApplicationException.class, () ->
+                cardService.removeAllCards(bankAccount));
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
         assertEquals("Error while removing all cards.", exception.getMessage());

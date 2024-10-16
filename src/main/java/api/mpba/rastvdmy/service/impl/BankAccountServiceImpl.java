@@ -85,7 +85,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
                 account.setIban(decryptedIban);
             } else {
                 account.setAccountNumber(maskAccountData(decryptedAccountNumber));
-                account.setIban(maskAccountData(decryptedIban));
+                account.setIban(maskIban(decryptedIban));
             }
             return true;
         } catch (Exception e) {
@@ -99,6 +99,14 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
             return data;
         }
         return "*".repeat(length - 4) + data.substring(length - 4);
+    }
+
+    private String maskIban(String data) {
+        int length = data.length();
+        if (length <= 8) {
+            return data;
+        }
+        return data.substring(0, 4) + "****" + data.substring(length - 4);
     }
 
     public Map<String, BigDecimal> getTotalBalance(HttpServletRequest request) {

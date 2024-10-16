@@ -56,34 +56,38 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
         );
-        return cards.stream().filter(this::decryptCardData).toList();
+        return cards.stream().filter(card -> decryptCardData(card, false)).toList();
     }
 
-    public Card getAccountCardById(String bankName, UUID accountId, UUID cardId, HttpServletRequest request) {
+    public Card getAccountCardById(String bankName, UUID accountId, UUID cardId, HttpServletRequest request, String type) {
         BankAccount account = getBankAccount(bankName, accountId, request);
 
         List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
         );
 
+        boolean unmask = type.equals("visible");
         return cards.stream()
                 .filter(card -> card.getId().equals(cardId))
-                .filter(this::decryptCardData)
+                .filter(card -> decryptCardData(card, unmask))
                 .findFirst().orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified card not found.")
                 );
     }
 
-    public boolean decryptCardData(Card card) {
+    public boolean decryptCardData(Card card, boolean unmask) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
             String decryptedCardNumber = EncryptionUtil.decrypt(card.getCardNumber(), secretKey);
-            String maskCardNumber = maskCardData(decryptedCardNumber);
-            card.setCardNumber(maskCardNumber);
-
             String decryptedCVV = EncryptionUtil.decrypt(card.getCvv(), secretKey);
-            String maskCVV = "*".repeat(decryptedCVV.length());
-            card.setCvv(maskCVV);
+
+            if (unmask) {
+                card.setCardNumber(decryptedCardNumber);
+                card.setCvv(decryptedCVV);
+            } else {
+                card.setCardNumber(maskCardData(decryptedCardNumber));
+                card.setCvv("*".repeat(decryptedCVV.length()));
+            }
             return true;
         } catch (Exception e) {
             return false;
