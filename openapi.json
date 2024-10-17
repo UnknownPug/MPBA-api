@@ -93,17 +93,50 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Authenticate - User",
-        "description": "Authentication as user.",
+        "summary": "Authentication",
+        "description": "Authentication process for users and administrators.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "example": {
-                  "email": "<String>",
-                  "password": "<String>"
-                }
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "email": {
+                        "type": "string",
+                        "example": "<String>"
+                      },
+                      "password": {
+                        "type": "string",
+                        "example": "<String>"
+                      }
+                    },
+                    "required": [
+                      "email",
+                      "password"
+                    ],
+                    "description": "User login credentials."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "email": {
+                        "type": "string",
+                        "example": "admin@mpba.com"
+                      },
+                      "password": {
+                        "type": "string",
+                        "example": "admin"
+                      }
+                    },
+                    "required": [
+                      "email",
+                      "password"
+                    ],
+                    "description": "Admin login credentials."
+                  }
+                ]
               }
             }
           }
@@ -258,7 +291,7 @@
           "User Profile"
         ],
         "summary": "Me",
-        "description": "Update mine profile (email, password, phone number).",
+        "description": "Update users (mine) profile (email, password, phone number).",
         "requestBody": {
           "content": {
             "application/json": {
@@ -421,19 +454,38 @@
         "tags": [
           "User Profile"
         ],
-        "summary": "Remove avatar",
-        "description": "Remove avatar for a user.",
+        "summary": "Add/Remove avatar",
+        "description": "Add or remove the avatar for a user.",
         "requestBody": {
           "content": {
             "multipart/form-data": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "user_avatar": {
-                    "type": "string",
-                    "format": "binary"
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "user_avatar": {
+                        "type": "string",
+                        "format": "binary",
+                        "description": "Image file for upload"
+                      }
+                    },
+                    "required": [
+                      "user_avatar"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "user_avatar": {
+                        "type": "string",
+                        "format": "binary",
+                        "description": "Empty for remove action"
+                      }
+                    },
+                    "description": "Leave this field empty to remove avatar"
                   }
-                }
+                ]
               }
             }
           }
@@ -448,9 +500,15 @@
             "name": "action",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "upload",
+                "remove"
+              ],
+              "description": "Defines whether to upload or remove the avatar"
             },
-            "example": "remove"
+            "required": true,
+            "example": "upload"
           }
         ],
         "responses": {
@@ -797,8 +855,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "Successful response",
+          "204": {
+            "description": "No Content",
             "content": {
               "application/json": {}
             }
@@ -1086,8 +1144,8 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Successful response",
+          "204": {
+            "description": "No Content",
             "content": {
               "application/json": {}
             }
@@ -1188,24 +1246,71 @@
         }
       }
     },
-    "/api/v1/{acoount_id}/payments": {
+    "/api/v1/{account_id}/payments": {
       "post": {
         "tags": [
           "Payment"
         ],
-        "summary": "Create bank transfer",
-        "description": "Create bank transfer.",
+        "summary": "Create payment",
+        "description": "Create a payment (bank transfer or card payment).",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "example": {
-                  "recipient_number": "<String>",
-                  "amount": "<Number>",
-                  "description": "<String>",
-                  "type": "BANK_TRANSFER"
-                }
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "recipient_number": {
+                        "type": "string",
+                        "description": "Recipient account number"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "description": "Amount to transfer",
+                        "example": 120.12
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Payment description"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "BANK_TRANSFER"
+                        ],
+                        "description": "Type of payment",
+                        "example": "BANK_TRANSFER"
+                      }
+                    },
+                    "required": [
+                      "recipient_number",
+                      "amount",
+                      "type"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "card_id": {
+                        "type": "string",
+                        "description": "Card UUID"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "CARD_PAYMENT"
+                        ],
+                        "description": "Type of payment",
+                        "example": "CARD_PAYMENT"
+                      }
+                    },
+                    "required": [
+                      "card_id",
+                      "type"
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -1217,7 +1322,7 @@
         ],
         "parameters": [
           {
-            "name": "acoount_id",
+            "name": "account_id",
             "in": "path",
             "schema": {
               "type": "string"
