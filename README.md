@@ -12,7 +12,7 @@
 
 ### ● Main documentation can be found by clicking [here](https://drive.google.com/file/d/1jsxo51URyl07bgMUU6Ss99PxhZ1synjx/view?usp=sharing)
 
-### ● Project also contains Java documentation - [Javadoc](https://unknownpug.github.io/Managing-personal-bank-accounts/)
+### ● Project also contains Java documentation - [Javadoc](https://unknownpug.github.io/MPBA-api/)
 
 ## Contents
 
