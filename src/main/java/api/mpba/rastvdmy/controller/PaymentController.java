@@ -20,6 +20,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Controller for handling payment-related requests.
+ * <p>
+ * This controller provides endpoints for retrieving, creating, and managing payments
+ * associated with a specific account. It ensures that the user has the appropriate
+ * role to access payment operations.
+ * </p>
+ */
 @Slf4j
 @RestController
 @PreAuthorize("hasRole('ROLE_DEFAULT')")
@@ -29,6 +37,12 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final PaymentMapper paymentMapper;
 
+    /**
+     * Constructor for the PaymentController.
+     *
+     * @param paymentService The service for payment operations.
+     * @param paymentMapper  The mapper to convert between Payment and PaymentResponse.
+     */
     @Autowired
     public PaymentController(PaymentService paymentService,
                              PaymentMapper paymentMapper) {
@@ -36,6 +50,14 @@ public class PaymentController {
         this.paymentMapper = paymentMapper;
     }
 
+    /**
+     * Retrieves all payments associated with the specified account.
+     *
+     * @param request   The HTTP servlet request.
+     * @param accountId The UUID of the account.
+     * @param bankName  The name of the bank.
+     * @return A response entity containing a list of payment responses.
+     */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{bankName}", produces = "application/json")
     public ResponseEntity<List<PaymentResponse>> getAllPayments(HttpServletRequest request,
@@ -57,11 +79,20 @@ public class PaymentController {
                         payment.getType(),
                         payment.getStatus(),
                         payment.getCurrency()))
-                ).toList();
+        ).toList();
 
         return ResponseEntity.ok(paymentResponses);
     }
 
+    /**
+     * Retrieves a specific payment by its ID.
+     *
+     * @param request   The HTTP servlet request.
+     * @param bankName  The name of the bank.
+     * @param accountId The UUID of the account.
+     * @param paymentId The UUID of the payment.
+     * @return A response entity containing the payment response.
+     */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{bankName}/{id}", produces = "application/json")
     public ResponseEntity<PaymentResponse> getPaymentById(HttpServletRequest request,
@@ -84,12 +115,21 @@ public class PaymentController {
         return ResponseEntity.ok(paymentResponse);
     }
 
+    /**
+     * Creates a new payment based on the provided parameters.
+     *
+     * @param request              The HTTP servlet request.
+     * @param accountId            The UUID of the account.
+     * @param paymentParamsRequest The request containing payment parameters.
+     * @return A response entity containing the created payment response.
+     * @throws ApplicationException If the payment type is invalid or not specified.
+     */
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<PaymentResponse> createPayment(HttpServletRequest request,
                                                          @PathVariable("accountId") UUID accountId,
-                                                         @RequestBody
-                                                         PaymentParamsRequest paymentParamsRequest) throws Exception {
+                                                         @RequestBody PaymentParamsRequest paymentParamsRequest
+    ) throws Exception {
 
         if (paymentParamsRequest.type() == null || paymentParamsRequest.type().toString().isBlank()) {
             throw new ApplicationException(
@@ -141,6 +181,12 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(paymentResponse);
     }
 
+    /**
+     * Logs informational messages to the console.
+     *
+     * @param message The message to log.
+     * @param args    Optional arguments to format the message.
+     */
     private void logInfo(String message, Object... args) {
         LOG.info(message, args);
     }

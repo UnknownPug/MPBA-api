@@ -115,8 +115,10 @@ class BankAccountServiceImplTest {
 
     @Test
     void getUserAccounts_ShouldReturnAccounts_WhenAccountsExist() {
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
@@ -125,8 +127,10 @@ class BankAccountServiceImplTest {
             SecretKey mockKey = mock(SecretKey.class);
 
             encryptionMock.when(EncryptionUtil::getSecretKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(bankAccount.getIban(), mockKey)).thenReturn("CZ1234567890");
-            encryptionMock.when(() -> EncryptionUtil.decrypt(bankAccount.getAccountNumber(), mockKey)).thenReturn("1234567890");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(bankAccount.getIban(), mockKey))
+                    .thenReturn("CZ1234567890");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(bankAccount.getAccountNumber(), mockKey))
+                    .thenReturn("1234567890");
 
             List<BankAccount> accounts = bankAccountService.getUserAccounts(request, "bankName");
 
@@ -138,7 +142,8 @@ class BankAccountServiceImplTest {
 
     @Test
     void getUserAccounts_ShouldThrowException_WhenNoAccountsFound() {
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
         when(accountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.empty());
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
@@ -154,8 +159,10 @@ class BankAccountServiceImplTest {
 
     @Test
     void getAccountById_ShouldReturnAccount_WhenAccountExists() {
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
@@ -164,10 +171,17 @@ class BankAccountServiceImplTest {
             SecretKey mockKey = mock(SecretKey.class);
 
             encryptionMock.when(EncryptionUtil::getSecretKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(bankAccount.getIban(), mockKey)).thenReturn("CZ1234567890");
-            encryptionMock.when(() -> EncryptionUtil.decrypt(bankAccount.getAccountNumber(), mockKey)).thenReturn("1234567890");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(bankAccount.getIban(), mockKey))
+                    .thenReturn("CZ1234567890");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(bankAccount.getAccountNumber(), mockKey))
+                    .thenReturn("1234567890");
 
-            BankAccount account = bankAccountService.getAccountById(request, "bankName", bankAccount.getId(), "visible");
+            BankAccount account = bankAccountService.getAccountById(
+                    request,
+                    "bankName",
+                    bankAccount.getId(),
+                    "visible"
+            );
 
             assertNotNull(account);
             assertEquals(bankAccount, account);
@@ -176,7 +190,8 @@ class BankAccountServiceImplTest {
 
     @Test
     void getAccountById_ShouldThrowException_WhenAccountNotFound() {
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
         when(accountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.empty());
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
@@ -195,8 +210,10 @@ class BankAccountServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findAllByUserProfileId(userProfile.getId())).thenReturn(Optional.of(List.of(bankIdentity)));
-        when(accountRepository.findAllByBankIdentitiesId(List.of(bankIdentity.getId()))).thenReturn(List.of(bankAccount));
+        when(bankIdentityRepository.findAllByUserProfileId(userProfile.getId()))
+                .thenReturn(Optional.of(List.of(bankIdentity)));
+        when(accountRepository.findAllByBankIdentitiesId(List.of(bankIdentity.getId())))
+                .thenReturn(List.of(bankAccount));
 
         Map<String, BigDecimal> totalBalance = bankAccountService.getTotalBalance(request);
 
@@ -224,7 +241,8 @@ class BankAccountServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank")).thenReturn(Optional.of(bankIdentity));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank"))
+                .thenReturn(Optional.of(bankIdentity));
         when(accountRepository.save(any(BankAccount.class))).thenReturn(bankAccount);
 
         BankAccount newAccount = bankAccountService.addAccount(request, "CzechBank");
@@ -238,8 +256,10 @@ class BankAccountServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank")).thenReturn(Optional.of(bankIdentity));
-        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
 
         bankAccountService.removeAccount(request, "CzechBank", bankAccount.getId());
 
@@ -251,7 +271,8 @@ class BankAccountServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank")).thenReturn(Optional.of(bankIdentity));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank"))
+                .thenReturn(Optional.of(bankIdentity));
         when(accountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.empty());
 
         ApplicationException exception = assertThrows(ApplicationException.class, () -> {
@@ -267,8 +288,10 @@ class BankAccountServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank")).thenReturn(Optional.of(bankIdentity));
-        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
 
         UUID nonExistentAccountId = UUID.randomUUID();
 
@@ -285,8 +308,10 @@ class BankAccountServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank")).thenReturn(Optional.of(bankIdentity));
-        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
 
         bankAccountService.removeAllAccounts(request, "CzechBank");
 
@@ -298,7 +323,8 @@ class BankAccountServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank")).thenReturn(Optional.empty());
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank"))
+                .thenReturn(Optional.empty());
 
         ApplicationException exception = assertThrows(ApplicationException.class, () -> {
             bankAccountService.removeAllAccounts(request, "CzechBank");
@@ -313,8 +339,10 @@ class BankAccountServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank")).thenReturn(Optional.of(bankIdentity));
-        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(Collections.emptyList()));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "CzechBank"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(accountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(Collections.emptyList()));
 
         ApplicationException exception = assertThrows(ApplicationException.class, () -> {
             bankAccountService.removeAllAccounts(request, "CzechBank");

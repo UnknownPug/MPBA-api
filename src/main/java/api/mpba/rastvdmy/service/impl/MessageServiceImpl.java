@@ -21,24 +21,50 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Implementation of the MessageService interface for managing messages between users.
+ * This service provides methods for sending and retrieving messages,
+ * including message encryption and decryption functionalities.
+ */
 @Service
 public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
     private final UserProfileRepository userProfileRepository;
     private final JwtService jwtService;
 
+    /**
+     * Constructor for MessageServiceImpl.
+     *
+     * @param messageRepository     the message repository to be used
+     * @param userProfileRepository the user profile repository to be used
+     * @param jwtService            the JWT service to be used
+     */
     @Autowired
-    public MessageServiceImpl(MessageRepository messageRepository, UserProfileRepository userProfileRepository, JwtService jwtService) {
+    public MessageServiceImpl(MessageRepository messageRepository,
+                              UserProfileRepository userProfileRepository,
+                              JwtService jwtService) {
         this.messageRepository = messageRepository;
         this.userProfileRepository = userProfileRepository;
         this.jwtService = jwtService;
     }
 
+    /**
+     * Retrieves all messages, decrypting their content before returning.
+     *
+     * @return a list of decrypted messages
+     */
     public List<Message> getMessages() {
         List<Message> messages = messageRepository.findAll();
         return messages.stream().filter(this::decryptMessageData).toList();
     }
 
+    /**
+     * Decrypts the content of a given message.
+     *
+     * @param message the message to decrypt
+     * @return true if decryption is successful, false otherwise
+     * @throws ApplicationException if an error occurs during decryption
+     */
     private boolean decryptMessageData(Message message) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
@@ -49,6 +75,15 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    /**
+     * Sends a message from the sender to the specified receiver.
+     *
+     * @param request       the HTTP request containing user data
+     * @param receiverEmail the email of the receiver
+     * @param content       the content of the message
+     * @return the saved Message object
+     * @throws Exception if an error occurs during message sending
+     */
     public Message sendMessage(HttpServletRequest request, String receiverEmail, String content) throws Exception {
         UserProfile sender = BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository);
 
@@ -61,8 +96,8 @@ public class MessageServiceImpl implements MessageService {
         }
         SecretKey secretKey = EncryptionUtil.getSecretKey();
 
-        String sanitizedContent = StringEscapeUtils.escapeHtml4(content);
-        String encryptedContent = EncryptionUtil.encrypt(sanitizedContent, secretKey);
+        String sanitizedContent = StringEscapeUtils.escapeHtml4(content); // Sanitize input content to prevent XSS
+        String encryptedContent = EncryptionUtil.encrypt(sanitizedContent, secretKey); // Encrypt the sanitized content
 
         UserProfile receiver = userProfileRepository.findByEmail(receiverEmail).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified receiver not found.")

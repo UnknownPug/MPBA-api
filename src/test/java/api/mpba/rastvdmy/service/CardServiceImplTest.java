@@ -111,15 +111,18 @@ class CardServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.of(List.of(card)));
 
         try (MockedStatic<EncryptionUtil> encryptionMock = Mockito.mockStatic(EncryptionUtil.class)) {
             SecretKey mockKey = mock(SecretKey.class);
 
             encryptionMock.when(EncryptionUtil::getSecretKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(card.getCardNumber(), mockKey)).thenReturn("1234567890");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(card.getCardNumber(), mockKey))
+                    .thenReturn("1234567890");
             encryptionMock.when(() -> EncryptionUtil.decrypt(card.getCvv(), mockKey)).thenReturn("123");
 
             List<Card> cards = cardService.getAccountCards("bankName", bankAccount.getId(), request);
@@ -137,8 +140,10 @@ class CardServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.empty());
 
         ApplicationException exception = assertThrows(ApplicationException.class, () ->
@@ -153,13 +158,20 @@ class CardServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.of(List.of(card)));
 
         ApplicationException exception = assertThrows(ApplicationException.class, () ->
-                cardService.getAccountCardById("bankName", bankAccount.getId(), UUID.randomUUID(), request, "visible"));
-
+                cardService.getAccountCardById("bankName",
+                        bankAccount.getId(),
+                        UUID.randomUUID(),
+                        request,
+                        "visible"
+                )
+        );
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("Specified card not found.", exception.getMessage());
     }
@@ -169,18 +181,26 @@ class CardServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.of(List.of(card)));
 
         try (MockedStatic<EncryptionUtil> encryptionMock = Mockito.mockStatic(EncryptionUtil.class)) {
             SecretKey mockKey = mock(SecretKey.class);
 
             encryptionMock.when(EncryptionUtil::getSecretKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(card.getCardNumber(), mockKey)).thenReturn("1234567890");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(card.getCardNumber(), mockKey))
+                    .thenReturn("1234567890");
             encryptionMock.when(() -> EncryptionUtil.decrypt(card.getCvv(), mockKey)).thenReturn("123");
 
-            Card retrievedCard = cardService.getAccountCardById("bankName", bankAccount.getId(), card.getId(), request, "visible");
+            Card retrievedCard = cardService.getAccountCardById(
+                    "bankName",
+                    bankAccount.getId(),
+                    card.getId(),
+                    request,
+                    "visible");
 
             assertNotNull(retrievedCard);
             assertEquals(card.getId(), retrievedCard.getId());
@@ -194,12 +214,19 @@ class CardServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.empty());
 
         ApplicationException exception = assertThrows(ApplicationException.class, () ->
-                cardService.getAccountCardById("bankName", bankAccount.getId(), UUID.randomUUID(), request, "visible"));
+                cardService.getAccountCardById(
+                        "bankName",
+                        bankAccount.getId(),
+                        UUID.randomUUID(),
+                        request,
+                        "visible"));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("No cards found for specified account.", exception.getMessage());
@@ -210,8 +237,10 @@ class CardServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.save(any(Card.class))).thenReturn(card);
 
         Card newCard = cardService.addAccountCard("bankName", bankAccount.getId(), request);
@@ -225,7 +254,8 @@ class CardServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.empty());
 
         ApplicationException exception = assertThrows(ApplicationException.class, () ->
@@ -240,8 +270,10 @@ class CardServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.of(List.of(card)));
 
         cardService.removeAccountCard("bankName", bankAccount.getId(), card.getId(), request);
@@ -254,8 +286,10 @@ class CardServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
-        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.of(List.of(bankAccount)));
+        when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
+        when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
+                .thenReturn(Optional.of(List.of(bankAccount)));
         when(cardRepository.findAllByAccountId(bankAccount.getId())).thenReturn(Optional.empty());
 
         ApplicationException exception = assertThrows(ApplicationException.class, () ->

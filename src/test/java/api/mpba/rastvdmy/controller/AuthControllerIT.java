@@ -26,7 +26,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {Application.class, SecurityConfig.class})
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = {Application.class, SecurityConfig.class}
+)
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 public class AuthControllerIT {
@@ -42,7 +45,6 @@ public class AuthControllerIT {
 
     @Test
     public void givenUserRequest_whenSignUp_thenReturnJwtAuthResponse() throws Exception {
-
         // Given
         UserProfileRequest userProfileRequest = new UserProfileRequest(
                 UUID.randomUUID(),
@@ -88,5 +90,4 @@ public class AuthControllerIT {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.token").value("mock-jwt-token"));
     }
-
 }

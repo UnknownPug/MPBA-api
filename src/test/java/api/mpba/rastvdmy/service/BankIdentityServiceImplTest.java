@@ -81,7 +81,8 @@ class BankIdentityServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(identityRepository.findAllByUserProfileId(userProfile.getId())).thenReturn(Optional.of(List.of(bankIdentity)));
+        when(identityRepository.findAllByUserProfileId(userProfile.getId()))
+                .thenReturn(Optional.of(List.of(bankIdentity)));
 
         List<BankIdentity> banks = bankIdentityService.getBanks(request);
 
@@ -109,7 +110,8 @@ class BankIdentityServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(identityRepository.findByNameAndConnectedToUserId("bankName", userProfile.getId())).thenReturn(Optional.of(bankIdentity));
+        when(identityRepository.findByNameAndConnectedToUserId("bankName", userProfile.getId()))
+                .thenReturn(Optional.of(bankIdentity));
 
         BankIdentity bank = bankIdentityService.getBankByName(request, "bankName");
 
@@ -133,7 +135,11 @@ class BankIdentityServiceImplTest {
 
     @Test
     void addBank_ShouldAddBank_WhenValidRequest() throws Exception {
-        BankIdentityRequest identityRequest = new BankIdentityRequest(bankIdentity.getBankName(), bankIdentity.getBankNumber(), bankIdentity.getSwift());
+        BankIdentityRequest identityRequest = new BankIdentityRequest(
+                bankIdentity.getBankName(),
+                bankIdentity.getBankNumber(),
+                bankIdentity.getSwift()
+        );
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
@@ -150,7 +156,8 @@ class BankIdentityServiceImplTest {
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
-        when(identityRepository.findByUserIdAndBankNameWithAccounts(userProfile.getId(), "bankName")).thenReturn(Optional.of(bankIdentity));
+        when(identityRepository.findByUserIdAndBankNameWithAccounts(userProfile.getId(), "bankName"))
+                .thenReturn(Optional.of(bankIdentity));
 
         bankIdentityService.deleteBank(request, "bankName");
 

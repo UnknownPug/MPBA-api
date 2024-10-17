@@ -25,18 +25,49 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.*;
 
+/**
+ * Service implementation for managing bank accounts, including account retrieval,
+ * creation, and deletion functionalities.
+ * It also handles user-related operations
+ * related to bank accounts, ensuring that user data is appropriately encrypted and masked.
+ */
 @Service
 public class BankAccountServiceImpl extends FinancialDataGenerator implements BankAccountService {
-    private static final int MIN_BALANCE = 100;
+    /**
+     * The minimum balance for a bank account.
+     */
+    private static final int MIN_BALANCE = 1000;
+
+    /**
+     * The maximum balance for a bank account.
+     */
     private static final int MAX_BALANCE = 10000;
+
+    /**
+     * The maximum number of available accounts.
+     */
     private static final int MAX_AVAILABLE_ACCOUNTS = 4;
+
+    /**
+     * The minimum number of available accounts.
+     */
     private static final int MIN_AVAILABLE_ACCOUNTS = 1;
+
     private final BankAccountRepository accountRepository;
     private final BankIdentityRepository bankIdentityRepository;
     private final JwtService jwtService;
     private final CardService cardService;
     private final UserProfileRepository userProfileRepository;
 
+    /**
+     * Constructs a new instance of {@link BankAccountServiceImpl}.
+     *
+     * @param accountRepository      the repository for bank account operations
+     * @param bankIdentityRepository the repository for bank identity operations
+     * @param jwtService             the service for handling JWT operations
+     * @param cardService            the service for handling card operations
+     * @param userProfileRepository  the repository for user profile operations
+     */
     @Autowired
     public BankAccountServiceImpl(BankAccountRepository accountRepository,
                                   BankIdentityRepository bankIdentityRepository,
@@ -50,14 +81,36 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         this.userProfileRepository = userProfileRepository;
     }
 
+    /**
+     * Retrieves a list of bank accounts associated with the specified bank for the user
+     * identified by the request.
+     *
+     * @param request  the HTTP request containing user information
+     * @param bankName the name of the bank
+     * @return a list of bank accounts
+     * @throws ApplicationException if no accounts are found for the user, or if there is an error during decryption
+     */
     public List<BankAccount> getUserAccounts(HttpServletRequest request, String bankName) {
         BankIdentity bankIdentity = getBankIdentity(request, bankName);
         List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No accounts found.")
         );
-        return accounts.stream().filter(account -> decryptAccountData(account, false)).collect(Collectors.toList());
+        return accounts.stream()
+                .filter(account -> decryptAccountData(account, false))
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves a specific bank account by its ID for the user identified by the request
+     * and bank name.
+     *
+     * @param request   the HTTP request containing user information
+     * @param bankName  the name of the bank
+     * @param accountId the ID of the bank account
+     * @param type      the type of visibility ("visible" to unmask)
+     * @return the requested bank account
+     * @throws ApplicationException if the requested account is not found
+     */
     public BankAccount getAccountById(HttpServletRequest request, String bankName, UUID accountId, String type) {
         BankIdentity bankIdentity = getBankIdentity(request, bankName);
 
@@ -74,6 +127,14 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
                 );
     }
 
+    /**
+     * Decrypts the account number and IBAN for a given bank account, optionally masking them.
+     *
+     * @param account the bank account to decrypt
+     * @param unmask  whether to unmask the account number and IBAN
+     * @return true if decryption was successful
+     * @throws ApplicationException if there is an error during decryption
+     */
     private boolean decryptAccountData(BankAccount account, boolean unmask) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
@@ -93,6 +154,12 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         }
     }
 
+    /**
+     * Masks the account number, displaying only the last four digits.
+     *
+     * @param data the account number to mask
+     * @return the masked account number
+     */
     private String maskAccountData(String data) {
         int length = data.length();
         if (length <= 4) {
@@ -101,6 +168,12 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         return "*".repeat(length - 4) + data.substring(length - 4);
     }
 
+    /**
+     * Masks the IBAN, displaying only the first four and last four digits.
+     *
+     * @param data the IBAN to mask
+     * @return the masked IBAN
+     */
     private String maskIban(String data) {
         int length = data.length();
         if (length <= 8) {
@@ -109,15 +182,24 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         return data.substring(0, 4) + "****" + data.substring(length - 4);
     }
 
+    /**
+     * Retrieves the total balance across all bank accounts associated with the user.
+     *
+     * @param request the HTTP request containing user information
+     * @return a map of total balances for each currency
+     * @throws ApplicationException if no bank identities are found for the user
+     */
     public Map<String, BigDecimal> getTotalBalance(HttpServletRequest request) {
         UserProfile userProfile = getUserData(request, jwtService, userProfileRepository);
-        List<BankIdentity> bankIdentities = bankIdentityRepository.findAllByUserProfileId(userProfile.getId()).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "No bank identities found.")
-        );
+        List<BankIdentity> bankIdentities =
+                bankIdentityRepository.findAllByUserProfileId(userProfile.getId()).orElseThrow(
+                        () -> new ApplicationException(HttpStatus.NOT_FOUND, "No bank identities found.")
+                );
 
         List<UUID> bankIdentitiesIds = bankIdentities.stream().map(BankIdentity::getId).toList();
 
-        List<BankAccount> allAccounts = accountRepository.findAllByBankIdentitiesId(bankIdentitiesIds); // Assume this method fetches all bank accounts
+        // Assume this method fetches all bank accounts
+        List<BankAccount> allAccounts = accountRepository.findAllByBankIdentitiesId(bankIdentitiesIds);
 
         Map<String, BigDecimal> totalBalances = allAccounts.stream()
                 .collect(Collectors.groupingBy(
@@ -131,6 +213,14 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         return totalBalances;
     }
 
+    /**
+     * Adds a new bank account for the user.
+     *
+     * @param request  the HTTP request containing user information
+     * @param bankName the name of the bank
+     * @return the created bank account
+     * @throws Exception if an error occurs during account creation
+     */
     @Transactional
     public BankAccount addAccount(HttpServletRequest request, String bankName) throws Exception {
         BankIdentity bankIdentity = getBankIdentity(request, bankName);
@@ -142,6 +232,12 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         return account;
     }
 
+    /**
+     * Connects multiple bank accounts to a user's bank identity.
+     *
+     * @param bankIdentity the bank identity to connect accounts to
+     * @throws Exception if an error occurs during account creation
+     */
     @Transactional
     public void connectAccounts(BankIdentity bankIdentity) throws Exception {
         List<Currency> availableCurrencies = new ArrayList<>(Arrays.asList(Currency.values()));
@@ -164,6 +260,15 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         }
     }
 
+    /**
+     * Generates and saves a new bank account with random data for the specified bank identity.
+     *
+     * @param generateBalance the random number generator for account balance
+     * @param accountCurrency the currency for the account
+     * @param bankIdentity    the bank identity associated with the account
+     * @return the generated bank account
+     * @throws Exception if an error occurs during account generation
+     */
     @Transactional
     protected BankAccount generateAccountData(Random generateBalance,
                                               Currency accountCurrency, BankIdentity bankIdentity) throws Exception {
@@ -184,6 +289,14 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         return accountRepository.save(account);
     }
 
+    /**
+     * Removes a specific bank account for the user identified by the request and bank name.
+     *
+     * @param request   the HTTP request containing user information
+     * @param bankName  the name of the bank
+     * @param accountId the ID of the bank account to be removed
+     * @throws ApplicationException if the requested account is not found, or if there is an error during card removal
+     */
     @Transactional
     public void removeAccount(HttpServletRequest request, String bankName, UUID accountId) {
         BankIdentity bankIdentity = getBankIdentity(request, bankName);
@@ -203,6 +316,14 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         accountRepository.delete(account);
     }
 
+    /**
+     * Removes all bank accounts associated with the specified bank for the user identified by the request.
+     *
+     * @param request  the HTTP request containing user information
+     * @param bankName the name of the bank
+     * @throws ApplicationException if no bank identities or accounts are found for the user,
+     *                              or if there is an error during card removal
+     */
     @Transactional
     public void removeAllAccounts(HttpServletRequest request, String bankName) {
         BankIdentity bankIdentity = getBankIdentity(request, bankName);
@@ -223,6 +344,14 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         accountRepository.deleteAll(accounts);
     }
 
+    /**
+     * Retrieves the bank identity for the user identified by the request and bank name.
+     *
+     * @param request  the HTTP request containing user information
+     * @param bankName the name of the bank
+     * @return the bank identity
+     * @throws ApplicationException if the bank identity is not found
+     */
     private BankIdentity getBankIdentity(HttpServletRequest request, String bankName) {
         UserProfile userProfile = getUserData(request, jwtService, userProfileRepository);
 
@@ -231,7 +360,17 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         );
     }
 
-    public static UserProfile getUserData(HttpServletRequest request, JwtService jwtService, UserProfileRepository userProfileRepository) {
+    /**
+     * Retrieves the user data for the user identified by the request.
+     *
+     * @param request               the HTTP request containing user information
+     * @param jwtService            the service for handling JWT operations
+     * @param userProfileRepository the repository for user profile operations
+     * @return the user profile
+     * @throws ApplicationException if the user is not found or is blocked
+     */
+    public static UserProfile getUserData(HttpServletRequest request, JwtService jwtService,
+                                          UserProfileRepository userProfileRepository) {
         final String token = jwtService.extractToken(request);
         final String userEmail = jwtService.extractSubject(token);
 

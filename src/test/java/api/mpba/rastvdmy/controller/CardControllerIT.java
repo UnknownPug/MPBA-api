@@ -40,7 +40,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {Application.class, SecurityConfig.class})
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = {Application.class, SecurityConfig.class}
+)
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 public class CardControllerIT {
@@ -111,6 +114,7 @@ public class CardControllerIT {
 
         List<Card> cards = List.of(card1, card2);
 
+        // When
         when(cardService.getAccountCards(eq(bankName), eq(accountId), any(HttpServletRequest.class))).thenReturn(cards);
         when(cardMapper.toResponse(any(CardRequest.class))).thenAnswer(invocation -> {
             CardRequest request = invocation.getArgument(0);
@@ -171,8 +175,11 @@ public class CardControllerIT {
                 .status(CardStatus.STATUS_CARD_DEFAULT)
                 .build();
 
-        when(cardService.getAccountCardById(eq(bankName), eq(accountId), eq(cardId), any(HttpServletRequest.class), eq("visible"))).thenReturn(card);
-        when(cardService.getAccountCardById(eq(bankName), eq(accountId), eq(cardId), any(HttpServletRequest.class), eq("non-visible"))).thenReturn(card);
+        // When
+        when(cardService.getAccountCardById(eq(bankName), eq(accountId), eq(cardId),
+                any(HttpServletRequest.class), eq("visible"))).thenReturn(card);
+        when(cardService.getAccountCardById(eq(bankName), eq(accountId), eq(cardId),
+                any(HttpServletRequest.class), eq("non-visible"))).thenReturn(card);
         when(cardMapper.toResponse(any(CardRequest.class))).thenReturn(new CardResponse(
                 card.getId(),
                 card.getCardNumber(),
@@ -185,7 +192,7 @@ public class CardControllerIT {
                 card.getStatus()
         ));
 
-        // Test case for type "visible"
+        // Then test case for type "visible"
         mockMvc.perform(
                         get("/api/v1/{bankName}/{accountId}/cards/{cardId}", bankName, accountId, cardId)
                                 .param("type", "visible")
@@ -203,7 +210,7 @@ public class CardControllerIT {
                 .andExpect(jsonPath("$.card_type").value(card.getType().toString()))
                 .andExpect(jsonPath("$.card_status").value(card.getStatus().toString()));
 
-        // Test case for type "non-visible"
+        // Then test case for type "non-visible"
         mockMvc.perform(
                         get("/api/v1/{bankName}/{accountId}/cards/{cardId}", bankName, accountId, cardId)
                                 .param("type", "non-visible")
@@ -251,6 +258,7 @@ public class CardControllerIT {
                 CardType.VISA,
                 CardStatus.STATUS_CARD_DEFAULT);
 
+        // When
         when(cardService.addAccountCard(eq(bankName), eq(accountId), any(HttpServletRequest.class))).thenReturn(card);
         when(cardMapper.toResponse(any(CardRequest.class))).thenReturn(new CardResponse(
                 card.getId(),
@@ -291,7 +299,8 @@ public class CardControllerIT {
         UUID cardId = UUID.randomUUID();
 
         // When
-        doNothing().when(cardService).removeAccountCard(eq(bankName), eq(accountId), eq(cardId), any(HttpServletRequest.class));
+        doNothing().when(cardService).removeAccountCard(eq(bankName), eq(accountId),
+                eq(cardId), any(HttpServletRequest.class));
 
         // Then
         mockMvc.perform(

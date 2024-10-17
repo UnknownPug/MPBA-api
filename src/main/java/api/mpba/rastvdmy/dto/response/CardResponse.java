@@ -9,6 +9,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * This class represents the response for a card in the banking system.
+ *
+ * @param id             The unique identifier of the card.
+ * @param cardNumber     The card number.
+ * @param cvv            The CVV of the card.
+ * @param pin            The PIN associated with the card.
+ * @param startDate      The date the card becomes active.
+ * @param expirationDate The date the card expires.
+ * @param cardCategory   The category of the card (e.g., credit, debit).
+ * @param cardType       The type of the card (e.g., Visa, MasterCard).
+ * @param cardStatus     The status of the card (e.g., active, blocked).
+ */
 @JsonPropertyOrder({
         "id",
         "card_number",

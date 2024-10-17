@@ -25,6 +25,10 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Service implementation for managing currency data.
+ * This service handles retrieving currency information from the database and external APIs.
+ */
 @Service
 public class CurrencyDataServiceImpl implements CurrencyDataService {
     private final CurrencyDataRepository currencyDataRepository;
@@ -34,12 +38,24 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
     private final UserProfileRepository userProfileRepository;
 
     @Value("${api.key}")
-    private String apiKey;
+    private String apiKey; // API key for the external currency API
 
+    /**
+     * Constructs a new CurrencyDataServiceImpl with the specified repositories, RestTemplate, JdbcTemplate, JwtService,
+     * and UserProfileRepository.
+     *
+     * @param currencyDataRepository the repository for currency data
+     * @param restTemplate           the RestTemplate for making HTTP requests
+     * @param jdbcTemplate           the JdbcTemplate for executing SQL queries
+     * @param jwtService             the JwtService for handling JWT tokens
+     * @param userProfileRepository  the repository for user profiles
+     */
     @Autowired
     public CurrencyDataServiceImpl(CurrencyDataRepository currencyDataRepository,
-                                   RestTemplate restTemplate, JdbcTemplate jdbcTemplate,
-                                   JwtService jwtService, UserProfileRepository userProfileRepository) {
+                                   RestTemplate restTemplate,
+                                   JdbcTemplate jdbcTemplate,
+                                   JwtService jwtService,
+                                   UserProfileRepository userProfileRepository) {
         this.currencyDataRepository = currencyDataRepository;
         this.restTemplate = restTemplate;
         this.jdbcTemplate = jdbcTemplate;
@@ -47,11 +63,26 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
         this.userProfileRepository = userProfileRepository;
     }
 
+    /**
+     * Retrieves all available currencies.
+     *
+     * @param request the HTTP request containing user data
+     * @return a list of all available currencies
+     */
     public List<CurrencyData> findAllCurrencies(HttpServletRequest request) {
         isUserValid(request);
         return currencyDataRepository.findAll();
     }
 
+    /**
+     * Retrieves currency data for a specified currency type.
+     * If the currency is not found in the database, it fetches it from an external API.
+     *
+     * @param request      the HTTP request containing user data
+     * @param currencyType the type of currency to retrieve
+     * @return the currency data for the specified type
+     * @throws ApplicationException if the specified currency type is invalid or not found
+     */
     public CurrencyData findByCurrency(HttpServletRequest request, String currencyType) {
         isUserValid(request);
         if (currencyType.isEmpty()) {
@@ -71,10 +102,22 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
         }
     }
 
+    /**
+     * Validates the user based on the HTTP request.
+     *
+     * @param request the HTTP request containing user data
+     * @throws ApplicationException if the user is not valid
+     */
     private void isUserValid(HttpServletRequest request) {
         BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository);
     }
 
+    /**
+     * Fetches currency data from an external API.
+     *
+     * @param currencyType the currency type to retrieve
+     * @return the currency data or null if not found
+     */
     private CurrencyData getCurrencyFromApi(String currencyType) {
         final String apiUrl = "https://v6.exchangerate-api.com/v6/" + apiKey + "/latest/" + Currency.CZK;
         try {
@@ -103,6 +146,13 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
         return null;
     }
 
+    /**
+     * Converts an amount from the base currency to the target currency using an external API.
+     *
+     * @param baseCurrency   the currency from which to convert
+     * @param targetCurrency the currency to which to convert
+     * @return the currency data for the target currency
+     */
     public CurrencyData convertCurrency(String baseCurrency, String targetCurrency) {
         final String apiUrl =
                 "https://v6.exchangerate-api.com/v6/" + apiKey + "/pair/" + baseCurrency + "/" + targetCurrency;
@@ -131,8 +181,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
     }
 
     /**
-     * Initializes the database with currency data.
-     * Connecting admin with all currency data.
+     * Initializes the database with currency data and connects the admin user to all currencies.
      */
     @PostConstruct
     public void initializeData() {
@@ -147,9 +196,9 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
         if (count == null || count == 0) {
             // Run the SQL script to connect the admin with the currencies
             jdbcTemplate.execute(
-                    "INSERT INTO user_profile_currency_data(user_profiles_id, currency_data_id)" +
-                            " SELECT '00000000-0000-0000-0000-000000000001', id" +
-                            " FROM currency_data;"
+                    "INSERT INTO user_profile_currency_data(user_profiles_id, currency_data_id) " +
+                            "SELECT '00000000-0000-0000-0000-000000000001', id " +
+                            "FROM currency_data;"
             );
         }
     }

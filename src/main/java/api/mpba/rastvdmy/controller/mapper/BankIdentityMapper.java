@@ -6,15 +6,20 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * Mapper for BankIdentityRequest and BankIdentityResponse
+ * Mapper for converting between {@link BankIdentityRequest} and {@link BankIdentityResponse}.
+ * <p>
+ * This interface uses MapStruct to generate the implementation for mapping fields
+ * between the two data transfer objects (DTOs) related to bank identities.
+ * </p>
  */
 @Mapper(componentModel = "spring")
 public interface BankIdentityMapper {
 
     /**
-     * Maps BankIdentityResponse to BankIdentityRequest
-     * @param bankIdentityResponse BankIdentityResponse
-     * @return BankIdentityRequest
+     * Maps a {@link BankIdentityResponse} object to a {@link BankIdentityRequest} object.
+     *
+     * @param bankIdentityResponse The {@link BankIdentityResponse} object to be converted.
+     * @return The converted {@link BankIdentityRequest} object.
      */
     @Mapping(target = "bankName", source = "bankName")
     @Mapping(target = "bankNumber", source = "bankNumber")
@@ -22,9 +27,10 @@ public interface BankIdentityMapper {
     BankIdentityRequest toRequest(BankIdentityResponse bankIdentityResponse);
 
     /**
-     * Maps BankIdentityRequest to BankIdentityResponse
-     * @param bankIdentityRequest BankIdentityRequest
-     * @return BankIdentityResponse
+     * Maps a {@link BankIdentityRequest} object to a {@link BankIdentityResponse} object.
+     *
+     * @param bankIdentityRequest The {@link BankIdentityRequest} object to be converted.
+     * @return The converted {@link BankIdentityResponse} object.
      */
     @Mapping(target = "bankName", source = "bankName")
     @Mapping(target = "bankNumber", source = "bankNumber")

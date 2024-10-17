@@ -5,6 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * Main application class for the MPBA API application.
+ * This class is responsible for bootstrapping the Spring Boot application.
+ */
 @SpringBootApplication
 @EnableScheduling
 @EnableCaching

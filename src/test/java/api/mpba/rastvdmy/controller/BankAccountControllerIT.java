@@ -39,7 +39,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {Application.class, SecurityConfig.class})
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = {Application.class, SecurityConfig.class})
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 public class BankAccountControllerIT {
@@ -101,6 +103,7 @@ public class BankAccountControllerIT {
 
         List<BankAccount> accounts = List.of(account1, account2);
 
+        // When
         when(accountService.getUserAccounts(any(HttpServletRequest.class), eq(bankName))).thenReturn(accounts);
         when(accountMapper.toResponse(any(BankAccountRequest.class))).thenAnswer(invocation -> {
             BankAccountRequest request = invocation.getArgument(0);
@@ -142,7 +145,10 @@ public class BankAccountControllerIT {
                 .currency(Currency.USD)
                 .build();
 
-        when(accountService.getAccountById(any(HttpServletRequest.class), eq(bankName), eq(accountId), eq(type))).thenReturn(account);
+        // When
+        when(accountService.getAccountById(any(HttpServletRequest.class),
+                eq(bankName), eq(accountId), eq(type))).thenReturn(account);
+
         when(accountMapper.toResponse(any(BankAccountRequest.class))).thenAnswer(invocation -> {
             BankAccountRequest request = invocation.getArgument(0);
             return new BankAccountResponse(
@@ -180,7 +186,10 @@ public class BankAccountControllerIT {
                 .currency(Currency.USD)
                 .build();
 
-        when(accountService.getAccountById(any(HttpServletRequest.class), eq(bankName), eq(accountId), eq(defaultType))).thenReturn(account);
+        // When
+        when(accountService.getAccountById(any(HttpServletRequest.class),
+                eq(bankName), eq(accountId), eq(defaultType))).thenReturn(account);
+
         when(accountMapper.toResponse(any(BankAccountRequest.class))).thenAnswer(invocation -> {
             BankAccountRequest request = invocation.getArgument(0);
             return new BankAccountResponse(
@@ -205,8 +214,10 @@ public class BankAccountControllerIT {
     @Test
     public void callGetTotalBalance_ShouldReturn_TotalBalances() throws Exception {
         // Given
-        Map<String, BigDecimal> totalBalances = Map.of("USD", new BigDecimal("3000.00"), "EUR", new BigDecimal("2000.00"));
+        Map<String, BigDecimal> totalBalances =
+                Map.of("USD", new BigDecimal("3000.00"), "EUR", new BigDecimal("2000.00"));
 
+        // When
         when(accountService.getTotalBalance(any(HttpServletRequest.class))).thenReturn(totalBalances);
 
         // Then
@@ -225,7 +236,13 @@ public class BankAccountControllerIT {
     public void callAddAccount_ShouldReturn_CreatedBankAccount() throws Exception {
         // Given
         String bankName = "Bank1";
-        BankAccountRequest accountRequest = new BankAccountRequest(UUID.randomUUID(), "123456", new BigDecimal("1000.00"), Currency.USD, "IBAN123");
+        BankAccountRequest accountRequest = new BankAccountRequest(
+                UUID.randomUUID(),
+                "123456",
+                new BigDecimal("1000.00"),
+                Currency.USD,
+                "IBAN123"
+        );
         BankAccount account = BankAccount.builder()
                 .id(UUID.randomUUID())
                 .balance(BigDecimal.valueOf(1000))
@@ -234,9 +251,11 @@ public class BankAccountControllerIT {
                 .currency(Currency.USD)
                 .build();
 
+        // When
         when(accountService.addAccount(any(HttpServletRequest.class), eq(bankName))).thenReturn(account);
         when(accountMapper.toResponse(any(BankAccountRequest.class))).thenReturn(new BankAccountResponse(
-                account.getId(), account.getAccountNumber(), account.getBalance(), account.getCurrency(), account.getIban()
+                account.getId(), account.getAccountNumber(),
+                account.getBalance(), account.getCurrency(), account.getIban()
         ));
 
         // Then

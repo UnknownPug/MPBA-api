@@ -11,6 +11,19 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * This class represents a response for a payment in the banking system.
+ *
+ * @param id            The unique identifier of the payment.
+ * @param senderName    The name of the payment sender.
+ * @param recipientName The name of the payment recipient.
+ * @param dateTime      The date and time when the payment was made.
+ * @param description   A description of the payment.
+ * @param amount        The amount of money involved in the payment.
+ * @param type          The type of the payment.
+ * @param status        The financial status of the payment.
+ * @param currency      The currency in which the payment is made.
+ */
 @JsonPropertyOrder({
         "id",
         "sender_name",

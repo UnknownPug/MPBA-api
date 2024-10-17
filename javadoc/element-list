@@ -1,0 +1,15 @@
+api.mpba.rastvdmy
+api.mpba.rastvdmy.config
+api.mpba.rastvdmy.config.utils
+api.mpba.rastvdmy.controller
+api.mpba.rastvdmy.controller.handler
+api.mpba.rastvdmy.controller.mapper
+api.mpba.rastvdmy.dto.request
+api.mpba.rastvdmy.dto.response
+api.mpba.rastvdmy.entity
+api.mpba.rastvdmy.entity.enums
+api.mpba.rastvdmy.exception
+api.mpba.rastvdmy.repository
+api.mpba.rastvdmy.service
+api.mpba.rastvdmy.service.impl
+api.mpba.rastvdmy.service.utils

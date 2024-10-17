@@ -6,8 +6,12 @@ import java.time.LocalDateTime;
 
 /**
  * This class represents a message in the banking system.
- * @param receiverEmail The name of the receiver.
- * @param content The content of the message.
+ * It contains information about the sender, receiver, content, and timestamp.
+ *
+ * @param receiverEmail The email of the message receiver.
+ * @param content       The content of the message.
+ * @param senderEmail   The email of the message sender.
+ * @param timestamp     The time when the message was sent.
  */
 public record MessageRequest(
         @JsonProperty("receiver_email")
@@ -18,4 +22,5 @@ public record MessageRequest(
         @JsonProperty("sender_email")
         String senderEmail,
 
-        LocalDateTime timestamp) {}
+        LocalDateTime timestamp
+) {}

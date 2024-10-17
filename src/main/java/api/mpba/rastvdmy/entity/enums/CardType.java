@@ -40,6 +40,11 @@ public enum CardType {
         return type;
     }
 
+    /**
+     * Returns a random CardType.
+     *
+     * @return A random card type from the enum values.
+     */
     public static CardType getRandomCardType() {
         return values()[(int) (Math.random() * values().length)];
     }

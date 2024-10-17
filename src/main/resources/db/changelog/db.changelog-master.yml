@@ -1,3 +1,11 @@
+# This YAML configuration specifies a database change log for managing database migrations.
+# It includes two SQL change log files:
+
+# 1. db/changelog/db.changelog-tables-init.sql:
+# This file is expected to contain the initial SQL scripts for creating the necessary tables in the database.
+
+# 2. db/changelog/db.changelog-admin-inject.sql:
+# This file is intended for injecting an initial admin user into the user_profile table if it does not already exist.
 databaseChangeLog:
   - include:
       file: db/changelog/db.changelog-tables-init.sql

@@ -7,8 +7,18 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
 
+/**
+ * A utility class for validating user data such as name, surname, email,
+ * password, phone number, and date of birth.
+ */
 public class UserDataValidator {
 
+    /**
+     * Validates the given name.
+     *
+     * @param name the name to validate
+     * @throws ApplicationException if the name is null, empty, or does not match the required pattern
+     */
     public static void isInvalidName(String name) {
         if (name == null || name.isBlank()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Name cannot be null or empty.");
@@ -22,6 +32,12 @@ public class UserDataValidator {
         }
     }
 
+    /**
+     * Validates the given surname.
+     *
+     * @param surname the surname to validate
+     * @throws ApplicationException if the surname is null, empty, or does not match the required pattern
+     */
     public static void isInvalidSurname(String surname) {
         if (surname == null || surname.isBlank()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Surname cannot be null or empty.");
@@ -35,6 +51,12 @@ public class UserDataValidator {
         }
     }
 
+    /**
+     * Validates the given email address.
+     *
+     * @param email the email address to validate
+     * @throws ApplicationException if the email is null, empty, or does not match the required pattern
+     */
     public static void isInvalidEmail(String email) {
         if (email == null || email.isBlank() ||
                 !email.matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
@@ -42,6 +64,12 @@ public class UserDataValidator {
         }
     }
 
+    /**
+     * Validates the given password.
+     *
+     * @param password the password to validate
+     * @throws ApplicationException if the password is null, empty, or does not meet the required criteria
+     */
     public static void isInvalidPassword(String password) {
         if (password == null || password.isBlank() ||
                 !password.matches("^(?=.*[A-Z])(?=.*[0-9\\W]).{8,20}$")) {
@@ -52,6 +80,12 @@ public class UserDataValidator {
         }
     }
 
+    /**
+     * Validates the given phone number.
+     *
+     * @param phoneNumber the phone number to validate
+     * @throws ApplicationException if the phone number is null, empty, or does not match the required format
+     */
     public static void isInvalidPhoneNumber(String phoneNumber) {
         if (phoneNumber == null || phoneNumber.isBlank()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
@@ -68,6 +102,12 @@ public class UserDataValidator {
         }
     }
 
+    /**
+     * Validates the given date of birth.
+     *
+     * @param dateOfBirth the date of birth to validate
+     * @throws ApplicationException if the date of birth is null, empty, or does not match the required format
+     */
     public static void isInvalidDateOfBirth(String dateOfBirth) {
 
         if (dateOfBirth == null || dateOfBirth.isBlank() ||

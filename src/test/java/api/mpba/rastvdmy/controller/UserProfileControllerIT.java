@@ -44,7 +44,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {Application.class, SecurityConfig.class})
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = {Application.class, SecurityConfig.class}
+)
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 public class UserProfileControllerIT {
@@ -82,7 +85,8 @@ public class UserProfileControllerIT {
 
         // Set the security context for admin user
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(adminUserDetails, null, adminUserDetails.getAuthorities())
+                new UsernamePasswordAuthenticationToken(
+                        adminUserDetails, null, adminUserDetails.getAuthorities())
         );
     }
 
@@ -98,12 +102,14 @@ public class UserProfileControllerIT {
 
         // Set the security context for default user
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(defaultUserDetails, null, defaultUserDetails.getAuthorities())
+                new UsernamePasswordAuthenticationToken(
+                        defaultUserDetails, null, defaultUserDetails.getAuthorities())
         );
     }
 
     @Test
     public void testGetUsers_ShouldReturn_ListOfUsers() throws Exception {
+        // Given
         setUpAdminUser();
         UserProfile userProfile1 = UserProfile.builder()
                 .id(UUID.randomUUID())
@@ -134,8 +140,11 @@ public class UserProfileControllerIT {
                 .build();
 
         List<UserProfile> userProfiles = List.of(userProfile1, userProfile2);
+
+        // When
         when(userProfileService.getUsers(any(HttpServletRequest.class))).thenReturn(userProfiles);
 
+        // Then
         mockMvc.perform(get("/api/v1/users")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -165,6 +174,7 @@ public class UserProfileControllerIT {
 
     @Test
     public void testFilterAndSortUsers_ShouldReturn_SortedAndFilteredUsers() throws Exception {
+        // Given
         setUpAdminUser();
         UserProfile userProfile1 = UserProfile.builder()
                 .id(UUID.randomUUID())
@@ -197,8 +207,11 @@ public class UserProfileControllerIT {
         List<UserProfile> userProfiles = List.of(userProfile1, userProfile2);
         Page<UserProfile> pagedResponse = new PageImpl<>(userProfiles);
 
-        when(userProfileService.filterAndSortUsers(any(HttpServletRequest.class), any(Pageable.class))).thenReturn(pagedResponse);
+        // When
+        when(userProfileService.filterAndSortUsers(any(HttpServletRequest.class),
+                any(Pageable.class))).thenReturn(pagedResponse);
 
+        // Then
         mockMvc.perform(get("/api/v1/users/filter")
                         .header("Authorization", "Bearer " + jwtToken)
                         .param("page", "0")
@@ -230,6 +243,7 @@ public class UserProfileControllerIT {
 
     @Test
     public void testGetUser_ShouldReturn_UserProfile() throws Exception {
+        // Given
         setUpAdminUser();
         UserProfile userProfile = UserProfile.builder()
                 .id(UUID.randomUUID())
@@ -245,8 +259,10 @@ public class UserProfileControllerIT {
                 .role(UserRole.ROLE_DEFAULT)
                 .build();
 
+        // When
         when(userProfileService.getUser(any(HttpServletRequest.class))).thenReturn(userProfile);
 
+        // Then
         mockMvc.perform(get("/api/v1/users/me")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -266,6 +282,7 @@ public class UserProfileControllerIT {
 
     @Test
     public void testGetUserById_ShouldReturn_UserProfile() throws Exception {
+        // Given
         setUpAdminUser();
         UUID userId = UUID.randomUUID();
         UserProfile userProfile = UserProfile.builder()
@@ -282,8 +299,10 @@ public class UserProfileControllerIT {
                 .role(UserRole.ROLE_DEFAULT)
                 .build();
 
+        // When
         when(userProfileService.getUserById(any(HttpServletRequest.class), eq(userId))).thenReturn(userProfile);
 
+        // Then
         mockMvc.perform(get("/api/v1/users/" + userId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -303,6 +322,7 @@ public class UserProfileControllerIT {
 
     @Test
     public void testUpdateUser_ShouldReturn_UserTokenResponse() throws Exception {
+        // Given
         setUpDefaultUser();
         UserUpdateRequest updateRequest = new UserUpdateRequest(
                 "jana.doe@mpba.com",
@@ -324,10 +344,12 @@ public class UserProfileControllerIT {
                 .role(UserRole.ROLE_DEFAULT)
                 .build();
 
+        // When
         when(userProfileService.updateUser(any(HttpServletRequest.class), any(UserUpdateRequest.class)))
                 .thenReturn(updatedUserProfile);
         when(userProfileService.generateToken(any(UserProfile.class))).thenReturn("new_jwt_token");
 
+        // Then
         mockMvc.perform(patch("/api/v1/users/me")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -339,6 +361,7 @@ public class UserProfileControllerIT {
 
     @Test
     public void testUpdateUserSpecificCredentials_ShouldReturn_UserTokenResponse() throws Exception {
+        // Given
         setUpAdminUser();
         UUID userId = UUID.randomUUID();
         AdminUpdateUserRequest updateRequest = new AdminUpdateUserRequest(
@@ -360,10 +383,12 @@ public class UserProfileControllerIT {
                 .role(UserRole.ROLE_DEFAULT)
                 .build();
 
-        when(userProfileService.updateUserSpecificCredentials(any(HttpServletRequest.class), eq(userId), any(AdminUpdateUserRequest.class)))
-                .thenReturn(updatedUserProfile);
+        // When
+        when(userProfileService.updateUserSpecificCredentials(any(HttpServletRequest.class),
+                eq(userId), any(AdminUpdateUserRequest.class))).thenReturn(updatedUserProfile);
         when(userProfileService.generateToken(any(UserProfile.class))).thenReturn("new_jwt_token");
 
+        // Then
         mockMvc.perform(patch("/api/v1/users/" + userId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -375,8 +400,8 @@ public class UserProfileControllerIT {
 
     @Test
     public void testManageUserAvatar_Upload_ShouldReturn_UserTokenResponse() throws Exception {
+        // Given
         setUpDefaultUser();
-
         MockMultipartFile userAvatar = new MockMultipartFile(
                 "user_avatar",
                 "avatar.png",
@@ -384,6 +409,7 @@ public class UserProfileControllerIT {
                 "avatar content".getBytes()
         );
 
+        // When
         doNothing().when(userProfileService).uploadUserAvatar(any(HttpServletRequest.class), any(MultipartFile.class));
         when(userProfileService.getUser(any(HttpServletRequest.class))).thenReturn(UserProfile.builder()
                 .id(UUID.randomUUID())
@@ -400,6 +426,7 @@ public class UserProfileControllerIT {
                 .build());
         when(userProfileService.generateToken(any(UserProfile.class))).thenReturn("new_jwt_token");
 
+        // Then
         mockMvc.perform(multipart("/api/v1/users/me/avatar")
                         .file(userAvatar)
                         .param("action", "upload")
@@ -416,8 +443,10 @@ public class UserProfileControllerIT {
 
     @Test
     public void testManageUserAvatar_Remove_ShouldReturn_UserTokenResponse() throws Exception {
+        // Given
         setUpDefaultUser();
 
+        // When
         doNothing().when(userProfileService).removeUserAvatar(any(HttpServletRequest.class));
         when(userProfileService.getUser(any(HttpServletRequest.class))).thenReturn(UserProfile.builder()
                 .id(UUID.randomUUID())
@@ -434,6 +463,7 @@ public class UserProfileControllerIT {
                 .build());
         when(userProfileService.generateToken(any(UserProfile.class))).thenReturn("new_jwt_token");
 
+        // Then
         mockMvc.perform(multipart("/api/v1/users/me/avatar")
                         .param("action", "remove")
                         .header("Authorization", "Bearer " + jwtToken)
@@ -449,8 +479,10 @@ public class UserProfileControllerIT {
 
     @Test
     public void testManageUserAvatar_InvalidAction_ShouldReturn_BadRequest() throws Exception {
+        // Given
         setUpDefaultUser();
 
+        // Then
         mockMvc.perform(patch("/api/v1/users/me/avatar")
                         .param("action", "invalid")
                         .header("Authorization", "Bearer " + jwtToken)
@@ -460,11 +492,14 @@ public class UserProfileControllerIT {
 
     @Test
     public void testUpdateUserRole_ShouldReturn_NoContent() throws Exception {
+        // Given
         setUpAdminUser();
         UUID userId = UUID.randomUUID();
 
+        // When
         doNothing().when(userProfileService).updateUserRole(any(HttpServletRequest.class), eq(userId));
 
+        // Then
         mockMvc.perform(patch("/api/v1/users/role/" + userId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -473,11 +508,14 @@ public class UserProfileControllerIT {
 
     @Test
     public void testUpdateUserStatus_ShouldReturn_NoContent() throws Exception {
+        // Given
         setUpAdminUser();
         UUID userId = UUID.randomUUID();
 
+        // When
         doNothing().when(userProfileService).updateUserStatus(any(HttpServletRequest.class), eq(userId));
 
+        // Then
         mockMvc.perform(patch("/api/v1/users/status/" + userId)
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -486,9 +524,13 @@ public class UserProfileControllerIT {
 
     @Test
     public void testDeleteMyProfile_ShouldReturn_NoContent() throws Exception {
+        // Given
         setUpDefaultUser();
+
+        // When
         doNothing().when(userProfileService).deleteUser(any(HttpServletRequest.class));
 
+        // Then
         mockMvc.perform(delete("/api/v1/users/me")
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNoContent());
@@ -496,11 +538,14 @@ public class UserProfileControllerIT {
 
     @Test
     public void testDeleteUserProfile_ShouldReturn_NoContent() throws Exception {
+        // Given
         setUpAdminUser();
         UUID userId = UUID.randomUUID();
 
+        // When
         doNothing().when(userProfileService).deleteUserByEmail(any(HttpServletRequest.class), eq(userId));
 
+        // Then
         mockMvc.perform(delete("/api/v1/users/" + userId)
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNoContent());

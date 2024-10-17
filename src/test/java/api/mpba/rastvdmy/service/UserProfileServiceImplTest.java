@@ -96,8 +96,11 @@ class UserProfileServiceImplTest {
             SecretKey mockKey = mock(SecretKey.class);
 
             encryptionMock.when(EncryptionUtil::generateKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(userProfile.getDateOfBirth(), mockKey)).thenReturn("2001-01-01");
-            encryptionMock.when(() -> EncryptionUtil.decrypt(userProfile.getPhoneNumber(), mockKey)).thenReturn("+420123456789");
+            encryptionMock.when(
+                    () -> EncryptionUtil.decrypt(userProfile.getDateOfBirth(), mockKey)
+            ).thenReturn("2001-01-01");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(userProfile.getPhoneNumber(), mockKey)
+            ).thenReturn("+420123456789");
 
             List<UserProfile> userProfiles = userService.getUsers(request);
 
@@ -119,8 +122,12 @@ class UserProfileServiceImplTest {
             SecretKey mockKey = mock(SecretKey.class);
 
             encryptionMock.when(EncryptionUtil::generateKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(userProfile.getDateOfBirth(), mockKey)).thenReturn("2001-01-01");
-            encryptionMock.when(() -> EncryptionUtil.decrypt(userProfile.getPhoneNumber(), mockKey)).thenReturn("+420123456789");
+            encryptionMock.when(
+                    () -> EncryptionUtil.decrypt(userProfile.getDateOfBirth(), mockKey)
+            ).thenReturn("2001-01-01");
+            encryptionMock.when(
+                    () -> EncryptionUtil.decrypt(userProfile.getPhoneNumber(), mockKey)
+            ).thenReturn("+420123456789");
 
 
             Page<UserProfile> result = userService.filterAndSortUsers(request, pageable);
@@ -141,8 +148,12 @@ class UserProfileServiceImplTest {
             SecretKey mockKey = mock(SecretKey.class);
 
             encryptionMock.when(EncryptionUtil::generateKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(userProfile.getDateOfBirth(), mockKey)).thenReturn("2001-01-01");
-            encryptionMock.when(() -> EncryptionUtil.decrypt(userProfile.getPhoneNumber(), mockKey)).thenReturn("+420123456789");
+            encryptionMock.when(
+                    () -> EncryptionUtil.decrypt(userProfile.getDateOfBirth(), mockKey)
+            ).thenReturn("2001-01-01");
+            encryptionMock.when(
+                    () -> EncryptionUtil.decrypt(userProfile.getPhoneNumber(), mockKey)
+            ).thenReturn("+420123456789");
 
             UserProfile result = userService.getUserById(request, userProfile.getId());
 
@@ -154,7 +165,11 @@ class UserProfileServiceImplTest {
 
     @Test
     void updateUser_ShouldUpdateAndReturnUser() throws Exception {
-        UserUpdateRequest userRequest = new UserUpdateRequest("new@example.com", "Qwertyuiop123", "+420987654321");
+        UserUpdateRequest userRequest = new UserUpdateRequest(
+                "new@example.com",
+                "Qwertyuiop123",
+                "+420987654321"
+        );
         when(request.getUserPrincipal()).thenReturn(() -> userProfile.getEmail());
         when(passwordEncoder.encode(userRequest.password())).thenReturn("encodedPassword");
         when(userProfileRepository.save(any(UserProfile.class))).thenReturn(userProfile);
@@ -191,7 +206,10 @@ class UserProfileServiceImplTest {
 
         userService.removeUserAvatar(request);
 
-        assertEquals("https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1", userProfile.getAvatar());
+        assertEquals(
+                "https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1",
+                userProfile.getAvatar()
+        );
         verify(userProfileRepository).save(userProfile);
     }
 
@@ -226,10 +244,14 @@ class UserProfileServiceImplTest {
         // Arrange
         when(request.getUserPrincipal()).thenReturn(() -> userProfile.getEmail());
 
-        AdminUpdateUserRequest userRequest = new AdminUpdateUserRequest("", "Czechia"); // Invalid surname
+        // Invalid surname
+        AdminUpdateUserRequest userRequest = new AdminUpdateUserRequest("", "Czechia");
 
         // Act & Assert
-        assertThrows(ApplicationException.class, () -> userService.updateUserSpecificCredentials(request, userProfile.getId(), userRequest));
+        assertThrows(
+                ApplicationException.class,
+                () -> userService.updateUserSpecificCredentials(request, userProfile.getId(), userRequest)
+        );
     }
 
     @Test
@@ -237,10 +259,17 @@ class UserProfileServiceImplTest {
         // Arrange
         when(request.getUserPrincipal()).thenReturn(() -> userProfile.getEmail());
 
-        AdminUpdateUserRequest userRequest = new AdminUpdateUserRequest("Surname", "InvalidCountry"); // Initialize userRequest
+        // Initialize userRequest
+        AdminUpdateUserRequest userRequest = new AdminUpdateUserRequest(
+                "Surname",
+                "InvalidCountry"
+        );
 
         // Act & Assert
-        assertThrows(ApplicationException.class, () -> userService.updateUserSpecificCredentials(request, userProfile.getId(), userRequest));
+        assertThrows(
+                ApplicationException.class,
+                () -> userService.updateUserSpecificCredentials(request, userProfile.getId(), userRequest)
+        );
     }
 
     @Test
@@ -248,7 +277,10 @@ class UserProfileServiceImplTest {
         when(request.getUserPrincipal()).thenReturn(() -> userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ApplicationException.class, () -> userService.updateUserSpecificCredentials(request, userProfile.getId(), userRequest));
+        Exception exception = assertThrows(
+                ApplicationException.class,
+                () -> userService.updateUserSpecificCredentials(request, userProfile.getId(), userRequest)
+        );
 
         assertEquals("User does not exist.", exception.getMessage());
     }
@@ -272,7 +304,10 @@ class UserProfileServiceImplTest {
         when(request.getUserPrincipal()).thenReturn(() -> "test@example.com");
         when(userProfileRepository.findByEmail("test@example.com")).thenReturn(Optional.ofNullable(userProfile));
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> userService.deleteUser(request));
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> userService.deleteUser(request)
+        );
 
         assertEquals("Make sure to delete all bank accounts first.", exception.getMessage());
 
@@ -284,7 +319,10 @@ class UserProfileServiceImplTest {
         when(request.getUserPrincipal()).thenReturn(() -> "nonexistent@example.com");
         when(userProfileRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> userService.deleteUser(request));
+        ApplicationException exception = assertThrows(
+                ApplicationException.class,
+                () -> userService.deleteUser(request)
+        );
 
         assertEquals("User does not exist.", exception.getMessage());
         verify(userProfileRepository, never()).delete(any());

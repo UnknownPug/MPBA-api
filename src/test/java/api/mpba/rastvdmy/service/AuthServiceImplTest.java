@@ -93,7 +93,8 @@ public class AuthServiceImplTest {
     public void signUp_ShouldThrowException_WhenEmailExists() {
         when(userProfileRepository.findByEmail(userProfileRequest.email())).thenReturn(Optional.of(userProfile));
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> authService.signUp(userProfileRequest));
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> authService.signUp(userProfileRequest));
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getHttpStatus());
         assertEquals("User with this email already exists.", exception.getMessage());
@@ -102,7 +103,8 @@ public class AuthServiceImplTest {
     @Test
     public void authenticate_ShouldReturnJwtAuthResponse_WhenValidCredentials() {
         when(userProfileRepository.findByEmail(userLoginRequest.email())).thenReturn(Optional.of(userProfile));
-        when(generateAccessToken.generate(any(UserProfile.class))).thenReturn(new GenerateAccessToken.TokenDetails("mockToken", 3600));
+        when(generateAccessToken.generate(any(UserProfile.class))).thenReturn(
+                new GenerateAccessToken.TokenDetails("mockToken", 3600));
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(null);
 
         JwtAuthResponse response = authService.authenticate(userLoginRequest);
@@ -116,7 +118,8 @@ public class AuthServiceImplTest {
     public void authenticate_ShouldThrowException_WhenUserNotFound() {
         when(userProfileRepository.findByEmail(userLoginRequest.email())).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> authService.authenticate(userLoginRequest));
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> authService.authenticate(userLoginRequest));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("User not found.", exception.getMessage());
@@ -127,7 +130,8 @@ public class AuthServiceImplTest {
         userProfile.setStatus(UserStatus.STATUS_BLOCKED);
         when(userProfileRepository.findByEmail(userLoginRequest.email())).thenReturn(Optional.of(userProfile));
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> authService.authenticate(userLoginRequest));
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> authService.authenticate(userLoginRequest));
 
         assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
         assertEquals("User is blocked. Authentication is forbidden.", exception.getMessage());
@@ -137,9 +141,11 @@ public class AuthServiceImplTest {
     public void authenticate_ShouldThrowException_WhenInvalidCredentials() {
         when(userProfileRepository.findByEmail(userLoginRequest.email())).thenReturn(Optional.of(userProfile));
 
-        doThrow(new RuntimeException()).when(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        doThrow(new RuntimeException()).when(authenticationManager).authenticate(
+                any(UsernamePasswordAuthenticationToken.class));
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> authService.authenticate(userLoginRequest));
+        ApplicationException exception = assertThrows(ApplicationException.class,
+                () -> authService.authenticate(userLoginRequest));
 
         assertEquals(HttpStatus.UNAUTHORIZED, exception.getHttpStatus());
         assertEquals("Invalid email or password. Please try again.", exception.getMessage());

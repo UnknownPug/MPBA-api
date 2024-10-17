@@ -34,7 +34,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {Application.class, SecurityConfig.class})
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = {Application.class, SecurityConfig.class}
+)
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 public class CurrencyDataControllerIT {
@@ -87,6 +90,7 @@ public class CurrencyDataControllerIT {
 
         List<CurrencyData> currencies = List.of(currencyData1, currencyData2);
 
+        // When
         when(currencyDataService.findAllCurrencies(any(HttpServletRequest.class))).thenReturn(currencies);
         when(currencyDataMapper.toResponse(any(CurrencyDataRequest.class))).thenAnswer(invocation -> {
             CurrencyDataRequest request = invocation.getArgument(0);
@@ -117,7 +121,9 @@ public class CurrencyDataControllerIT {
                 .rate(new BigDecimal("1.0"))
                 .build();
 
-        when(currencyDataService.findByCurrency(any(HttpServletRequest.class), eq(currencyType))).thenReturn(currencyData);
+        // When
+        when(currencyDataService.findByCurrency(
+                any(HttpServletRequest.class), eq(currencyType))).thenReturn(currencyData);
         when(currencyDataMapper.toResponse(any(CurrencyDataRequest.class))).thenReturn(new CurrencyDataResponse(
                 currencyData.getCurrency(), currencyData.getRate()
         ));

@@ -55,6 +55,11 @@ public enum Currency {
         return currency;
     }
 
+    /**
+     * Returns a random Currency.
+     *
+     * @return A random currency from the enum values.
+     */
     public static Currency getRandomCurrency() {
         return values()[(int) (Math.random() * values().length)];
     }

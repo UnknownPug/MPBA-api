@@ -146,15 +146,20 @@ class PaymentServiceImplTest {
             SecretKey mockKey = mock(SecretKey.class);
 
             encryptionMock.when(EncryptionUtil::getSecretKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getSenderName(), mockKey)).thenReturn("John Doe");
-            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getRecipientName(), mockKey)).thenReturn("Jane Doe");
-            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getDescription(), mockKey)).thenReturn("Test payment");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getSenderName(), mockKey))
+                    .thenReturn("John Doe");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getRecipientName(), mockKey))
+                    .thenReturn("Jane Doe");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getDescription(), mockKey))
+                    .thenReturn("Test payment");
 
-            List<Payment> payments = paymentService.getAllPayments(request, "CzechBank", bankAccount.getId());
+            List<Payment> payments = paymentService
+                    .getAllPayments(request, "CzechBank", bankAccount.getId());
 
             assertNotNull(payments);
             assertEquals(1, payments.size());
-            verify(paymentRepository).findAllBySenderAccountIdOrSenderCardId(bankAccount.getId(), List.of(card.getId()));
+            verify(paymentRepository)
+                    .findAllBySenderAccountIdOrSenderCardId(bankAccount.getId(), List.of(card.getId()));
         }
     }
 
@@ -201,11 +206,19 @@ class PaymentServiceImplTest {
             SecretKey mockKey = mock(SecretKey.class);
 
             encryptionMock.when(EncryptionUtil::getSecretKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getSenderName(), mockKey)).thenReturn("John Doe");
-            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getRecipientName(), mockKey)).thenReturn("Jane Doe");
-            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getDescription(), mockKey)).thenReturn("Test payment");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getSenderName(), mockKey))
+                    .thenReturn("John Doe");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getRecipientName(), mockKey))
+                    .thenReturn("Jane Doe");
+            encryptionMock.when(() -> EncryptionUtil.decrypt(payment.getDescription(), mockKey))
+                    .thenReturn("Test payment");
 
-            Payment result = paymentService.getPaymentById(request, "CzechBank", bankAccount.getId(), payment.getId());
+            Payment result = paymentService.getPaymentById(
+                    request,
+                    "CzechBank",
+                    bankAccount.getId(),
+                    payment.getId()
+            );
 
             assertNotNull(result);
             assertEquals(payment.getId(), result.getId());
@@ -258,10 +271,18 @@ class PaymentServiceImplTest {
         try (MockedStatic<EncryptionUtil> encryptionMock = Mockito.mockStatic(EncryptionUtil.class)) {
             SecretKey mockKey = mock(SecretKey.class);
             encryptionMock.when(EncryptionUtil::getSecretKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(recipientAccount.getAccountNumber(), mockKey)).thenReturn(recipientAccount.getAccountNumber());
-            encryptionMock.when(() -> EncryptionUtil.encrypt(anyString(), eq(mockKey))).thenAnswer(invocation -> invocation.getArgument(0));
+            encryptionMock.when(() -> EncryptionUtil.decrypt(recipientAccount.getAccountNumber(), mockKey))
+                    .thenReturn(recipientAccount.getAccountNumber());
+            encryptionMock.when(() -> EncryptionUtil.encrypt(anyString(), eq(mockKey)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
-            Payment result = paymentService.createBankTransfer(request, bankAccount.getId(), recipientAccount.getAccountNumber(), BigDecimal.valueOf(100), "Test payment");
+            Payment result = paymentService.createBankTransfer(
+                    request,
+                    bankAccount.getId(),
+                    recipientAccount.getAccountNumber(),
+                    BigDecimal.valueOf(100),
+                    "Test payment"
+            );
 
             assertNotNull(result);
             assertEquals(payment.getId(), result.getId());
@@ -274,8 +295,14 @@ class PaymentServiceImplTest {
         when(accountRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(ApplicationException.class, () ->
-                paymentService.createBankTransfer(request, UUID.randomUUID(), "0987654321", BigDecimal.valueOf(100), "Test payment"));
-
+                paymentService.createBankTransfer(
+                        request,
+                        UUID.randomUUID(),
+                        "0987654321",
+                        BigDecimal.valueOf(100),
+                        "Test payment"
+                )
+        );
         assertEquals("Account not found.", exception.getMessage());
     }
 
@@ -285,8 +312,14 @@ class PaymentServiceImplTest {
         when(accountRepository.findAll()).thenReturn(Collections.emptyList());
 
         Exception exception = assertThrows(ApplicationException.class, () ->
-                paymentService.createBankTransfer(request, bankAccount.getId(), "0987654321", BigDecimal.valueOf(100), "Test payment"));
-
+                paymentService.createBankTransfer(
+                        request,
+                        bankAccount.getId(),
+                        "0987654321",
+                        BigDecimal.valueOf(100),
+                        "Test payment"
+                )
+        );
         assertEquals("There are no accounts.", exception.getMessage());
     }
 
@@ -298,11 +331,20 @@ class PaymentServiceImplTest {
         try (MockedStatic<EncryptionUtil> encryptionMock = Mockito.mockStatic(EncryptionUtil.class)) {
             SecretKey mockKey = mock(SecretKey.class);
             encryptionMock.when(EncryptionUtil::getSecretKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.decrypt(recipientAccount.getAccountNumber(), mockKey)).thenReturn(recipientAccount.getAccountNumber());
-            encryptionMock.when(() -> EncryptionUtil.encrypt(anyString(), eq(mockKey))).thenAnswer(invocation -> invocation.getArgument(0));
+            encryptionMock.when(() -> EncryptionUtil.decrypt(recipientAccount.getAccountNumber(), mockKey))
+                    .thenReturn(recipientAccount.getAccountNumber());
+            encryptionMock.when(() -> EncryptionUtil.encrypt(anyString(), eq(mockKey)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
 
             Exception exception = assertThrows(ApplicationException.class, () ->
-                    paymentService.createBankTransfer(request, bankAccount.getId(), "0987654321", BigDecimal.ZERO, "Test payment"));
+                    paymentService.createBankTransfer(
+                            request,
+                            bankAccount.getId(),
+                            "0987654321",
+                            BigDecimal.ZERO,
+                            "Test payment"
+                    )
+            );
 
             assertEquals("Amount must be greater than zero.", exception.getMessage());
         }
@@ -340,13 +382,11 @@ class PaymentServiceImplTest {
         when(accountRepository.findById(bankAccount.getId())).thenReturn(Optional.of(bankAccount));
         when(cardRepository.findByAccountIdAndId(bankAccount.getId(), card.getId())).thenReturn(Optional.of(card));
 
-        // Ожидаем выброс исключения
         ApplicationException exception = assertThrows(ApplicationException.class, () ->
                 paymentService.createCardPayment(request, bankAccount.getId(), card.getId()));
 
         assertEquals("Operation is unavailable, card is unavailable to use.", exception.getMessage());
 
-        // Убедиться, что метод save не был вызван
         verify(paymentRepository, never()).save(any(Payment.class));
     }
 }

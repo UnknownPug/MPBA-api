@@ -28,6 +28,12 @@ import javax.crypto.SecretKey;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * This class implements the AuthService interface and provides functionalities for user authentication
+ * and registration within the banking application.
+ * It manages user profiles, authentication tokens,
+ * and ensures data validation during the signup and login processes.
+ */
 @Service
 public class AuthServiceImpl extends FinancialDataGenerator implements AuthService {
     private final AuthenticationManager authenticationManager;
@@ -37,6 +43,16 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
     private final RestTemplate restTemplate;
     private final GenerateAccessToken generateAccessToken;
 
+    /**
+     * Constructor for the AuthServiceImpl class.
+     *
+     * @param userProfileRepository  Repository for user profile operations.
+     * @param authenticationManager  Manages the authentication processes.
+     * @param passwordEncoder        Encodes user passwords for secure storage.
+     * @param currencyDataRepository Repository for currency data operations.
+     * @param restTemplate           Used for REST API calls.
+     * @param generateAccessToken    Generates access tokens for authenticated users.
+     */
     public AuthServiceImpl(
             UserProfileRepository userProfileRepository,
             AuthenticationManager authenticationManager,
@@ -51,6 +67,13 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         this.generateAccessToken = generateAccessToken;
     }
 
+    /**
+     * Registers a new user profile in the system.
+     *
+     * @param request Contains the user profile details to register.
+     * @return JwtAuthResponse containing the generated JWT token and its expiration details.
+     * @throws Exception if there is an error during the registration process.
+     */
     @Transactional
     public JwtAuthResponse signUp(UserProfileRequest request) throws Exception {
 
@@ -63,12 +86,15 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         UserDataValidator.isInvalidDateOfBirth(request.dateOfBirth());
         validateUserData(request);
 
+        // Encrypt sensitive data before saving
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         String encodedDateOfBirth = EncryptionUtil.encrypt(request.dateOfBirth(), secretKey);
         String encodedPhoneNumber = EncryptionUtil.encrypt(request.phoneNumber(), secretKey);
 
+        // Retrieve all available currency data
         List<CurrencyData> currencyData = currencyDataRepository.findAll();
 
+        // Create and save the new user profile
         UserProfile userProfile = UserProfile.builder()
                 .id(UUID.randomUUID())
                 .role(UserRole.ROLE_DEFAULT)
@@ -85,6 +111,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 .build();
         userProfileRepository.save(userProfile);
 
+        // Generate an access token for the newly registered user
         GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(userProfile);
 
         return JwtAuthResponse.builder()
@@ -93,23 +120,35 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 .build();
     }
 
+    /**
+     * Authenticates an existing user and generates an access token.
+     *
+     * @param request Contains the login credentials (email and password).
+     * @return JwtAuthResponse containing the generated JWT token and its expiration details.
+     */
     @Transactional
     public JwtAuthResponse authenticate(UserLoginRequest request) {
+
+        // Retrieve user profile by email
         UserProfile userProfile = userProfileRepository.findByEmail(request.email()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
         );
 
+        // Check if the user's account is blocked
         if (userProfile.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "User is blocked. Authentication is forbidden.");
         }
 
         try {
+            // Authenticate the user with provided credentials
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password())
             );
         } catch (Exception e) {
             throw new ApplicationException(HttpStatus.UNAUTHORIZED, "Invalid email or password. Please try again.");
         }
+
+        // Generate access token upon successful authentication
         GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(userProfile);
 
         return JwtAuthResponse.builder()
@@ -118,12 +157,22 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 .build();
     }
 
+    /**
+     * Validates user data during signup.
+     *
+     * @param request Contains the user profile details to validate.
+     */
     private void validateUserData(UserProfileRequest request) {
         checkIfUserExistsByEmail(request);
         checkIfUserExistsByPhoneNumber(request);
         countryValidation(request);
     }
 
+    /**
+     * Checks if a user already exists with the provided email address.
+     *
+     * @param request Contains the user profile details.
+     */
     private void checkIfUserExistsByEmail(UserProfileRequest request) {
         if (userProfileRepository.findByEmail(request.email()).isPresent()) {
             throw new ApplicationException(
@@ -132,6 +181,11 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         }
     }
 
+    /**
+     * Checks if a user already exists with the provided phone number.
+     *
+     * @param request Contains the user profile details.
+     */
     private void checkIfUserExistsByPhoneNumber(UserProfileRequest request) {
         List<UserProfile> userProfiles = userProfileRepository.findAll();
         boolean phoneNumberExists = userProfiles.stream()
@@ -143,6 +197,13 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         }
     }
 
+    /**
+     * Checks if the phone number exists among the user profiles.
+     *
+     * @param userProfile The user profile to check against.
+     * @param request     Contains the user profile details for comparison.
+     * @return True if the phone number exists, false otherwise.
+     */
     private boolean isPhoneNumberExists(UserProfile userProfile, UserProfileRequest request) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
@@ -153,6 +214,11 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         }
     }
 
+    /**
+     * Validates the country of origin provided during signup.
+     *
+     * @param request Contains the user profile details to validate.
+     */
     private void countryValidation(UserProfileRequest request) {
         CountryValidator countryValidator = new CountryValidator(restTemplate);
         if (countryValidator.countryExists(request.countryOfOrigin())) {

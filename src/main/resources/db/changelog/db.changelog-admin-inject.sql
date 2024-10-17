@@ -1,4 +1,6 @@
--- If an admin user does not exist, create one
+-- This PL/pgSQL block checks if an admin user with the email 'admin@mpba.com' exists in the user_profile table.
+-- If the admin user does not exist, it creates a new admin user with predefined attributes such as ID, role,
+-- status, name, surname, date of birth, country of origin, email, password (hashed), avatar URL, and phone number.
 DO
 $$
     BEGIN

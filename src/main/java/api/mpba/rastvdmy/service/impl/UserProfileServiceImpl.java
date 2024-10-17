@@ -35,6 +35,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Service implementation for managing user profiles.
+ * This class provides methods for retrieving, updating, and deleting user profiles,
+ * as well as handling user authentication and authorization.
+ * It also includes methods for encrypting and decrypting user data.
+ */
 @Service
 public class UserProfileServiceImpl extends FinancialDataGenerator implements UserProfileService {
     private final UserProfileRepository userProfileRepository;
@@ -43,6 +49,16 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
     private final RestTemplate restTemplate;
     private final GenerateAccessToken generateAccessToken;
 
+    /**
+     * Constructs a new UserProfileServiceImpl with the specified repository, JWT service,
+     * password encoder, REST template, and access token generator.
+     *
+     * @param userProfileRepository The repository for user profiles.
+     * @param jwtService            The service for handling JWT tokens.
+     * @param passwordEncoder       The encoder for hashing passwords.
+     * @param restTemplate          The REST template for making HTTP requests.
+     * @param generateAccessToken   The generator for access tokens.
+     */
     @Autowired
     public UserProfileServiceImpl(UserProfileRepository userProfileRepository,
                                   JwtService jwtService,
@@ -56,6 +72,12 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         this.generateAccessToken = generateAccessToken;
     }
 
+    /**
+     * Retrieves all user profiles with decrypted data.
+     *
+     * @param request the HTTP request containing user authentication data
+     * @return a list of user profiles
+     */
     @Cacheable(value = "users")
     public List<UserProfile> getUsers(HttpServletRequest request) {
         validateUserData(request);
@@ -63,6 +85,13 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         return userProfiles.stream().filter(this::decryptUserData).toList();
     }
 
+    /**
+     * Filters and sorts user profiles based on pagination.
+     *
+     * @param request  the HTTP request containing user authentication data
+     * @param pageable pagination information
+     * @return a paginated list of user profiles
+     */
     @Cacheable(value = "users")
     public Page<UserProfile> filterAndSortUsers(HttpServletRequest request, Pageable pageable) {
         validateUserData(request);
@@ -71,6 +100,12 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         return usersPage;
     }
 
+    /**
+     * Retrieves a user profile based on the authenticated user.
+     *
+     * @param request the HTTP request containing user authentication data
+     * @return the user profile of the authenticated user
+     */
     @Cacheable(value = "users")
     public UserProfile getUser(HttpServletRequest request) {
         UserProfile userProfile = validateUserData(request);
@@ -78,6 +113,13 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         return userProfile;
     }
 
+    /**
+     * Retrieves a user profile by its unique ID.
+     *
+     * @param request the HTTP request containing user authentication data
+     * @param id      the unique ID of the user profile
+     * @return the user profile
+     */
     @Cacheable(value = "users")
     public UserProfile getUserById(HttpServletRequest request, UUID id) {
         validateUserData(request);
@@ -88,13 +130,27 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         return userProfile;
     }
 
+    /**
+     * Validates user data from the HTTP request and retrieves the user profile.
+     *
+     * @param request the HTTP request containing user authentication data
+     * @return the validated user profile
+     */
     private UserProfile validateUserData(HttpServletRequest request) {
         return retrieveAndValidateUser(userProfileRepository.findByEmail(request.getUserPrincipal().getName()));
     }
 
+    /**
+     * Decrypts-sensitive data for a user profile.
+     *
+     * @param userProfile the user profile to decrypt
+     * @return true if decryption was successful
+     */
     private boolean decryptUserData(UserProfile userProfile) {
         try {
-            SecretKey secretKey = EncryptionUtil.getSecretKey(); // Ensure this retrieves the same key used for encryption
+            // Ensure this retrieves the same key used for encryption
+            SecretKey secretKey = EncryptionUtil.getSecretKey();
+
             userProfile.setDateOfBirth(EncryptionUtil.decrypt(userProfile.getDateOfBirth(), secretKey));
             userProfile.setPhoneNumber(EncryptionUtil.decrypt(userProfile.getPhoneNumber(), secretKey));
             return true;
@@ -103,6 +159,14 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         }
     }
 
+    /**
+     * Updates the user profile with new information.
+     *
+     * @param request     the HTTP request containing user authentication data
+     * @param userRequest the new user data
+     * @return the updated user profile
+     * @throws Exception if an error occurs during the update
+     */
     @CachePut(value = "users", key = "#request.userPrincipal.name + '_update'")
     public UserProfile updateUser(HttpServletRequest request, UserUpdateRequest userRequest) throws Exception {
         UserProfile userProfile = validateUserData(request);
@@ -124,6 +188,11 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         return userProfileRepository.save(userProfile);
     }
 
+    /**
+     * Checks if a user with the specified email already exists.
+     *
+     * @param request the user update request
+     */
     private void checkIfUserExistsByEmail(UserUpdateRequest request) {
         if (userProfileRepository.findByEmail(request.email()).isPresent()) {
             throw new ApplicationException(
@@ -132,6 +201,11 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         }
     }
 
+    /**
+     * Checks if a user with the specified phone number already exists.
+     *
+     * @param request the user update request
+     */
     private void checkIfUserExistsByPhoneNumber(UserUpdateRequest request) {
         List<UserProfile> userProfiles = userProfileRepository.findAll();
         boolean isPhoneUsed = userProfiles.stream()
@@ -143,6 +217,13 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         }
     }
 
+    /**
+     * Checks if the user already uses the phone number.
+     *
+     * @param userProfile the user profile
+     * @param request     the user update request
+     * @return true if the phone number is already used
+     */
     private boolean checkIsNumberUsed(UserProfile userProfile, UserUpdateRequest request) {
         try {
             SecretKey secretKey = EncryptionUtil.getSecretKey();
@@ -153,6 +234,14 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         }
     }
 
+    /**
+     * Admin updates the user profile with new information.
+     *
+     * @param request     the HTTP request containing user authentication data
+     * @param userId      the unique ID of the user profile
+     * @param userRequest the new user data
+     * @return the updated user profile
+     */
     @CachePut(value = "users", key = "#request.userPrincipal.name + '_admin_update'")
     public UserProfile updateUserSpecificCredentials(HttpServletRequest request, UUID userId,
                                                      @Valid AdminUpdateUserRequest userRequest) {
@@ -169,11 +258,22 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         return userProfileRepository.save(userProfile);
     }
 
+    /**
+     * Generates an access token for the user profile.
+     *
+     * @param userProfile the user profile
+     * @return the generated access token
+     */
     public String generateToken(UserProfile userProfile) {
         GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(userProfile);
         return generatedToken.token();
     }
 
+    /**
+     * Validates the country of origin for the user.
+     *
+     * @param request the admin update user request
+     */
     private void countryValidation(AdminUpdateUserRequest request) {
         CountryValidator countryValidator = new CountryValidator(restTemplate);
         if (countryValidator.countryExists(request.countryOfOrigin())) {
@@ -181,6 +281,12 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         }
     }
 
+    /**
+     * Uploads a user avatar image.
+     *
+     * @param request    the HTTP request containing user authentication data
+     * @param userAvatar the user avatar image
+     */
     @CachePut(value = "users", key = "#request.userPrincipal.name")
     public void uploadUserAvatar(HttpServletRequest request, MultipartFile userAvatar) {
         UserProfile userProfile = validateUserData(request);
@@ -193,6 +299,11 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         userProfileRepository.save(userProfile);
     }
 
+    /**
+     * Removes the user avatar image.
+     *
+     * @param request the HTTP request containing user authentication data
+     */
     @CachePut(value = "users", key = "#request.userPrincipal.name")
     public void removeUserAvatar(HttpServletRequest request) {
         UserProfile userProfile = validateUserData(request);
@@ -201,6 +312,12 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         userProfileRepository.save(userProfile);
     }
 
+    /**
+     * Updates the user role.
+     *
+     * @param request the HTTP request containing user authentication data
+     * @param userId  the unique ID of the user profile
+     */
     @CachePut(value = "users", key = "#request.userPrincipal.name")
     public void updateUserRole(HttpServletRequest request, UUID userId) {
         validateUserData(request);
@@ -218,6 +335,12 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         userProfileRepository.save(userProfile);
     }
 
+    /**
+     * Updates the user status.
+     *
+     * @param request the HTTP request containing user authentication data
+     * @param userId  the unique ID of the user profile
+     */
     @CachePut(value = "users", key = "#request.userPrincipal.name")
     public void updateUserStatus(HttpServletRequest request, UUID userId) {
         validateUserData(request);
@@ -242,6 +365,12 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         }
     }
 
+    /**
+     * Retrieves and validates the user profile.
+     *
+     * @param userProfileRepository the user profile repository
+     * @return the user profile
+     */
     private UserProfile retrieveAndValidateUser(Optional<UserProfile> userProfileRepository) {
         UserProfile userProfile = userProfileRepository.orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
@@ -250,12 +379,22 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         return userProfile;
     }
 
+    /**
+     * Validates the user status.
+     *
+     * @param userProfile the user profile
+     */
     private static void validateUserStatus(UserProfile userProfile) {
         if (userProfile.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
     }
 
+    /**
+     * Deletes the user profile.
+     *
+     * @param request the HTTP request containing user authentication data
+     */
     @Transactional
     public void deleteUser(HttpServletRequest request) {
         UserProfile userProfile = validateUserData(request);
@@ -271,6 +410,12 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         userProfileRepository.delete(userProfile);
     }
 
+    /**
+     * Deletes the user profile by email.
+     *
+     * @param request the HTTP request containing user authentication data
+     * @param userId  the unique ID of the user profile
+     */
     @Transactional
     public void deleteUserByEmail(HttpServletRequest request, UUID userId) {
         validateUserData(request);
@@ -286,12 +431,23 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         userProfileRepository.delete(userProfile);
     }
 
+    /**
+     * Retrieves the user details service.
+     *
+     * @return the user details service
+     */
     public UserDetailsService userDetailsService() {
         return userData -> (UserDetails) userProfileRepository.findByEmail(userData).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
     }
 
+    /**
+     * Extracts the user ID from the JWT token in the HTTP request.
+     *
+     * @param request the HTTP request containing the JWT token
+     * @return the user ID extracted from the token
+     */
     private String getUserFromToken(HttpServletRequest request) {
         final String token = jwtService.extractToken(request);
         return jwtService.extractSubject(token);

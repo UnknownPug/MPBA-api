@@ -2,15 +2,24 @@ package api.mpba.rastvdmy.entity.enums;
 
 /**
  * This enum represents the category of a card.
- * It contains the categories: DEBIT, PREPAID and CREDIT.
+ * It contains the categories: DEBIT, PREPAID, and CREDIT.
  */
 public enum CardCategory {
 
     /**
      * Represents a DEBIT card category.
      */
-    DEBIT("DEBIT");
+    DEBIT("DEBIT"),
 
+    /**
+     * Represents a PREPAID card category.
+     */
+    PREPAID("PREPAID"),
+
+    /**
+     * Represents a CREDIT card category.
+     */
+    CREDIT("CREDIT");
 
     /**
      * The category of the card.

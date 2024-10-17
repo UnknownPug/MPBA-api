@@ -148,7 +148,8 @@ class MessageServiceImplTest {
             encryptionMock.when(() -> EncryptionUtil.decrypt(eq("encryptedContent"), eq(mockKey)))
                     .thenThrow(new RuntimeException("Decryption error"));
 
-            ApplicationException exception = assertThrows(ApplicationException.class, () -> messageService.getMessages());
+            ApplicationException exception = assertThrows(ApplicationException.class,
+                    () -> messageService.getMessages());
 
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
             assertEquals("Error while decrypting account data.", exception.getMessage());
@@ -165,14 +166,22 @@ class MessageServiceImplTest {
         try (MockedStatic<EncryptionUtil> encryptionMock = Mockito.mockStatic(EncryptionUtil.class)) {
             SecretKey mockKey = mock(SecretKey.class);
             encryptionMock.when(EncryptionUtil::getSecretKey).thenReturn(mockKey);
-            encryptionMock.when(() -> EncryptionUtil.encrypt("Hello, Jane!", mockKey)).thenReturn("encryptedContent");
+            encryptionMock.when(
+                    () -> EncryptionUtil.encrypt("Hello, Jane!", mockKey)
+            ).thenReturn("encryptedContent");
 
             UserProfile mockSender = spy(sender);
-            try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock = Mockito.mockStatic(BankAccountServiceImpl.class)) {
-                bankAccountServiceMock.when(() -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository))
-                        .thenReturn(mockSender);
+            try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock =
+                         Mockito.mockStatic(BankAccountServiceImpl.class)) {
+                bankAccountServiceMock.when(
+                        () -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository)
+                ).thenReturn(mockSender);
 
-                Message result = messageService.sendMessage(request, "janedoe@mpba.com", "Hello, Jane!");
+                Message result = messageService.sendMessage(
+                        request,
+                        "janedoe@mpba.com",
+                        "Hello, Jane!"
+                );
 
                 assertNotNull(result);
                 assertEquals("encryptedContent", result.getContent());
@@ -187,9 +196,11 @@ class MessageServiceImplTest {
     void sendMessage_ShouldThrowException_WhenUserIsBlocked() {
         sender.setStatus(UserStatus.STATUS_BLOCKED);
 
-        try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock = Mockito.mockStatic(BankAccountServiceImpl.class)) {
-            bankAccountServiceMock.when(() -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository))
-                    .thenReturn(sender);
+        try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock =
+                     Mockito.mockStatic(BankAccountServiceImpl.class)) {
+            bankAccountServiceMock.when(
+                    () -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository)
+            ).thenReturn(sender);
 
             ApplicationException exception = assertThrows(ApplicationException.class, () ->
                     messageService.sendMessage(request, "janedoe@mpba.com", "Hello, Jane!"));
@@ -201,9 +212,11 @@ class MessageServiceImplTest {
 
     @Test
     void sendMessage_ShouldThrowException_WhenContentIsEmpty() {
-        try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock = Mockito.mockStatic(BankAccountServiceImpl.class)) {
-            bankAccountServiceMock.when(() -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository))
-                    .thenReturn(sender);
+        try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock =
+                     Mockito.mockStatic(BankAccountServiceImpl.class)) {
+            bankAccountServiceMock.when(
+                    () -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository)
+            ).thenReturn(sender);
 
             ApplicationException exception = assertThrows(ApplicationException.class, () ->
                     messageService.sendMessage(request, "janedoe@mpba.com", ""));
@@ -215,9 +228,11 @@ class MessageServiceImplTest {
 
     @Test
     void sendMessage_ShouldThrowException_WhenReceiverNotFound() {
-        try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock = Mockito.mockStatic(BankAccountServiceImpl.class)) {
-            bankAccountServiceMock.when(() -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository))
-                    .thenReturn(sender);
+        try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock =
+                     Mockito.mockStatic(BankAccountServiceImpl.class)) {
+            bankAccountServiceMock.when(
+                    () -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository)
+            ).thenReturn(sender);
 
             when(userProfileRepository.findByEmail("janedoe@mpba.com")).thenReturn(Optional.empty());
 

@@ -1,0 +1,1240 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Managing Personal Banking Accounts API",
+    "description": "This folder contains requests for the “Managing Personal Bank Accounts” API, which includes functionality for user authentication, currency management, user profile handling, messaging, bank identity management, bank account operations, card management, and payment processing. Each section facilitates essential banking operations, enabling users to efficiently manage their personal bank accounts and related activities. \n \n For more information, please refer to the [Postman API documentation](https://documenter.getpostman.com/view/34110793/2sAXxV4Upk), where also testing scripts are available for each request. \n \n To install it, click on 'Run in Postman' and choose the desired type of application. Then choose the workplace where you will install the collection and click 'Import'.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8082"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "This folder contains all components related to user authentication within the application. It encompasses the implementation of user registration, login, JWT (JSON Web Token) handling, and authorization mechanisms. The authentication system ensures secure access to the application by validating user credentials and managing sessions effectively."
+    },
+    {
+      "name": "Currency",
+      "description": "This folder is dedicated to managing all aspects related to currency handling within the application. It includes functionalities for retrieving and updating exchange rates by interacting with third-party APIs that provide currency data."
+    },
+    {
+      "name": "User Profile",
+      "description": "This folder includes all functionality related to user management in the application. It includes operations for managing profiles, role assignments, and statuses."
+    },
+    {
+      "name": "Message",
+      "description": "This folder contains all API requests related to messaging functionality within the application. It includes endpoints for viewing all messages and sending new messages."
+    },
+    {
+      "name": "Bank Identity",
+      "description": "This folder contains API requests related to managing bank identities associated with users. It allows you to retrieve all existing banks linked to a specific user, fetch details of a specific bank, add a new bank, and delete an existing bank."
+    },
+    {
+      "name": "Bank Account",
+      "description": "This folder provides API requests for managing bank accounts linked to users. It allows you to retrieve all existing accounts for a specific bank, fetch details of a particular account, obtain the total balances across all accounts associated with the user, add a new account, delete an account by its ID, and remove all accounts."
+    },
+    {
+      "name": "Card",
+      "description": "This folder in Postman allows you to retrieve a list of all cards linked to a specific account, access a specific card, add a new card, and delete a specific card by its Id."
+    },
+    {
+      "name": "Payment",
+      "description": "This folder in Postman allows you to get a list of all payments made from a specific card and bank, access the details of a specific payment, execute a card payment and bank transfer."
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/signup": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Sign Up",
+        "description": "Creating a new user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "name": "<String>",
+                  "surname": "<String>",
+                  "date_of_birth": "<String>",
+                  "country_of_origin": "<String>",
+                  "email": "<String>",
+                  "password": "<String>",
+                  "phone_number": "<String>"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Authenticate - User",
+        "description": "Authentication as user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "email": "<String>",
+                  "password": "<String>"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/currency-data": {
+      "get": {
+        "tags": [
+          "Currency"
+        ],
+        "summary": "All currencies",
+        "description": "Get a list of all available currencies rates.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/currency-data/<Currency-name>": {
+      "get": {
+        "tags": [
+          "Currency"
+        ],
+        "summary": "Currency",
+        "description": "Getting a specific currency rate.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Users",
+        "description": "Get a list of users.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/filter": {
+      "get": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Filter users",
+        "description": "Filtering users by using page, size and sort parameters.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Page number <0, n>"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Size number <0, n>"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "asc/desc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Me",
+        "description": "Get users (mine) profile.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Me",
+        "description": "Update mine profile (email, password, phone number).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "email": "<String>",
+                  "password": "<String>",
+                  "phone_number": "<String>"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Me",
+        "description": "Deleting users (mine) profile.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "By id",
+        "description": "Get a specific user.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Users' UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Admin user update",
+        "description": "Updating user specific credentials (surname, country of origin).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "surname": "<String>",
+                  "country_of_origin": "<String>"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Users' UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "By id",
+        "description": "Delete a specific user.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Users' UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me/avatar": {
+      "patch": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Remove avatar",
+        "description": "Remove avatar for a user.",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_avatar": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "remove"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/role/{id}": {
+      "patch": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Role by id",
+        "description": "Switch user role to Admin or Default.",
+        "requestBody": {
+          "content": {}
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Users' UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/status/{id}": {
+      "patch": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Status by id",
+        "description": "Switch user status to Blocked or Unblocked.",
+        "requestBody": {
+          "content": {}
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Users' UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/messages": {
+      "get": {
+        "tags": [
+          "Message"
+        ],
+        "summary": "List",
+        "description": "Get a list of messages.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Message"
+        ],
+        "summary": "Send",
+        "description": "Sending a message to a specific user.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "receiver_email": "<String>",
+                  "content": "<String>"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/banks": {
+      "get": {
+        "tags": [
+          "Bank Identity"
+        ],
+        "summary": "List",
+        "description": "Get a list of banks.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Bank Identity"
+        ],
+        "summary": "Add Bank",
+        "description": "Add a new bank to user. It will also add accounts and cards.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "bank_name": "<String>"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/banks/{name}": {
+      "get": {
+        "tags": [
+          "Bank Identity"
+        ],
+        "summary": "Bank",
+        "description": "Get a specific bank.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Bank Identity"
+        ],
+        "summary": "Bank",
+        "description": "Deleting a specific bank.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{bank_name}": {
+      "get": {
+        "tags": [
+          "Bank Account"
+        ],
+        "summary": "List",
+        "description": "Get a list of all bank accounts.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Bank Account"
+        ],
+        "summary": "Account",
+        "description": "Add a new user account (will also add cards).",
+        "requestBody": {
+          "content": {}
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "example": "Ceska Sporitelna"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Bank Account"
+        ],
+        "summary": "All",
+        "description": "Deleting all accounts from a specific bank.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{bank_name}/{account_id}": {
+      "get": {
+        "tags": [
+          "Bank Account"
+        ],
+        "summary": "By id",
+        "description": "Get a specifc bank account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Account UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Bank Account"
+        ],
+        "summary": "By id",
+        "description": "Delete a specific bank account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Account UUID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/total": {
+      "get": {
+        "tags": [
+          "Bank Account"
+        ],
+        "summary": "Total account sum",
+        "description": "Get the total amount of accounts in different currencies from all the user's banks.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/{bank_name}/{account_id}/cards": {
+      "get": {
+        "tags": [
+          "Card"
+        ],
+        "summary": "List",
+        "description": "Get a list of cards.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Account id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Card"
+        ],
+        "summary": "Card",
+        "description": "Add a new card.",
+        "requestBody": {
+          "content": {}
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Account id"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/{bank_name}/{account_id}/cards/{card_id}": {
+      "get": {
+        "tags": [
+          "Card"
+        ],
+        "summary": "By id",
+        "description": "Get a specific card.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Account UUID"
+          },
+          {
+            "name": "card_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Card UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Card"
+        ],
+        "summary": "By id",
+        "description": "Delete a specific card.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Account UUID"
+          },
+          {
+            "name": "card_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Card UUID"
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/{account_id}/payments/{bank_name}": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "List",
+        "description": "Get a list of payments.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Account UUID"
+          },
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/{account_id}/payments/{bank_name}/{id}": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Payment by id",
+        "description": "Get a specific payment.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Account UUID"
+          },
+          {
+            "name": "bank_name",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bank name"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Payment UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/{acoount_id}/payments": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Create bank transfer",
+        "description": "Create bank transfer.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "recipient_number": "<String>",
+                  "amount": "<Number>",
+                  "description": "<String>",
+                  "type": "BANK_TRANSFER"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "acoount_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Account UUID"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

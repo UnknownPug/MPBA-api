@@ -27,8 +27,17 @@ import static api.mpba.rastvdmy.entity.enums.Currency.getRandomCurrency;
 import static api.mpba.rastvdmy.entity.enums.FinancialStatus.*;
 import static api.mpba.rastvdmy.entity.enums.PaymentType.*;
 
+/**
+ * Implementation of the PaymentService interface for managing payment operations,
+ * including bank transfers and card payments.
+ * This service handles the creation,
+ * retrieval, and validation of payments while ensuring proper encryption and security.
+ */
 @Service
 public class PaymentServiceImpl implements PaymentService {
+    /**
+     * Maximum payment amount allowed.
+     */
     private static final int MAX_PAYMENT = 6000;
 
     private final PaymentRepository paymentRepository;
@@ -38,6 +47,16 @@ public class PaymentServiceImpl implements PaymentService {
     private final JwtService jwtService;
     private final UserProfileRepository userProfileRepository;
 
+    /**
+     * Constructor for PaymentServiceImpl.
+     *
+     * @param paymentRepository     the payment repository to be used
+     * @param accountRepository     the bank account repository to be used
+     * @param cardRepository        the card repository to be used
+     * @param currencyDataService   the currency data service to be used
+     * @param jwtService            the JWT service to be used
+     * @param userProfileRepository the user profile repository to be used
+     */
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository,
                               BankAccountRepository accountRepository,
@@ -52,6 +71,15 @@ public class PaymentServiceImpl implements PaymentService {
         this.userProfileRepository = userProfileRepository;
     }
 
+    /**
+     * Retrieves all payments associated with a given bank account or card.
+     *
+     * @param request   the HTTP request containing user data
+     * @param bankName  the name of the bank associated with the payments
+     * @param accountId the ID of the bank account
+     * @return a list of payments related to the specified account
+     * @throws ApplicationException if the bank account is invalid or no payments are found
+     */
     public List<Payment> getAllPayments(HttpServletRequest request, String bankName, UUID accountId) {
         BankAccount bankAccount = getBankAccount(request, accountId);
 
@@ -71,6 +99,16 @@ public class PaymentServiceImpl implements PaymentService {
         return payments;
     }
 
+    /**
+     * Retrieves a specific payment by its ID.
+     *
+     * @param request   the HTTP request containing user data
+     * @param bankName  the name of the bank associated with the payment
+     * @param accountId the ID of the bank account
+     * @param paymentId the ID of the payment to retrieve
+     * @return the requested payment
+     * @throws ApplicationException if the payment is not found or is not associated with the specified bank
+     */
     public Payment getPaymentById(HttpServletRequest request, String bankName,
                                   UUID accountId, UUID paymentId) {
         BankAccount bankAccount = getBankAccount(request, accountId);
@@ -94,6 +132,14 @@ public class PaymentServiceImpl implements PaymentService {
         return payment;
     }
 
+    /**
+     * Retrieves the bank account associated with the user's JWT token.
+     *
+     * @param request   the HTTP request containing user data
+     * @param accountId the ID of the bank account to retrieve
+     * @return the associated BankAccount
+     * @throws ApplicationException if the user is not found, the account is not found, or the user is blocked
+     */
     private BankAccount getBankAccount(HttpServletRequest request, UUID accountId) {
         String token = jwtService.extractToken(request);
         String userEmail = jwtService.extractSubject(token);
@@ -110,6 +156,12 @@ public class PaymentServiceImpl implements PaymentService {
         );
     }
 
+    /**
+     * Decrypts sensitive payment data to ensure secure handling.
+     *
+     * @param payment the payment object containing encrypted data
+     * @throws ApplicationException if decryption fails
+     */
     private void decryptPaymentData(Payment payment) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
@@ -123,6 +175,17 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /**
+     * Creates a bank transfer payment.
+     *
+     * @param request         the HTTP request containing user data
+     * @param accountId       the ID of the bank account
+     * @param recipientNumber the account number of the recipient
+     * @param amount          the amount to be transferred
+     * @param description     a description for the payment
+     * @return the created Payment object
+     * @throws Exception if an error occurs during payment creation
+     */
     public Payment createBankTransfer(HttpServletRequest request, UUID accountId,
                                       String recipientNumber, BigDecimal amount, String description) throws Exception {
 
@@ -142,6 +205,13 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentRepository.save(payment);
     }
 
+    /**
+     * Finds a bank account by its account number.
+     *
+     * @param recipientNumber the account number of the recipient
+     * @return the found BankAccount
+     * @throws ApplicationException if no accounts are found or the recipient account is not found
+     */
     private BankAccount findBankAccountByNumber(String recipientNumber) {
         List<BankAccount> accounts = accountRepository.findAll();
 
@@ -156,6 +226,13 @@ public class PaymentServiceImpl implements PaymentService {
                 );
     }
 
+    /**
+     * Validates the recipient account number against the bank account.
+     *
+     * @param recipientNumber the account number to validate
+     * @param bankAccount     the bank account to validate against
+     * @return true if the numbers match, false otherwise
+     */
     private static boolean isNumberValid(String recipientNumber, BankAccount bankAccount) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
@@ -165,6 +242,15 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /**
+     * Initializes a bank transfer payment with encrypted data.
+     *
+     * @param senderAccount    the bank account of the sender
+     * @param description      a description for the payment
+     * @param recipientAccount the bank account of the recipient
+     * @return the initialized Payment object
+     * @throws Exception if an error occurs during encryption
+     */
     private Payment initializeBankPayment(BankAccount senderAccount, String description,
                                           BankAccount recipientAccount) throws Exception {
         if (senderAccount.getId().equals(recipientAccount.getId())) {
@@ -192,12 +278,29 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * Validates the amount to be transferred.
+     *
+     * @param amount the amount to be transferred
+     * @throws ApplicationException if the amount is invalid
+     */
     private void validateAmount(BigDecimal amount) {
         if (amount.equals(BigDecimal.ZERO)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Amount must be greater than zero.");
         }
     }
 
+    /**
+     * Checks if the sender's account has sufficient balance for the payment.
+     * If the balance is sufficient, the amount is subtracted from the sender's account.
+     * If the currencies of the sender and recipient are different, the amount is converted.
+     *
+     * @param senderAccount the bank account of the sender
+     * @param amount        the amount to be transferred
+     * @param currency      the currency of the recipient
+     * @param payment       the payment object to be updated
+     * @return true if the amount is sufficient, false otherwise
+     */
     private boolean isAmountSufficient(BankAccount senderAccount, BigDecimal amount,
                                        Currency currency, Payment payment) {
 
@@ -220,6 +323,14 @@ public class PaymentServiceImpl implements PaymentService {
         return true;
     }
 
+    /**
+     * Converts the amount to be transferred to the recipient's currency.
+     *
+     * @param amount           the amount to be transferred
+     * @param senderCurrency   the currency of the sender
+     * @param receiverCurrency the currency of the recipient
+     * @param payment          the payment object to be updated
+     */
     private void convertCurrency(BigDecimal amount, Currency senderCurrency,
                                  Currency receiverCurrency, Payment payment) {
         BigDecimal exchangeRate = currencyDataService.convertCurrency(
@@ -229,12 +340,27 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setCurrency(receiverCurrency);
     }
 
+    /**
+     * Processes a bank payment by adding the amount to the recipient's account.
+     *
+     * @param recipientAccount the bank account of the recipient
+     * @param payment          the payment object to be processed
+     */
     private void processBankPayment(BankAccount recipientAccount, Payment payment) {
         recipientAccount.setBalance(recipientAccount.getBalance().add(payment.getAmount()));
         accountRepository.save(recipientAccount);
         payment.setStatus(RECEIVED);
     }
 
+    /**
+     * Creates a card payment.
+     *
+     * @param request   the HTTP request containing user data
+     * @param accountId the ID of the bank account
+     * @param cardId    the ID of the card
+     * @return the created Payment object
+     * @throws Exception if an error occurs during payment creation
+     */
     public Payment createCardPayment(HttpServletRequest request, UUID accountId, UUID cardId) throws Exception {
         BankAccount account = getBankAccount(request, accountId);
 
@@ -249,6 +375,14 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentRepository.save(payment);
     }
 
+    /**
+     * Finds a card by its ID and associated bank account.
+     *
+     * @param accountId the ID of the bank account
+     * @param cardId    the ID of the card
+     * @return the found Card
+     * @throws ApplicationException if the card is not found or is blocked
+     */
     private Card findCardByIdAndAccountId(UUID accountId, UUID cardId) {
         Card card = cardRepository.findByAccountIdAndId(accountId, cardId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Card not found.")
@@ -257,6 +391,12 @@ public class PaymentServiceImpl implements PaymentService {
         return card;
     }
 
+    /**
+     * Validates the status of a card before processing a payment.
+     *
+     * @param card the card to validate
+     * @throws ApplicationException if the card is blocked or expired
+     */
     private void validateCardStatus(Card card) {
         if (card.getStatus().equals(CardStatus.STATUS_CARD_BLOCKED)
                 || card.getExpirationDate().isBefore(LocalDate.now())) {
@@ -265,6 +405,14 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /**
+     * Initializes a card payment with encrypted data.
+     *
+     * @param senderAccount the bank account of the sender
+     * @param card          the card used for the payment
+     * @return the initialized Payment object
+     * @throws Exception if an error occurs during encryption
+     */
     private Payment initializeCardPayment(BankAccount senderAccount, Card card) throws Exception {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         String encryptedSenderName = EncryptionUtil.encrypt(
@@ -284,6 +432,11 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    /**
+     * Generates a random amount for a card payment.
+     *
+     * @return a random amount
+     */
     private BigDecimal generateRandomAmount() {
         Random randomAmount = new Random();
         return BigDecimal.valueOf(randomAmount.nextDouble(MAX_PAYMENT) + 1);

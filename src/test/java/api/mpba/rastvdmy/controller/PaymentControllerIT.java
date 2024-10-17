@@ -40,7 +40,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {Application.class, SecurityConfig.class})
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = {Application.class, SecurityConfig.class}
+)
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 public class PaymentControllerIT {
@@ -111,7 +114,10 @@ public class PaymentControllerIT {
 
         List<Payment> payments = List.of(payment1, payment2);
 
-        when(paymentService.getAllPayments(any(HttpServletRequest.class), eq(bankName), eq(accountId))).thenReturn(payments);
+        // When
+        when(paymentService.getAllPayments(any(HttpServletRequest.class),
+                eq(bankName), eq(accountId))).thenReturn(payments);
+
         when(paymentMapper.toResponse(any(PaymentRequest.class))).thenAnswer(invocation -> {
             PaymentRequest request = invocation.getArgument(0);
             return new PaymentResponse(
@@ -167,9 +173,20 @@ public class PaymentControllerIT {
                 .currency(Currency.USD)
                 .build();
 
-        when(paymentService.createCardPayment(any(HttpServletRequest.class), eq(accountId), eq(paymentParamsRequest.cardId()))).thenReturn(payment);
+        // When
+        when(paymentService.createCardPayment(any(HttpServletRequest.class),
+                eq(accountId), eq(paymentParamsRequest.cardId()))).thenReturn(payment);
+
         when(paymentMapper.toResponse(any(PaymentRequest.class))).thenReturn(new PaymentResponse(
-                payment.getId(), payment.getSenderName(), payment.getRecipientName(), payment.getDateTime(), payment.getDescription(), payment.getAmount(), payment.getType(), payment.getStatus(), payment.getCurrency()
+                payment.getId(),
+                payment.getSenderName(),
+                payment.getRecipientName(),
+                payment.getDateTime(),
+                payment.getDescription(),
+                payment.getAmount(),
+                payment.getType(),
+                payment.getStatus(),
+                payment.getCurrency()
         ));
 
         // Then
@@ -192,7 +209,11 @@ public class PaymentControllerIT {
         // Given
         UUID accountId = UUID.randomUUID();
         PaymentParamsRequest paymentParamsRequest = new PaymentParamsRequest(
-                "123456789", "Bank Transfer", new BigDecimal("200.00"), null, PaymentType.BANK_TRANSFER
+                "123456789",
+                "Bank Transfer",
+                new BigDecimal("200.00"),
+                null,
+                PaymentType.BANK_TRANSFER
         );
         Payment payment = Payment.builder()
                 .id(UUID.randomUUID())
@@ -206,9 +227,20 @@ public class PaymentControllerIT {
                 .currency(Currency.USD)
                 .build();
 
-        when(paymentService.createBankTransfer(any(HttpServletRequest.class), eq(accountId), eq(paymentParamsRequest.recipientNumber()), eq(paymentParamsRequest.amount()), eq(paymentParamsRequest.description()))).thenReturn(payment);
+        // When
+        when(paymentService.createBankTransfer(any(HttpServletRequest.class),
+                eq(accountId), eq(paymentParamsRequest.recipientNumber()), eq(paymentParamsRequest.amount()),
+                eq(paymentParamsRequest.description()))).thenReturn(payment);
         when(paymentMapper.toResponse(any(PaymentRequest.class))).thenReturn(new PaymentResponse(
-                payment.getId(), payment.getSenderName(), payment.getRecipientName(), payment.getDateTime(), payment.getDescription(), payment.getAmount(), payment.getType(), payment.getStatus(), payment.getCurrency()
+                payment.getId(),
+                payment.getSenderName(),
+                payment.getRecipientName(),
+                payment.getDateTime(),
+                payment.getDescription(),
+                payment.getAmount(),
+                payment.getType(),
+                payment.getStatus(),
+                payment.getCurrency()
         ));
 
         // Then

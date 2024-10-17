@@ -22,7 +22,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * This class is responsible for handling message related requests.
+ * Controller for handling message-related requests.
+ * <p>
+ * This class provides endpoints for sending and retrieving messages. It utilizes the
+ * {@link MessageService} for business logic and {@link MessageMapper} for mapping
+ * between request and response objects. Messages are also sent to a Kafka topic for
+ * further processing.
+ * </p>
  */
 @Slf4j
 @RestController
@@ -39,6 +45,7 @@ public class MessageController {
      *
      * @param messageService The service to handle message operations.
      * @param kafkaTemplate  The template to send messages to Kafka.
+     * @param messageMapper  The mapper for converting between request and response objects.
      */
     @Autowired
     public MessageController(MessageService messageService,
@@ -49,6 +56,11 @@ public class MessageController {
         this.messageMapper = messageMapper;
     }
 
+    /**
+     * Retrieves a list of messages.
+     *
+     * @return A {@link ResponseEntity} containing a list of {@link MessageResponse}.
+     */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<MessageResponse>> getMessages() {
@@ -66,6 +78,14 @@ public class MessageController {
         return ResponseEntity.ok(messagesResponses);
     }
 
+    /**
+     * Sends a message to a recipient and publishes it to Kafka.
+     *
+     * @param request        The HTTP servlet request containing user information.
+     * @param messageRequest The request body containing message details.
+     * @return A {@link ResponseEntity} containing the sent {@link MessageResponse}.
+     * @throws Exception if there is an error sending the message.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<MessageResponse> sendMessage(
@@ -83,10 +103,16 @@ public class MessageController {
                         message.getContent(),
                         message.getSender().getEmail(),
                         message.getTimestamp()
-        ));
+                ));
         return ResponseEntity.accepted().body(response);
     }
 
+    /**
+     * Logs informational messages to the console.
+     *
+     * @param message The message to log.
+     * @param args    Optional arguments to format the message.
+     */
     private void logInfo(String message, Object... args) {
         LOG.info(message, args);
     }

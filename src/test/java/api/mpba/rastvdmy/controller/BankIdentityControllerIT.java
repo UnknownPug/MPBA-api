@@ -36,7 +36,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {Application.class, SecurityConfig.class})
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = {Application.class, SecurityConfig.class}
+)
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 public class BankIdentityControllerIT {
@@ -77,7 +80,6 @@ public class BankIdentityControllerIT {
 
     @Test
     public void callAddBank_ShouldReturn_CreatedBankIdentity() throws Exception {
-
         // Given
         BankIdentityRequest bankIdentityRequest = new BankIdentityRequest(
                 "CzechBank",
@@ -116,7 +118,6 @@ public class BankIdentityControllerIT {
 
     @Test
     public void callGetBanks_ShouldReturn_ListOfBankIdentities() throws Exception {
-
         // Given
         BankIdentity bankIdentity1 = BankIdentity.builder()
                 .id(UUID.randomUUID())
@@ -159,7 +160,6 @@ public class BankIdentityControllerIT {
 
     @Test
     public void callGetBankByName_ShouldReturn_BankIdentity() throws Exception {
-
         // Given
         String bankName = "Bank1";
         BankIdentity bankIdentity = BankIdentity.builder()
@@ -192,7 +192,6 @@ public class BankIdentityControllerIT {
 
     @Test
     public void callDeleteBank_ShouldReturn_NoContent() throws Exception {
-
         // Given
         String bankName = "Bank1";
 

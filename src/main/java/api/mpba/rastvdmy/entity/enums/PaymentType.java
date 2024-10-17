@@ -2,12 +2,12 @@ package api.mpba.rastvdmy.entity.enums;
 
 /**
  * This enum represents the types of payments that can be made in the system.
- * It contains the types: GATEWAY and BANK_TRANSFER.
+ * It contains the types: CARD_PAYMENT and BANK_TRANSFER.
  */
 public enum PaymentType {
 
     /**
-     * Represents the payment type when a payment is made through a gateway.
+     * Represents the payment type when a payment is made through a card.
      */
     CARD_PAYMENT("CARD_PAYMENT"),
 

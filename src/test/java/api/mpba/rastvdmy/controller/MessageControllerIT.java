@@ -40,7 +40,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = {Application.class, SecurityConfig.class})
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = {Application.class, SecurityConfig.class}
+)
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 public class MessageControllerIT {
@@ -111,7 +114,6 @@ public class MessageControllerIT {
 
     @Test
     public void callGetMessages_ShouldReturn_ListOfMessages() throws Exception {
-
         // Given
         Message message1 = Message.builder()
                 .id(UUID.randomUUID())
@@ -131,10 +133,16 @@ public class MessageControllerIT {
 
         List<Message> messages = List.of(message1, message2);
 
+        // When
         when(messageService.getMessages()).thenReturn(messages);
         when(messageMapper.toResponse(any(MessageRequest.class))).thenAnswer(invocation -> {
             MessageRequest messageRequest = invocation.getArgument(0);
-            return new MessageResponse(messageRequest.receiverEmail(), messageRequest.content(), messageRequest.senderEmail(), messageRequest.timestamp());
+            return new MessageResponse(
+                    messageRequest.receiverEmail(),
+                    messageRequest.content(),
+                    messageRequest.senderEmail(),
+                    messageRequest.timestamp()
+            );
         });
 
         // Then
@@ -163,7 +171,6 @@ public class MessageControllerIT {
                 LocalDateTime.now()
         );
 
-
         Message message = Message.builder()
                 .id(UUID.randomUUID())
                 .content("Hi Jane")
@@ -172,9 +179,15 @@ public class MessageControllerIT {
                 .receiver(receiver)
                 .build();
 
-        when(messageService.sendMessage(any(HttpServletRequest.class), eq(messageRequest.receiverEmail()), eq(messageRequest.content()))).thenReturn(message);
+        // When
+        when(messageService.sendMessage(
+                any(HttpServletRequest.class), eq(messageRequest.receiverEmail()), eq(messageRequest.content()))
+        ).thenReturn(message);
         when(messageMapper.toResponse(any(MessageRequest.class))).thenReturn(new MessageResponse(
-                message.getReceiver().getEmail(), message.getContent(), message.getSender().getEmail(), message.getTimestamp()
+                message.getReceiver().getEmail(),
+                message.getContent(),
+                message.getSender().getEmail(),
+                message.getTimestamp()
         ));
 
         // Then

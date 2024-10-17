@@ -1,3 +1,4 @@
+# Hazelcast configuration
 hazelcast:
   network:
     join:

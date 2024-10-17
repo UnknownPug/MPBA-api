@@ -20,6 +20,15 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Controller for managing bank identities.
+ * <p>
+ * This controller provides endpoints for users to interact with bank identities,
+ * including retrieving bank information, adding new banks, and deleting bank identities.
+ * It utilizes the {@link BankIdentityService} for business logic and {@link BankIdentityMapper}
+ * for mapping between request and response objects.
+ * </p>
+ */
 @Slf4j
 @RestController
 @PreAuthorize("hasRole('ROLE_DEFAULT')")
@@ -29,12 +38,24 @@ public class BankIdentityController {
     private final BankIdentityService identityService;
     private final BankIdentityMapper identityMapper;
 
+    /**
+     * Constructor for BankIdentityController.
+     *
+     * @param identityService The {@link BankIdentityService} to be used.
+     * @param identityMapper  The {@link BankIdentityMapper} to be used.
+     */
     @Autowired
     public BankIdentityController(BankIdentityService identityService, BankIdentityMapper identityMapper) {
         this.identityService = identityService;
         this.identityMapper = identityMapper;
     }
 
+    /**
+     * Retrieves all bank identities.
+     *
+     * @param request The HTTP servlet request containing user information.
+     * @return A {@link ResponseEntity} containing a list of {@link BankIdentityResponse}.
+     */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<BankIdentityResponse>> getBanks(HttpServletRequest request) {
@@ -50,6 +71,13 @@ public class BankIdentityController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Retrieves a specific bank identity by its name.
+     *
+     * @param request The HTTP servlet request containing user information.
+     * @param name    The name of the bank to retrieve.
+     * @return A {@link ResponseEntity} containing the requested {@link BankIdentityResponse}.
+     */
     @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{name}", produces = "application/json")
     public ResponseEntity<BankIdentityResponse> getBankByName(HttpServletRequest request,
@@ -64,6 +92,14 @@ public class BankIdentityController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Adds a new bank identity.
+     *
+     * @param request         The HTTP servlet request containing user information.
+     * @param identityRequest The request body containing bank identity details.
+     * @return A {@link ResponseEntity} containing the created {@link BankIdentityResponse}.
+     * @throws Exception If there is an error while adding the bank identity.
+     */
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<BankIdentityResponse> addBank(
@@ -79,6 +115,13 @@ public class BankIdentityController {
         return ResponseEntity.accepted().body(response);
     }
 
+    /**
+     * Deletes a bank identity by its name.
+     *
+     * @param request  The HTTP servlet request containing user information.
+     * @param bankName The name of the bank to delete.
+     * @return A {@link ResponseEntity} with no content.
+     */
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(path = "/{name}")
     public ResponseEntity<Void> deleteBank(HttpServletRequest request, @PathVariable("name") String bankName) {
@@ -87,6 +130,12 @@ public class BankIdentityController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Logs informational messages to the console.
+     *
+     * @param message The message to log.
+     * @param args    Optional arguments to format the message.
+     */
     private void logInfo(String message, Object... args) {
         LOG.info(message, args);
     }

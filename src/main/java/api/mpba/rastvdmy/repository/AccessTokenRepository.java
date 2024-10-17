@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * Repository interface for managing access tokens in the database.
+ * It extends JpaRepository, which provides basic CRUD operations and JPA-related methods.
+ */
 @Repository
-public interface AccessTokenRepository extends JpaRepository<AccessToken, UUID> {
-}
+public interface AccessTokenRepository extends JpaRepository<AccessToken, UUID> {}

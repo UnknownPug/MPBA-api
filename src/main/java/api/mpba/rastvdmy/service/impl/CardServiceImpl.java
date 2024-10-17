@@ -29,20 +29,44 @@ import java.util.*;
 import static api.mpba.rastvdmy.entity.enums.CardStatus.*;
 import static api.mpba.rastvdmy.entity.enums.CardType.getRandomCardType;
 
+/**
+ * Implementation of the CardService interface for managing user bank cards.
+ * This service provides methods for adding, retrieving, and removing cards associated with bank accounts.
+ * It includes functionality for card encryption and data masking to ensure sensitive information is handled securely.
+ */
 @Service
 public class CardServiceImpl extends FinancialDataGenerator implements CardService {
+    /**
+     * Maximum number of cards that can be created per user.
+     */
     public static final int MAX_AVAILABLE_CARDS = 3;
+
+    /**
+     * Minimum number of cards that can be created per user.
+     */
     public static final int MIN_AVAILABLE_CARDS = 1;
+
     private final CardRepository cardRepository;
     private final BankIdentityRepository bankIdentityRepository;
     private final BankAccountRepository bankAccountRepository;
     private final JwtService jwtService;
     private final UserProfileRepository userProfileRepository;
 
+    /**
+     * Constructs a CardServiceImpl with the specified repositories and services.
+     *
+     * @param cardRepository         the repository for card data
+     * @param bankIdentityRepository the repository for bank identity data
+     * @param bankAccountRepository  the repository for bank account data
+     * @param jwtService             the service for handling JWT tokens
+     * @param userProfileRepository  the repository for user profile data
+     */
     @Autowired
     public CardServiceImpl(CardRepository cardRepository,
                            BankIdentityRepository bankIdentityRepository,
-                           BankAccountRepository bankAccountRepository, JwtService jwtService, UserProfileRepository userProfileRepository) {
+                           BankAccountRepository bankAccountRepository,
+                           JwtService jwtService,
+                           UserProfileRepository userProfileRepository) {
         this.cardRepository = cardRepository;
         this.bankIdentityRepository = bankIdentityRepository;
         this.bankAccountRepository = bankAccountRepository;
@@ -50,6 +74,15 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         this.userProfileRepository = userProfileRepository;
     }
 
+    /**
+     * Retrieves all cards associated with a specific bank account.
+     *
+     * @param bankName  the name of the bank
+     * @param accountId the ID of the bank account
+     * @param request   the HTTP request containing user data
+     * @return a list of cards associated with the specified account
+     * @throws ApplicationException if no cards are found for the specified account
+     */
     public List<Card> getAccountCards(String bankName, UUID accountId, HttpServletRequest request) {
         BankAccount account = getBankAccount(bankName, accountId, request);
 
@@ -59,7 +92,19 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         return cards.stream().filter(card -> decryptCardData(card, false)).toList();
     }
 
-    public Card getAccountCardById(String bankName, UUID accountId, UUID cardId, HttpServletRequest request, String type) {
+    /**
+     * Retrieves a specific card associated with a bank account by card ID.
+     *
+     * @param bankName  the name of the bank
+     * @param accountId the ID of the bank account
+     * @param cardId    the ID of the card to retrieve
+     * @param request   the HTTP request containing user data
+     * @param type      the visibility type (e.g., "visible" or "hidden")
+     * @return the specified card if found
+     * @throws ApplicationException if the specified card is not found
+     */
+    public Card getAccountCardById(String bankName, UUID accountId, UUID cardId,
+                                   HttpServletRequest request, String type) {
         BankAccount account = getBankAccount(bankName, accountId, request);
 
         List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
@@ -75,6 +120,13 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
                 );
     }
 
+    /**
+     * Decrypts the sensitive data of a card, optionally unmasking it.
+     *
+     * @param card   the card to decrypt
+     * @param unmask whether to unmask the data
+     * @return true if decryption was successful; false otherwise
+     */
     public boolean decryptCardData(Card card, boolean unmask) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
@@ -94,6 +146,12 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         }
     }
 
+    /**
+     * Masks the card data, leaving only the last four digits visible.
+     *
+     * @param data the card data to mask
+     * @return the masked card data
+     */
     private String maskCardData(String data) {
         int length = data.length();
         if (length <= 4) {
@@ -102,12 +160,27 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         return "*".repeat(length - 4) + data.substring(length - 4);
     }
 
+    /**
+     * Adds a new card associated with the specified bank account.
+     *
+     * @param bankName  the name of the bank
+     * @param accountId the ID of the bank account
+     * @param request   the HTTP request containing user data
+     * @return the created Card
+     * @throws Exception if there is an error while adding the card
+     */
     @Transactional
     public Card addAccountCard(String bankName, UUID accountId, HttpServletRequest request) throws Exception {
         BankAccount account = getBankAccount(bankName, accountId, request);
         return generateCard(generateCardNumber(), generateCvv(), generatePin(), account);
     }
 
+    /**
+     * Connects a number of cards to a specified bank account.
+     *
+     * @param account the bank account to connect cards to
+     * @throws Exception if there is an error while connecting cards
+     */
     @Transactional
     public void connectCards(BankAccount account) throws Exception {
         List<CardType> cardTypes = new ArrayList<>(Arrays.asList(CardType.values()));
@@ -125,6 +198,16 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         }
     }
 
+    /**
+     * Generates and encrypts a new card with the provided details.
+     *
+     * @param cardNumber the card number
+     * @param cvv        the CVV of the card
+     * @param pin        the PIN for the card
+     * @param account    the bank account associated with the card
+     * @return the generated Card
+     * @throws Exception if there is an error while generating the card
+     */
     @Transactional
     protected Card generateCard(String cardNumber, String cvv, String pin, BankAccount account) throws Exception {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
@@ -152,6 +235,15 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         return cardRepository.save(card);
     }
 
+    /**
+     * Removes a specific card associated with a bank account.
+     *
+     * @param bankName  the name of the bank
+     * @param accountId the ID of the bank account
+     * @param cardId    the ID of the card to remove
+     * @param request   the HTTP request containing user data
+     * @throws ApplicationException if the specified card is not found
+     */
     public void removeAccountCard(String bankName, UUID accountId, UUID cardId, HttpServletRequest request) {
         BankAccount account = getBankAccount(bankName, accountId, request);
 
@@ -167,6 +259,12 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         cardRepository.delete(card);
     }
 
+    /**
+     * Removes all cards associated with a specified bank account.
+     *
+     * @param account the bank account whose cards should be removed
+     * @throws ApplicationException if no cards are found for the specified account
+     */
     @Transactional
     public void removeAllCards(BankAccount account) {
         List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
@@ -180,12 +278,22 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         }
     }
 
+    /**
+     * Retrieves the bank account associated with the specified bank name and account ID.
+     *
+     * @param bankName  the name of the bank
+     * @param accountId the ID of the bank account
+     * @param request   the HTTP request containing user data
+     * @return the bank account associated with the specified bank name and account ID
+     * @throws ApplicationException if the specified bank account or bank identity is not found
+     */
     private BankAccount getBankAccount(String bankName, UUID accountId, HttpServletRequest request) {
         UserProfile userProfile = BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository);
 
-        BankIdentity identity = bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), bankName).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
-        );
+        BankIdentity identity = bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), bankName)
+                .orElseThrow(
+                        () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
+                );
 
         List<BankAccount> bankAccounts = bankAccountRepository.findAllByBankIdentityId(identity.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No accounts found for specified bank identity.")

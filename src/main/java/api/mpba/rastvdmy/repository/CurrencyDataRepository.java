@@ -10,8 +10,8 @@ import java.util.UUID;
 /**
  * This interface represents the repository for the CurrencyData entity.
  * It extends JpaRepository to provide methods to manipulate CurrencyData entities.
- * JpaRepository is a JPA specific extension of Repository
- * that provides JPA related methods such as flushing the persistence context and deleting records in a batch.
+ * JpaRepository is a JPA-specific extension of Repository
+ * that provides JPA-related methods such as flushing the persistence context and deleting records in a batch.
  * It is annotated with @Repository to indicate that it's a component that directly accesses the database.
  */
 @Repository
@@ -29,7 +29,8 @@ public interface CurrencyDataRepository extends JpaRepository<CurrencyData, UUID
      * Finds all CurrencyData entities by their currency type.
      *
      * @param currencyType The currency type of the CurrencyData entities to find.
-     * @return A list of CurrencyData entities with the given currency type, or an empty list if no such entities exist.
+     * @return A list of CurrencyData entities with the given currency type,
+     *         or an empty list if no such entities exist.
      */
     List<CurrencyData> findAllByCurrency(String currencyType);
 }

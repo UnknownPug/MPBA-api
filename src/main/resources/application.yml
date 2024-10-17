@@ -1,8 +1,11 @@
+# Server configuration
 server:
   port: 8082
   error:
     whitelabel:
       enabled: true
+
+# Spring application configuration
 spring:
   application:
     name: mpba-api
@@ -30,8 +33,12 @@ spring:
     password: postgres
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
+
+# API key for the ExchangeRate-API
 api:
   key: 2d03edf7aa4c0318731708ae
+
+# Security configuration
 security:
   jwt:
     secret-key: 7d9e1b591dfcbcf28483189062bf531ad8a06702062601784c7f1f6e75566b78

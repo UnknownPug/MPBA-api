@@ -6,15 +6,20 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /**
- * Mapper for MessageRequest and MessageResponse
+ * Mapper for converting between {@link MessageRequest} and {@link MessageResponse}.
+ * <p>
+ * This interface uses MapStruct to automatically generate the implementation for mapping fields
+ * between the two data transfer objects (DTOs) related to messages.
+ * </p>
  */
 @Mapper(componentModel = "spring")
 public interface MessageMapper {
 
     /**
-     * Maps MessageResponse to MessageRequest
-     * @param messageResponse MessageResponse
-     * @return MessageRequest
+     * Maps a {@link MessageResponse} object to a {@link MessageRequest} object.
+     *
+     * @param messageResponse The {@link MessageResponse} object to be converted.
+     * @return The converted {@link MessageRequest} object.
      */
     @Mapping(target = "receiverEmail", source = "receiverEmail")
     @Mapping(target = "content", source = "content")
@@ -23,9 +28,10 @@ public interface MessageMapper {
     MessageRequest toRequest(MessageResponse messageResponse);
 
     /**
-     * Maps MessageRequest to MessageResponse
-     * @param messageRequest MessageRequest
-     * @return MessageResponse
+     * Maps a {@link MessageRequest} object to a {@link MessageResponse} object.
+     *
+     * @param messageRequest The {@link MessageRequest} object to be converted.
+     * @return The converted {@link MessageResponse} object.
      */
     @Mapping(target = "receiverEmail", source = "receiverEmail")
     @Mapping(target = "content", source = "content")

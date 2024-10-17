@@ -2,7 +2,7 @@ package api.mpba.rastvdmy.entity.enums;
 
 /**
  * This enum represents the status of a card.
- * It contains the statuses: default, blocked, and unblocked.
+ * It contains the statuses: STATUS_CARD_BLOCKED, STATUS_CARD_UNBLOCKED, and STATUS_CARD_DEFAULT.
  */
 public enum CardStatus {
 
@@ -35,6 +35,11 @@ public enum CardStatus {
         this.status = status;
     }
 
+    /**
+     * Returns a random CardStatus.
+     *
+     * @return A random status from the enum values.
+     */
     public static CardStatus getRandomStatus() {
         return values()[(int) (Math.random() * values().length)];
     }
