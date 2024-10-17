@@ -1,4 +1,4 @@
-# This program was created as a bachelor project CTU FEL in Prague
+# Bachelor's Thesis: Backend API for managing personal banking accounts
 
 ## (CTU - SIT winter semester 2025)
 
