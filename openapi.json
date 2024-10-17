@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Managing Personal Banking Accounts API",
-    "description": "This folder contains requests for the “Managing Personal Bank Accounts” API, which includes functionality for user authentication, currency management, user profile handling, messaging, bank identity management, bank account operations, card management, and payment processing. Each section facilitates essential banking operations, enabling users to efficiently manage their personal bank accounts and related activities. \n \n For more information, please refer to the [Postman API documentation](https://documenter.getpostman.com/view/34110793/2sAXxV4Upk), where also testing scripts are available for each request. \n \n To install it, click on 'Run in Postman' and choose the desired type of application. Then choose the workplace where you will install the collection and click 'Import'.",
+    "description": "This folder contains API requests for the “Managing Personal Bank Accounts” application. It includes endpoints for user authentication, currency management, user profile handling, messaging, bank identity management, bank account operations, card management, and payment processing. Each section supports key banking operations, allowing users to efficiently manage their personal bank accounts and related activities. \n \n For more information, please refer to the [Postman API documentation](https://documenter.getpostman.com/view/34110793/2sAXxV4Upk), where also testing scripts are available for each request. \n \n To install it, click on 'Run in Postman' and choose the desired type of application. Then choose the workplace where you will install the collection and click 'Import'.",
     "version": "1.0.0"
   },
   "servers": [
@@ -21,15 +21,15 @@
   "tags": [
     {
       "name": "Authentication",
-      "description": "This folder contains all components related to user authentication within the application. It encompasses the implementation of user registration, login, JWT (JSON Web Token) handling, and authorization mechanisms. The authentication system ensures secure access to the application by validating user credentials and managing sessions effectively."
+      "description": "This folder contains all API requests related to user authentication within the application. It includes endpoints for user registration, login, JWT (JSON Web Token) handling, and authorization mechanisms. The authentication system ensures secure access by validating user credentials and managing sessions."
     },
     {
       "name": "Currency",
-      "description": "This folder is dedicated to managing all aspects related to currency handling within the application. It includes functionalities for retrieving and updating exchange rates by interacting with third-party APIs that provide currency data."
+      "description": "This folder contains all API requests related to currency handling within the application. It includes endpoints for retrieving and updating exchange rates by interacting with third-party APIs that provide currency data."
     },
     {
       "name": "User Profile",
-      "description": "This folder includes all functionality related to user management in the application. It includes operations for managing profiles, role assignments, and statuses."
+      "description": "This folder contains all API requests related to user management within the application. It includes endpoints for managing profiles, role assignments, and statuses."
     },
     {
       "name": "Message",
@@ -45,11 +45,11 @@
     },
     {
       "name": "Card",
-      "description": "This folder in Postman allows you to retrieve a list of all cards linked to a specific account, access a specific card, add a new card, and delete a specific card by its Id."
+      "description": "This folder contains all API requests related to card management within the application. It includes endpoints for retrieving all cards linked to a specific account, accessing a specific card, adding a new card, and deleting a card by its ID."
     },
     {
       "name": "Payment",
-      "description": "This folder in Postman allows you to get a list of all payments made from a specific card and bank, access the details of a specific payment, execute a card payment and bank transfer."
+      "description": "This folder contains all API requests related to payment processing within the application. It includes endpoints for retrieving all payments made from a specific card or bank, accessing the details of a specific payment, executing card payments, and performing bank transfers."
     }
   ],
   "paths": {
