@@ -38,7 +38,7 @@
 
 Before running the project, You need to have the following requirements:
 
-1. Installed Java 21 and Maven.
+1. Installed Java 21 and Maven 4.0.0.
 2. Installed PostgreSQL.
 3. Installed IDE for running the app (Preferable: IntelliJ IDEA).
 4. Installed Postman or web version.
