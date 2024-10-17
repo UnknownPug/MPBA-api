@@ -18,7 +18,7 @@
 
 #### [1. Setting requirements](#requirements)
 
-#### [2. Installation process](#installation)
+#### [2. Installation process](#github)
 
 #### [3. Database configuration](#database)
 
@@ -45,7 +45,7 @@ Before running the project, You need to have the following requirements:
 5. Installed Git.
 6. Installed [Kafka 3.1.0](https://archive.apache.org/dist/kafka/3.1.0/kafka_2.13-3.1.0.tgz).
 
-#### <a name="installation"></a>2. Installation process
+#### <a name="github"></a>2. GitHub Installation
 
 After You have installed all the requirements, You can start the installation process:
 
