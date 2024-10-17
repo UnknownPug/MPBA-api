@@ -18,7 +18,7 @@
 
 #### [1. Setting requirements](#requirements)
 
-#### [2. Installation process](#github)
+#### [2. GitHub installation](#github)
 
 #### [3. Database configuration](#database)
 
