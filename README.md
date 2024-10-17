@@ -66,7 +66,7 @@ Next, You need to set up the database:
 
 #### <a name="configuration"></a>4. Application Configuration
 
-After you have set up the database, open the `src/main/resources/application.yml` file and review the configuration.
+After You have set up the database, open the `src/main/resources/application.yml` file and review the configuration.
 If it does not meet your requirements, modify it accordingly:
 
 1. Set the `server.port` to `8082`, or to any other desired port for your web services.
