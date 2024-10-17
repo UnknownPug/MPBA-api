@@ -1,4 +1,4 @@
-# Bachelor's Thesis: Backend API for managing personal banking accounts
+# Backend API for managing personal banking accounts
 
 ## (CTU - SIT winter semester 2025)
 
