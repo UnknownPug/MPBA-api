@@ -34,6 +34,8 @@
 
 ### <a name="installation"></a> Installation Process
 
+This section describes the step-by-step process to install and configure the project, including the necessary tools, database setup, and configuration settings required to successfully run the application.
+
 #### <a name="requirements"></a>1. Setting requirements
 
 Before running the project, You need to have the following requirements:
