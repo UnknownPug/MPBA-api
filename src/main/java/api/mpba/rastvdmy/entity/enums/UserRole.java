@@ -2,7 +2,7 @@ package api.mpba.rastvdmy.entity.enums;
 
 /**
  * This enum represents the roles a user can have in the system.
- * It contains the roles: ROLE_USER and ROLE_ADMIN.
+ * It contains the roles: ROLE_DEFAULT and ROLE_ADMIN.
  */
 public enum UserRole {
 
