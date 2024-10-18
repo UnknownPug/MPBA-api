@@ -65,7 +65,7 @@ class PaymentServiceImplTest {
                 .name("John")
                 .surname("Doe")
                 .dateOfBirth("2001-01-01")
-                .countryOrigin("Czechia")
+                .countryOfOrigin("Czechia")
                 .email("jhondoe@mpba.com")
                 .password("Password123")
                 .phoneNumber("+420123456789")

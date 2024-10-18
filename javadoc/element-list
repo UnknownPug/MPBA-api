@@ -11,5 +11,6 @@ api.mpba.rastvdmy.entity.enums
 api.mpba.rastvdmy.exception
 api.mpba.rastvdmy.repository
 api.mpba.rastvdmy.service
+api.mpba.rastvdmy.service.generator
 api.mpba.rastvdmy.service.impl
 api.mpba.rastvdmy.service.validator

@@ -102,7 +102,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 .name(request.name())
                 .surname(request.surname())
                 .dateOfBirth(encodedDateOfBirth)
-                .countryOrigin(request.countryOfOrigin())
+                .countryOfOrigin(request.countryOfOrigin())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .avatar("https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1")

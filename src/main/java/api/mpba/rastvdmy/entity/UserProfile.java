@@ -86,7 +86,7 @@ public class UserProfile implements UserDetails, Serializable {
      * This field is mandatory and stores the user's country.
      */
     @Column(name = "country_of_origin", nullable = false)
-    private String countryOrigin;
+    private String countryOfOrigin;
 
     /**
      * The email address of the user.

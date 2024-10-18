@@ -253,7 +253,7 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         countryValidation(userRequest);
 
         userProfile.setSurname(userRequest.surname());
-        userProfile.setCountryOrigin(userRequest.countryOfOrigin());
+        userProfile.setCountryOfOrigin(userRequest.countryOfOrigin());
 
         return userProfileRepository.save(userProfile);
     }

@@ -1,4 +1,4 @@
--- Changeset Unknown: 1
+-- Changeset: 1
 -- This changeset creates the user_profile table to store user information.
 -- Fields include ID, role, status, name, surname, date of birth, country of origin,
 -- email (unique), password, avatar URL, and phone number (unique).
@@ -17,7 +17,7 @@ CREATE TABLE user_profile
     phone_number      VARCHAR(255) UNIQUE NOT NULL
 );
 
--- Changeset Unknown: 2
+-- Changeset: 2
 -- This changeset creates the bank_identity table to store bank information related to users.
 -- It includes fields for bank name, bank number (unique), SWIFT code (unique), and a foreign key to user_profile.
 CREATE TABLE bank_identity
@@ -30,7 +30,7 @@ CREATE TABLE bank_identity
     FOREIGN KEY (user_id) REFERENCES user_profile (id)
 );
 
--- Changeset Unknown: 3
+-- Changeset: 3
 -- This changeset creates the bank_account table to manage user bank accounts.
 -- It includes fields for account currency, balance, account number (unique), IBAN (unique),
 -- and a foreign key to bank_identity.
@@ -45,7 +45,7 @@ CREATE TABLE bank_account
     FOREIGN KEY (bank_id) REFERENCES bank_identity (id)
 );
 
--- Changeset Unknown: 4
+-- Changeset: 4
 -- This changeset creates the card table to store information about user cards.
 -- It includes fields for card category, type, status, card number (unique),
 -- CVV, PIN, start date, expiration date, and a foreign key to bank_account.
@@ -64,7 +64,7 @@ CREATE TABLE card
     FOREIGN KEY (account_id) REFERENCES bank_account (id)
 );
 
--- Changeset Unknown: 5
+-- Changeset: 5
 -- This changeset creates the payment table to record payment transactions.
 -- It includes fields for status, type, currency, amount, sender and recipient names,
 -- description, date/time, and foreign keys to sender and recipient accounts and sender card.
@@ -87,7 +87,7 @@ CREATE TABLE payment
     FOREIGN KEY (sender_card_id) REFERENCES card (id)
 );
 
--- Changeset Unknown: 6
+-- Changeset: 6
 -- This changeset creates the message table to manage user messages.
 -- It includes fields for message content, timestamp, and foreign keys to sender and receiver user profiles.
 CREATE TABLE message
@@ -101,7 +101,7 @@ CREATE TABLE message
     FOREIGN KEY (receiver_id) REFERENCES user_profile (id)
 );
 
--- Changeset Unknown: 7
+-- Changeset: 7
 -- This changeset creates the currency_data table to store currency information.
 -- It includes fields for currency name (unique) and its exchange rate.
 CREATE TABLE currency_data
@@ -111,7 +111,7 @@ CREATE TABLE currency_data
     rate     DECIMAL(19, 2) NOT NULL
 );
 
--- Changeset Unknown: 8
+-- Changeset: 8
 -- This changeset creates the access_token table to store generated JWT tokens.
 -- It includes fields for token value (unique), expiration date, and a foreign key to user_profile.
 CREATE TABLE access_token
@@ -123,7 +123,7 @@ CREATE TABLE access_token
     FOREIGN KEY (user_id) REFERENCES user_profile (id)
 );
 
--- Changeset Unknown: 9
+-- Changeset: 9
 -- This changeset creates the user_profile_currency_data table to establish a many-to-many relationship
 -- between user profiles and currencies, linking user profiles to their preferred currencies.
 CREATE TABLE user_profile_currency_data
