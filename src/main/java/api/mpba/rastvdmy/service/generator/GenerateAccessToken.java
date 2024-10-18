@@ -1,4 +1,4 @@
-package api.mpba.rastvdmy.service.utils;
+package api.mpba.rastvdmy.service.generator;
 
 import api.mpba.rastvdmy.entity.AccessToken;
 import api.mpba.rastvdmy.entity.UserProfile;

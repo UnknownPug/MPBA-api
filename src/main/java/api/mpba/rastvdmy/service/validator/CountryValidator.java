@@ -1,4 +1,4 @@
-package api.mpba.rastvdmy.service.utils;
+package api.mpba.rastvdmy.service.validator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

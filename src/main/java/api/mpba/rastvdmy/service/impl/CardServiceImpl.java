@@ -15,7 +15,7 @@ import api.mpba.rastvdmy.repository.CardRepository;
 import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.CardService;
 import api.mpba.rastvdmy.service.JwtService;
-import api.mpba.rastvdmy.service.utils.FinancialDataGenerator;
+import api.mpba.rastvdmy.service.generator.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

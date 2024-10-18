@@ -84,7 +84,7 @@ loadScripts(document, 'script');</script>
 <h1 title="Class UserProfileServiceImpl" class="title">Class UserProfileServiceImpl</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
-<div class="inheritance"><a href="../utils/FinancialDataGenerator.html" title="class in api.mpba.rastvdmy.service.utils">api.mpba.rastvdmy.service.utils.FinancialDataGenerator</a>
+<div class="inheritance"><a href="../utils/FinancialDataGenerator.html" title="class in api.mpba.rastvdmy.service.validator">api.mpba.rastvdmy.service.generator.FinancialDataGenerator</a>
 <div class="inheritance">api.mpba.rastvdmy.service.impl.UserProfileServiceImpl</div>
 </div>
 </div>
@@ -97,7 +97,7 @@ loadScripts(document, 'script');</script>
 <hr>
 <div class="type-signature"><span class="annotations">@Service
 </span><span class="modifiers">public class </span><span class="element-name type-name-label">UserProfileServiceImpl</span>
-<span class="extends-implements">extends <a href="../utils/FinancialDataGenerator.html" title="class in api.mpba.rastvdmy.service.utils">FinancialDataGenerator</a>
+<span class="extends-implements">extends <a href="../utils/FinancialDataGenerator.html" title="class in api.mpba.rastvdmy.service.validator">FinancialDataGenerator</a>
 implements <a href="../UserProfileService.html" title="interface in api.mpba.rastvdmy.service">UserProfileService</a></span></div>
 <div class="block">Service implementation for managing user profiles.
  This class provides methods for retrieving, updating, and deleting user profiles,
@@ -119,7 +119,7 @@ implements <a href="../UserProfileService.html" title="interface in api.mpba.ras
  <a href="../JwtService.html" title="interface in api.mpba.rastvdmy.service">JwtService</a>&nbsp;jwtService,
  org.springframework.security.crypto.password.PasswordEncoder&nbsp;passwordEncoder,
  org.springframework.web.client.RestTemplate&nbsp;restTemplate,
- <a href="../utils/GenerateAccessToken.html" title="class in api.mpba.rastvdmy.service.utils">GenerateAccessToken</a>&nbsp;generateAccessToken)</code></div>
+ <a href="../utils/GenerateAccessToken.html" title="class in api.mpba.rastvdmy.service.validator">GenerateAccessToken</a>&nbsp;generateAccessToken)</code></div>
 <div class="col-last even-row-color">
 <div class="block">Constructs a new UserProfileServiceImpl with the specified repository, JWT service,
  password encoder, REST template, and access token generator.</div>
@@ -221,7 +221,7 @@ implements <a href="../UserProfileService.html" title="interface in api.mpba.ras
 </div>
 </div>
 <div class="inherited-list">
-<h3 id="methods-inherited-from-class-api.mpba.rastvdmy.service.utils.FinancialDataGenerator">Methods inherited from class&nbsp;api.mpba.rastvdmy.service.utils.<a href="../utils/FinancialDataGenerator.html" title="class in api.mpba.rastvdmy.service.utils">FinancialDataGenerator</a></h3>
+<h3 id="methods-inherited-from-class-api.mpba.rastvdmy.service.utils.FinancialDataGenerator">Methods inherited from class&nbsp;api.mpba.rastvdmy.service.validator.<a href="../utils/FinancialDataGenerator.html" title="class in api.mpba.rastvdmy.service.validator">FinancialDataGenerator</a></h3>
 <code><a href="../utils/FinancialDataGenerator.html#generateAccountNumber()">generateAccountNumber</a>, <a href="../utils/FinancialDataGenerator.html#generateBankNumber()">generateBankNumber</a>, <a href="../utils/FinancialDataGenerator.html#generateCardNumber()">generateCardNumber</a>, <a href="../utils/FinancialDataGenerator.html#generateCvv()">generateCvv</a>, <a href="../utils/FinancialDataGenerator.html#generateIban()">generateIban</a>, <a href="../utils/FinancialDataGenerator.html#generatePin()">generatePin</a>, <a href="../utils/FinancialDataGenerator.html#generateSwift()">generateSwift</a>, <a href="../utils/FinancialDataGenerator.html#getRandomExpirationDate(java.time.LocalDate)">getRandomExpirationDate</a>, <a href="../utils/FinancialDataGenerator.html#getRandomStartDate()">getRandomStartDate</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></h3>
@@ -246,7 +246,7 @@ implements <a href="../UserProfileService.html" title="interface in api.mpba.ras
  <a href="../JwtService.html" title="interface in api.mpba.rastvdmy.service">JwtService</a>&nbsp;jwtService,
  org.springframework.security.crypto.password.PasswordEncoder&nbsp;passwordEncoder,
  org.springframework.web.client.RestTemplate&nbsp;restTemplate,
- <a href="../utils/GenerateAccessToken.html" title="class in api.mpba.rastvdmy.service.utils">GenerateAccessToken</a>&nbsp;generateAccessToken)</span></div>
+ <a href="../utils/GenerateAccessToken.html" title="class in api.mpba.rastvdmy.service.validator">GenerateAccessToken</a>&nbsp;generateAccessToken)</span></div>
 <div class="block">Constructs a new UserProfileServiceImpl with the specified repository, JWT service,
  password encoder, REST template, and access token generator.</div>
 <dl class="notes">

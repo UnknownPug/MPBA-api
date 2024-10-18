@@ -1,4 +1,4 @@
-package api.mpba.rastvdmy.service.utils;
+package api.mpba.rastvdmy.service.validator;
 
 import api.mpba.rastvdmy.exception.ApplicationException;
 import org.springframework.http.HttpStatus;
