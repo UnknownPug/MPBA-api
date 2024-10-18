@@ -1,6 +1,6 @@
 # Backend API for managing personal banking accounts
 
-## (CTU - SIT winter semester 2025)
+## (CTU - SIT winter semester 2024)
 
 ### Authors: Dmitry Rastvorov
 
@@ -126,5 +126,5 @@ To run the project, follow these steps:
 
 Also in this application was used third-party APIs:
 
-1. [Exchange Rate API](https://app.exchangerate-api.com/dashboard) for getting exchange rate currencies
-2. [REST Countries API](https://restcountries.com) for validation of existing countries
+1. [Exchange Rate API](https://app.exchangerate-api.com/dashboard) for getting exchange rate currencies.
+2. [REST Countries API](https://restcountries.com) for validation of existing countries.
