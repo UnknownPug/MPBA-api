@@ -1,6 +1,6 @@
 # Backend API for managing personal banking accounts
 
-## (CTU - SIT winter semester 2025)
+## (CTU - SIT winter semester 2024)
 
 ### Authors: Dmitry Rastvorov
 
