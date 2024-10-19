@@ -1,5 +1,6 @@
--- Changeset: 1
--- ID: user_profile_table_creation
+-- liquibase formatted sql changeLogID:123
+
+-- Changeset Unknown: 1
 CREATE TABLE user_profile
 (
     id                UUID PRIMARY KEY,
@@ -15,8 +16,7 @@ CREATE TABLE user_profile
     phone_number      VARCHAR(255) UNIQUE NOT NULL
 );
 
--- Changeset: 2
--- ID: bank_identity_table_creation
+-- Changeset Unknown: 2
 CREATE TABLE bank_identity
 (
     id          UUID PRIMARY KEY,
@@ -27,8 +27,7 @@ CREATE TABLE bank_identity
     FOREIGN KEY (user_id) REFERENCES user_profile (id)
 );
 
--- Changeset: 3
--- ID: bank_account_table_creation
+-- Changeset Unknown: 3
 CREATE TABLE bank_account
 (
     id             UUID PRIMARY KEY,
@@ -40,8 +39,7 @@ CREATE TABLE bank_account
     FOREIGN KEY (bank_id) REFERENCES bank_identity (id)
 );
 
--- Changeset: 4
--- ID: card_table_creation
+-- Changeset Unknown: 4
 CREATE TABLE card
 (
     id              UUID PRIMARY KEY,
@@ -57,8 +55,7 @@ CREATE TABLE card
     FOREIGN KEY (account_id) REFERENCES bank_account (id)
 );
 
--- Changeset: 5
--- ID: payment_table_creation
+-- Changeset Unknown: 5
 CREATE TABLE payment
 (
     id                   UUID PRIMARY KEY,
@@ -78,8 +75,7 @@ CREATE TABLE payment
     FOREIGN KEY (sender_card_id) REFERENCES card (id)
 );
 
--- Changeset: 6
--- ID: message_table_creation
+-- Changeset Unknown: 6
 CREATE TABLE message
 (
     id          UUID PRIMARY KEY,
@@ -91,8 +87,7 @@ CREATE TABLE message
     FOREIGN KEY (receiver_id) REFERENCES user_profile (id)
 );
 
--- Changeset: 7
--- ID: currency_data_table_creation
+-- Changeset Unknown: 7
 CREATE TABLE currency_data
 (
     id       UUID PRIMARY KEY,
@@ -100,8 +95,7 @@ CREATE TABLE currency_data
     rate     DECIMAL(19, 2) NOT NULL
 );
 
--- Changeset: 8
--- ID: access_token_table_creation
+-- Changeset Unknown: 8
 CREATE TABLE access_token
 (
     id              UUID PRIMARY KEY,
@@ -111,8 +105,7 @@ CREATE TABLE access_token
     FOREIGN KEY (user_id) REFERENCES user_profile (id)
 );
 
--- Changeset: 9
--- ID: user_profile_currency_data_table_creation
+-- Changeset Unknown: 9
 CREATE TABLE user_profile_currency_data
 (
     user_profiles_id UUID,
