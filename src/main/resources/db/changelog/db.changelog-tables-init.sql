@@ -1,7 +1,5 @@
 -- Changeset: 1
--- This changeset creates the user_profile table to store user information.
--- Fields include ID, role, status, name, surname, date of birth, country of origin,
--- email (unique), password, avatar URL, and phone number (unique).
+-- ID: user_profile_table_creation
 CREATE TABLE user_profile
 (
     id                UUID PRIMARY KEY,
@@ -18,8 +16,7 @@ CREATE TABLE user_profile
 );
 
 -- Changeset: 2
--- This changeset creates the bank_identity table to store bank information related to users.
--- It includes fields for bank name, bank number (unique), SWIFT code (unique), and a foreign key to user_profile.
+-- ID: bank_identity_table_creation
 CREATE TABLE bank_identity
 (
     id          UUID PRIMARY KEY,
@@ -31,9 +28,7 @@ CREATE TABLE bank_identity
 );
 
 -- Changeset: 3
--- This changeset creates the bank_account table to manage user bank accounts.
--- It includes fields for account currency, balance, account number (unique), IBAN (unique),
--- and a foreign key to bank_identity.
+-- ID: bank_account_table_creation
 CREATE TABLE bank_account
 (
     id             UUID PRIMARY KEY,
@@ -46,9 +41,7 @@ CREATE TABLE bank_account
 );
 
 -- Changeset: 4
--- This changeset creates the card table to store information about user cards.
--- It includes fields for card category, type, status, card number (unique),
--- CVV, PIN, start date, expiration date, and a foreign key to bank_account.
+-- ID: card_table_creation
 CREATE TABLE card
 (
     id              UUID PRIMARY KEY,
@@ -65,9 +58,7 @@ CREATE TABLE card
 );
 
 -- Changeset: 5
--- This changeset creates the payment table to record payment transactions.
--- It includes fields for status, type, currency, amount, sender and recipient names,
--- description, date/time, and foreign keys to sender and recipient accounts and sender card.
+-- ID: payment_table_creation
 CREATE TABLE payment
 (
     id                   UUID PRIMARY KEY,
@@ -88,8 +79,7 @@ CREATE TABLE payment
 );
 
 -- Changeset: 6
--- This changeset creates the message table to manage user messages.
--- It includes fields for message content, timestamp, and foreign keys to sender and receiver user profiles.
+-- ID: message_table_creation
 CREATE TABLE message
 (
     id          UUID PRIMARY KEY,
@@ -102,8 +92,7 @@ CREATE TABLE message
 );
 
 -- Changeset: 7
--- This changeset creates the currency_data table to store currency information.
--- It includes fields for currency name (unique) and its exchange rate.
+-- ID: currency_data_table_creation
 CREATE TABLE currency_data
 (
     id       UUID PRIMARY KEY,
@@ -112,8 +101,7 @@ CREATE TABLE currency_data
 );
 
 -- Changeset: 8
--- This changeset creates the access_token table to store generated JWT tokens.
--- It includes fields for token value (unique), expiration date, and a foreign key to user_profile.
+-- ID: access_token_table_creation
 CREATE TABLE access_token
 (
     id              UUID PRIMARY KEY,
@@ -124,8 +112,7 @@ CREATE TABLE access_token
 );
 
 -- Changeset: 9
--- This changeset creates the user_profile_currency_data table to establish a many-to-many relationship
--- between user profiles and currencies, linking user profiles to their preferred currencies.
+-- ID: user_profile_currency_data_table_creation
 CREATE TABLE user_profile_currency_data
 (
     user_profiles_id UUID,
