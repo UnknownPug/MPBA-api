@@ -1,6 +1,17 @@
-# This YAML configuration specifies a database change log for managing database migrations.
 databaseChangeLog:
-  - include:
-      file: db/changelog/db.changelog-tables-init.sql
-  - include:
-      file: db/changelog/db.changelog-admin-inject.sql
+  - changeSet:
+      id: 1729384754723-1
+      author: Unknown
+      comment: Create tables
+      changes:
+        - sqlFile:
+            path: db.changelog-tables-init.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: 1729384759980-1
+      author: Unknown
+      comment: Insert admin data
+      changes:
+        - sqlFile:
+            path: db.changelog-admin-inject.sql
+            relativeToChangelogFile: true
