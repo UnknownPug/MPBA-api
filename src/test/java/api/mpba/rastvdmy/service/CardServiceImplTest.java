@@ -39,7 +39,7 @@ class CardServiceImplTest {
     private UserProfileRepository userProfileRepository;
 
     @Mock
-    private UserValidationService userValidationService;
+    private TokenVerifierService tokenVerifierService;
 
     @InjectMocks
     private CardServiceImpl cardService;
@@ -108,7 +108,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCards_ShouldReturnCards_WhenCardsExist() {
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -135,7 +135,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCards_ShouldThrowException_WhenNoCardsFound() {
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -151,7 +151,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCardById_ShouldThrowException_WhenCardNotFound() {
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -172,7 +172,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCardById_ShouldReturnCard_WhenCardExists() {
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -203,7 +203,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCardById_ShouldThrowException_WhenNoCardsFound() {
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -224,7 +224,7 @@ class CardServiceImplTest {
 
     @Test
     void addAccountCard_ShouldAddCard_WhenValidRequest() throws Exception {
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -239,7 +239,7 @@ class CardServiceImplTest {
 
     @Test
     void addAccountCard_ShouldThrowException_WhenBankAccountNotFound() {
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.empty());
@@ -253,7 +253,7 @@ class CardServiceImplTest {
 
     @Test
     void removeAccountCard_ShouldRemoveCard_WhenCardExists() {
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -267,7 +267,7 @@ class CardServiceImplTest {
 
     @Test
     void removeAccountCard_ShouldThrowException_WhenNoCardsFound() {
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))

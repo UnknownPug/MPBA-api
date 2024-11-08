@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 /**
  * Interface for user validation services.
  */
-public interface UserValidationService {
+public interface TokenVerifierService {
     /**
      * Retrieves the user data for the user identified by the request.
      *

@@ -5,7 +5,7 @@ import api.mpba.rastvdmy.entity.CurrencyData;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.CurrencyDataRepository;
 import api.mpba.rastvdmy.service.CurrencyDataService;
-import api.mpba.rastvdmy.service.UserValidationService;
+import api.mpba.rastvdmy.service.TokenVerifierService;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
     private final CurrencyDataRepository currencyDataRepository;
     private final RestTemplate restTemplate;
     private final JdbcTemplate jdbcTemplate;
-    private final UserValidationService userValidationService;
+    private final TokenVerifierService tokenVerifierService;
 
     @Value("${api.key}")
     private String apiKey; // API key for the external currency API
@@ -45,17 +45,17 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
      * @param currencyDataRepository the repository for currency data
      * @param restTemplate           the RestTemplate for making HTTP requests
      * @param jdbcTemplate           the JdbcTemplate for executing SQL queries
-     * @param userValidationService  the service for extracting user token and getting user data from the request
+     * @param tokenVerifierService  the service for extracting user token and getting user data from the request
      */
     @Autowired
     public CurrencyDataServiceImpl(CurrencyDataRepository currencyDataRepository,
                                    RestTemplate restTemplate,
                                    JdbcTemplate jdbcTemplate,
-                                   UserValidationService userValidationService) {
+                                   TokenVerifierService tokenVerifierService) {
         this.currencyDataRepository = currencyDataRepository;
         this.restTemplate = restTemplate;
         this.jdbcTemplate = jdbcTemplate;
-        this.userValidationService = userValidationService;
+        this.tokenVerifierService = tokenVerifierService;
     }
 
     /**
@@ -65,7 +65,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
      * @return a list of all available currencies
      */
     public List<CurrencyData> findAllCurrencies(HttpServletRequest request) {
-        userValidationService.getUserData(request);
+        tokenVerifierService.getUserData(request);
         return currencyDataRepository.findAll();
     }
 
@@ -79,7 +79,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
      * @throws ApplicationException if the specified currency type is invalid or not found
      */
     public CurrencyData findByCurrency(HttpServletRequest request, String currencyType) {
-        userValidationService.getUserData(request);
+        tokenVerifierService.getUserData(request);
         if (currencyType.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Specify currency type.");
         }

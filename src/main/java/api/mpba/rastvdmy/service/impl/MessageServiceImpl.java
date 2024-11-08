@@ -9,7 +9,7 @@ import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.MessageRepository;
 import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.MessageService;
-import api.mpba.rastvdmy.service.UserValidationService;
+import api.mpba.rastvdmy.service.TokenVerifierService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ import java.util.UUID;
 @Service
 public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
-    private final UserValidationService userValidationService;
+    private final TokenVerifierService tokenVerifierService;
     private final UserProfileRepository userProfileRepository;
 
     /**
@@ -37,15 +37,15 @@ public class MessageServiceImpl implements MessageService {
      *
      * @param messageRepository     the message repository to be used
      * @param userProfileRepository the user profile repository to be used
-     * @param userValidationService the service for extracting user token and getting user data from the request
+     * @param tokenVerifierService the service for extracting user token and getting user data from the request
      *
      */
     @Autowired
     public MessageServiceImpl(MessageRepository messageRepository, UserProfileRepository userProfileRepository,
-                              UserValidationService userValidationService) {
+                              TokenVerifierService tokenVerifierService) {
         this.messageRepository = messageRepository;
         this.userProfileRepository = userProfileRepository;
-        this.userValidationService = userValidationService;
+        this.tokenVerifierService = tokenVerifierService;
     }
 
     /**
@@ -85,7 +85,7 @@ public class MessageServiceImpl implements MessageService {
      * @throws Exception if an error occurs during message sending
      */
     public Message sendMessage(HttpServletRequest request, String receiverEmail, String content) throws Exception {
-        UserProfile sender = userValidationService.getUserData(request);
+        UserProfile sender = tokenVerifierService.getUserData(request);
 
         if (sender.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");

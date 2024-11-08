@@ -39,7 +39,7 @@ class BankAccountServiceImplTest {
     private BankIdentityRepository bankIdentityRepository;
 
     @Mock
-    private UserValidationService userValidationService;
+    private TokenVerifierService tokenVerifierService;
 
     @Mock
     private UserProfileRepository userProfileRepository;
@@ -112,7 +112,7 @@ class BankAccountServiceImplTest {
         bankAccount.setCards(List.of(card));
         accountRepository.save(bankAccount);
 
-        when(userValidationService.getUserData(request)).thenReturn(userProfile);
+        when(tokenVerifierService.getUserData(request)).thenReturn(userProfile);
     }
 
     @Test

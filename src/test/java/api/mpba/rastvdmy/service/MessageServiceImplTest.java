@@ -9,7 +9,7 @@ import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.MessageRepository;
 import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.impl.MessageServiceImpl;
-import api.mpba.rastvdmy.service.impl.UserValidationServiceImpl;
+import api.mpba.rastvdmy.service.impl.TokenVerifierServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ class MessageServiceImplTest {
     private HttpServletRequest request;
 
     @Mock
-    private UserValidationServiceImpl userValidationService;
+    private TokenVerifierServiceImpl userValidationService;
 
     @InjectMocks
     private MessageServiceImpl messageService;
@@ -171,8 +171,8 @@ class MessageServiceImplTest {
             ).thenReturn("encryptedContent");
 
             UserProfile mockSender = spy(sender);
-            try (MockedStatic<UserValidationServiceImpl> validationServiceMock =
-                         Mockito.mockStatic(UserValidationServiceImpl.class)) {
+            try (MockedStatic<TokenVerifierServiceImpl> validationServiceMock =
+                         Mockito.mockStatic(TokenVerifierServiceImpl.class)) {
                 validationServiceMock.when(
                         () -> userValidationService.getUserData(request)
                 ).thenReturn(mockSender);
@@ -196,8 +196,8 @@ class MessageServiceImplTest {
     void sendMessage_ShouldThrowException_WhenUserIsBlocked() {
         sender.setStatus(UserStatus.STATUS_BLOCKED);
 
-        try (MockedStatic<UserValidationServiceImpl> validationServiceMock =
-                     Mockito.mockStatic(UserValidationServiceImpl.class)) {
+        try (MockedStatic<TokenVerifierServiceImpl> validationServiceMock =
+                     Mockito.mockStatic(TokenVerifierServiceImpl.class)) {
             validationServiceMock.when(
                     () -> userValidationService.getUserData(request)
             ).thenReturn(sender);
@@ -213,8 +213,8 @@ class MessageServiceImplTest {
 
     @Test
     void sendMessage_ShouldThrowException_WhenContentIsEmpty() {
-        try (MockedStatic<UserValidationServiceImpl> validationServiceMock =
-                     Mockito.mockStatic(UserValidationServiceImpl.class)) {
+        try (MockedStatic<TokenVerifierServiceImpl> validationServiceMock =
+                     Mockito.mockStatic(TokenVerifierServiceImpl.class)) {
             validationServiceMock.when(
                     () -> userValidationService.getUserData(request)
             ).thenReturn(sender);
@@ -229,8 +229,8 @@ class MessageServiceImplTest {
 
     @Test
     void sendMessage_ShouldThrowException_WhenReceiverNotFound() {
-        try (MockedStatic<UserValidationServiceImpl> validationServiceMock =
-                     Mockito.mockStatic(UserValidationServiceImpl.class)) {
+        try (MockedStatic<TokenVerifierServiceImpl> validationServiceMock =
+                     Mockito.mockStatic(TokenVerifierServiceImpl.class)) {
             validationServiceMock.when(
                     () -> userValidationService.getUserData(request)
             ).thenReturn(sender);

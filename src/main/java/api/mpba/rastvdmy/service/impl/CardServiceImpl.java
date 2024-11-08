@@ -13,7 +13,7 @@ import api.mpba.rastvdmy.repository.BankAccountRepository;
 import api.mpba.rastvdmy.repository.BankIdentityRepository;
 import api.mpba.rastvdmy.repository.CardRepository;
 import api.mpba.rastvdmy.service.CardService;
-import api.mpba.rastvdmy.service.UserValidationService;
+import api.mpba.rastvdmy.service.TokenVerifierService;
 import api.mpba.rastvdmy.service.generator.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +48,7 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
     private final CardRepository cardRepository;
     private final BankIdentityRepository bankIdentityRepository;
     private final BankAccountRepository bankAccountRepository;
-    private final UserValidationService userValidationService;
+    private final TokenVerifierService tokenVerifierService;
 
     /**
      * Constructs a CardServiceImpl with the specified repositories and services.
@@ -56,16 +56,16 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
      * @param cardRepository         the repository for card data
      * @param bankIdentityRepository the repository for bank identity data
      * @param bankAccountRepository  the repository for bank account data
-     * @param userValidationService  the service for extracting user token and getting user data from the request
+     * @param tokenVerifierService  the service for extracting user token and getting user data from the request
      */
     @Autowired
     public CardServiceImpl(CardRepository cardRepository,
                            BankIdentityRepository bankIdentityRepository, BankAccountRepository bankAccountRepository,
-                           UserValidationService userValidationService) {
+                           TokenVerifierService tokenVerifierService) {
         this.cardRepository = cardRepository;
         this.bankIdentityRepository = bankIdentityRepository;
         this.bankAccountRepository = bankAccountRepository;
-        this.userValidationService = userValidationService;
+        this.tokenVerifierService = tokenVerifierService;
     }
 
     /**
@@ -282,7 +282,7 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
      * @throws ApplicationException if the specified bank account or bank identity is not found
      */
     private BankAccount getBankAccount(String bankName, UUID accountId, HttpServletRequest request) {
-        UserProfile userProfile = userValidationService.getUserData(request);
+        UserProfile userProfile = tokenVerifierService.getUserData(request);
 
         BankIdentity identity = bankIdentityRepository
                 .findByUserProfileIdAndBankName(userProfile.getId(), bankName.trim())

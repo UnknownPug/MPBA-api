@@ -10,7 +10,7 @@ import api.mpba.rastvdmy.repository.BankAccountRepository;
 import api.mpba.rastvdmy.repository.BankIdentityRepository;
 import api.mpba.rastvdmy.service.BankAccountService;
 import api.mpba.rastvdmy.service.CardService;
-import api.mpba.rastvdmy.service.UserValidationService;
+import api.mpba.rastvdmy.service.TokenVerifierService;
 import api.mpba.rastvdmy.service.generator.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +54,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
     private final BankAccountRepository accountRepository;
     private final BankIdentityRepository bankIdentityRepository;
     private final CardService cardService;
-    private final UserValidationService userValidationService;
+    private final TokenVerifierService tokenVerifierService;
 
     /**
      * Constructs a new instance of {@link BankAccountServiceImpl}.
@@ -62,16 +62,16 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
      * @param accountRepository      the repository for bank account operations
      * @param bankIdentityRepository the repository for bank identity operations
      * @param cardService            the service for handling card operations
-     * @param userValidationService  the service for extracting user token and getting user data from the request
+     * @param tokenVerifierService  the service for extracting user token and getting user data from the request
      */
     @Autowired
     public BankAccountServiceImpl(BankAccountRepository accountRepository,
                                   BankIdentityRepository bankIdentityRepository,
-                                  CardService cardService, UserValidationService userValidationService) {
+                                  CardService cardService, TokenVerifierService tokenVerifierService) {
         this.accountRepository = accountRepository;
         this.bankIdentityRepository = bankIdentityRepository;
         this.cardService = cardService;
-        this.userValidationService = userValidationService;
+        this.tokenVerifierService = tokenVerifierService;
     }
 
     /**
@@ -183,7 +183,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
      * @throws ApplicationException if no bank identities are found for the user
      */
     public Map<String, BigDecimal> getTotalBalance(HttpServletRequest request) {
-        UserProfile userProfile = userValidationService.getUserData(request);
+        UserProfile userProfile = tokenVerifierService.getUserData(request);
         List<BankIdentity> bankIdentities =
                 bankIdentityRepository.findAllByUserProfileId(userProfile.getId()).orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "No bank identities found.")
@@ -346,7 +346,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
      * @throws ApplicationException if the bank identity is not found
      */
     private BankIdentity getBankIdentity(HttpServletRequest request, String bankName) {
-        UserProfile userProfile = userValidationService.getUserData(request);
+        UserProfile userProfile = tokenVerifierService.getUserData(request);
 
         return bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), bankName.trim()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
