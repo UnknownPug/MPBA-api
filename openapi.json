@@ -173,7 +173,7 @@
         }
       }
     },
-    "/api/v1/currency-data/<Currency-name>": {
+    "/api/v1/currency-data/{name}": {
       "get": {
         "tags": [
           "Currency"
@@ -183,6 +183,17 @@
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Currency name (example: CZK, USD)"
           }
         ],
         "responses": {
@@ -870,7 +881,7 @@
           "Bank Account"
         ],
         "summary": "By id",
-        "description": "Get a specifc bank account.",
+        "description": "Get a specific bank account.",
         "security": [
           {
             "bearerAuth": []
