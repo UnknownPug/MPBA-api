@@ -66,13 +66,13 @@
               "schema": {
                 "type": "object",
                 "example": {
-                  "name": "<String>",
-                  "surname": "<String>",
-                  "date_of_birth": "<String>",
-                  "country_of_origin": "<String>",
-                  "email": "<String>",
-                  "password": "<String>",
-                  "phone_number": "<String>"
+                  "name": "string",
+                  "surname": "string",
+                  "date_of_birth": "string",
+                  "country_of_origin": "string",
+                  "email": "string",
+                  "password": "string",
+                  "phone_number": "string"
                 }
               }
             }
@@ -105,11 +105,11 @@
                     "properties": {
                       "email": {
                         "type": "string",
-                        "example": "<String>"
+                        "example": "string"
                       },
                       "password": {
                         "type": "string",
-                        "example": "<String>"
+                        "example": "string"
                       }
                     },
                     "required": [
@@ -309,9 +309,9 @@
               "schema": {
                 "type": "object",
                 "example": {
-                  "email": "<String>",
-                  "password": "<String>",
-                  "phone_number": "<String>"
+                  "email": "string",
+                  "password": "string",
+                  "phone_number": "string"
                 }
               }
             }
@@ -396,8 +396,8 @@
               "schema": {
                 "type": "object",
                 "example": {
-                  "surname": "<String>",
-                  "country_of_origin": "<String>"
+                  "surname": "string",
+                  "country_of_origin": "string"
                 }
               }
             }
@@ -637,8 +637,8 @@
               "schema": {
                 "type": "object",
                 "example": {
-                  "receiver_email": "<String>",
-                  "content": "<String>"
+                  "receiver_email": "string",
+                  "content": "string"
                 }
               }
             }
@@ -692,7 +692,7 @@
               "schema": {
                 "type": "object",
                 "example": {
-                  "bank_name": "<String>"
+                  "bank_name": "string"
                 }
               }
             }
@@ -1278,8 +1278,7 @@
                       },
                       "amount": {
                         "type": "number",
-                        "description": "Amount to transfer",
-                        "example": 120.12
+                        "description": "Amount to transfer"
                       },
                       "description": {
                         "type": "string",
