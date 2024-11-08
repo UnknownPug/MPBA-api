@@ -7,9 +7,6 @@ import api.mpba.rastvdmy.entity.Card;
 import api.mpba.rastvdmy.service.CardService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,7 +30,6 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasRole('ROLE_DEFAULT')")
 @RequestMapping(path = "/api/v1/{bankName}/{accountId}/cards")
 public class CardController {
-    private static final Logger LOG = LoggerFactory.getLogger(CardController.class);
     private final CardMapper cardMapper;
     private final CardService cardService;
 
@@ -43,7 +39,6 @@ public class CardController {
      * @param cardMapper  The {@link CardMapper} to be used.
      * @param cardService The {@link CardService} to be used.
      */
-    @Autowired
     public CardController(CardMapper cardMapper, CardService cardService) {
         this.cardService = cardService;
         this.cardMapper = cardMapper;
@@ -57,7 +52,6 @@ public class CardController {
      * @param request   The HTTP servlet request containing user information.
      * @return A {@link ResponseEntity} containing a list of {@link CardResponse}.
      */
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<CardResponse>> getAccountCards(@PathVariable("bankName") String bankName,
                                                               @PathVariable("accountId") UUID accountId,
@@ -65,17 +59,8 @@ public class CardController {
         logInfo("Getting all cards ...");
         List<Card> cards = cardService.getAccountCards(bankName, accountId, request);
         List<CardResponse> cardResponses = cards.stream()
-                .map(card -> cardMapper.toResponse(new CardRequest(
-                        card.getId(),
-                        card.getCardNumber(),
-                        card.getCvv(),
-                        card.getPin(),
-                        card.getStartDate(),
-                        card.getExpirationDate(),
-                        card.getCategory(),
-                        card.getType(),
-                        card.getStatus())
-                )).collect(Collectors.toList());
+                .map(card -> cardMapper.toResponse(convertToCardRequest(card)))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(cardResponses);
     }
 
@@ -89,7 +74,6 @@ public class CardController {
      * @param request   The HTTP servlet request containing user information.
      * @return A {@link ResponseEntity} containing the requested {@link CardResponse}.
      */
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{cardId}", produces = "application/json")
     public ResponseEntity<CardResponse> getAccountCardById(@PathVariable("bankName") String bankName,
                                                            @PathVariable("accountId") UUID accountId,
@@ -99,16 +83,7 @@ public class CardController {
                                                            HttpServletRequest request) {
         logInfo("Getting card ...");
         Card card = cardService.getAccountCardById(bankName, accountId, cardId, request, type);
-        CardResponse cardResponse = cardMapper.toResponse(new CardRequest(
-                card.getId(),
-                card.getCardNumber(),
-                card.getCvv(),
-                card.getPin(),
-                card.getStartDate(),
-                card.getExpirationDate(),
-                card.getCategory(),
-                card.getType(),
-                card.getStatus()));
+        CardResponse cardResponse = cardMapper.toResponse(convertToCardRequest(card));
         return ResponseEntity.ok(cardResponse);
     }
 
@@ -121,14 +96,24 @@ public class CardController {
      * @return A {@link ResponseEntity} containing the created {@link CardResponse}.
      * @throws Exception If there is an error while adding the card.
      */
-    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(produces = "application/json")
     public ResponseEntity<CardResponse> addAccountCard(@PathVariable("bankName") String bankName,
                                                        @PathVariable("accountId") UUID accountId,
                                                        HttpServletRequest request) throws Exception {
         logInfo("Creating new card ...");
         Card card = cardService.addAccountCard(bankName, accountId, request);
-        CardResponse cardResponse = cardMapper.toResponse(new CardRequest(
+        CardResponse cardResponse = cardMapper.toResponse(convertToCardRequest(card));
+        return ResponseEntity.status(HttpStatus.CREATED).body(cardResponse);
+    }
+
+    /**
+     * Converts a {@link Card} to a {@link CardRequest}.
+     *
+     * @param card The card to convert.
+     * @return The converted card.
+     */
+    private static CardRequest convertToCardRequest(Card card) {
+        return new CardRequest(
                 card.getId(),
                 card.getCardNumber(),
                 card.getCvv(),
@@ -137,9 +122,7 @@ public class CardController {
                 card.getExpirationDate(),
                 card.getCategory(),
                 card.getType(),
-                card.getStatus()));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(cardResponse);
+                card.getStatus());
     }
 
     /**
@@ -151,7 +134,6 @@ public class CardController {
      * @param request   The HTTP servlet request containing user information.
      * @return A {@link ResponseEntity} with no content.
      */
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(path = "/{cardId}")
     public ResponseEntity<Void> removeAccountCard(
             @PathVariable(name = "bankName") String bankName,
@@ -170,6 +152,6 @@ public class CardController {
      * @param args    Optional arguments to format the message.
      */
     private void logInfo(String message, Object... args) {
-        LOG.info(message, args);
+        log.info(message, args);
     }
 }

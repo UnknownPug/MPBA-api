@@ -14,6 +14,7 @@ import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.BankIdentityRepository;
 import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.impl.UserProfileServiceImpl;
+import api.mpba.rastvdmy.service.validator.UserDataValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,6 +51,9 @@ class UserProfileServiceImplTest {
 
     @Mock
     private AdminUpdateUserRequest userRequest;
+
+    @Mock
+    private UserDataValidator userDataValidator;
 
     @InjectMocks
     private UserProfileServiceImpl userService;

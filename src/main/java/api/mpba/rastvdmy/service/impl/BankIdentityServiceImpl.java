@@ -88,7 +88,7 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
-        return identityRepository.findByNameAndConnectedToUserId(name, userProfile.getId()).orElseThrow(
+        return identityRepository.findByNameAndConnectedToUserId(name.trim(), userProfile.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User doesn't have this specific bank."));
     }
 
@@ -114,7 +114,7 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
 
         BankIdentity bankIdentity = BankIdentity.builder()
                 .id(UUID.randomUUID())
-                .bankName(identityRequest.bankName())
+                .bankName(identityRequest.bankName().trim())
                 .bankNumber(generateBankNumber())
                 .swift(generateSwift())
                 .userProfile(userProfile)
@@ -142,7 +142,7 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
         }
 
         BankIdentity bankIdentity =
-                identityRepository.findByUserIdAndBankNameWithAccounts(userProfile.getId(), bankName)
+                identityRepository.findByUserIdAndBankNameWithAccounts(userProfile.getId(), bankName.trim())
                         .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND,
                                 "User is not found or bank with the given name is not connected to the user."
                         ));
@@ -169,7 +169,7 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
-        if (identityRepository.findByUserProfileIdAndBankName(userProfile.getId(), identityRequest.bankName()
+        if (identityRepository.findByUserProfileIdAndBankName(userProfile.getId(), identityRequest.bankName().trim()
         ).isPresent()) {
             throw new ApplicationException(HttpStatus.CONFLICT, "Bank with the same name already added.");
         }

@@ -8,8 +8,8 @@ import api.mpba.rastvdmy.entity.enums.UserStatus;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.MessageRepository;
 import api.mpba.rastvdmy.repository.UserProfileRepository;
-import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.MessageService;
+import api.mpba.rastvdmy.service.UserValidationService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,23 +29,23 @@ import java.util.UUID;
 @Service
 public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
+    private final UserValidationService userValidationService;
     private final UserProfileRepository userProfileRepository;
-    private final JwtService jwtService;
 
     /**
      * Constructor for MessageServiceImpl.
      *
      * @param messageRepository     the message repository to be used
      * @param userProfileRepository the user profile repository to be used
-     * @param jwtService            the JWT service to be used
+     * @param userValidationService the service for extracting user token and getting user data from the request
+     *
      */
     @Autowired
-    public MessageServiceImpl(MessageRepository messageRepository,
-                              UserProfileRepository userProfileRepository,
-                              JwtService jwtService) {
+    public MessageServiceImpl(MessageRepository messageRepository, UserProfileRepository userProfileRepository,
+                              UserValidationService userValidationService) {
         this.messageRepository = messageRepository;
         this.userProfileRepository = userProfileRepository;
-        this.jwtService = jwtService;
+        this.userValidationService = userValidationService;
     }
 
     /**
@@ -85,7 +85,7 @@ public class MessageServiceImpl implements MessageService {
      * @throws Exception if an error occurs during message sending
      */
     public Message sendMessage(HttpServletRequest request, String receiverEmail, String content) throws Exception {
-        UserProfile sender = BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository);
+        UserProfile sender = userValidationService.getUserData(request);
 
         if (sender.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
@@ -96,10 +96,10 @@ public class MessageServiceImpl implements MessageService {
         }
         SecretKey secretKey = EncryptionUtil.getSecretKey();
 
-        String sanitizedContent = StringEscapeUtils.escapeHtml4(content); // Sanitize input content to prevent XSS
+        String sanitizedContent = StringEscapeUtils.escapeHtml4(content.trim()); // Sanitize input content to prevent XSS
         String encryptedContent = EncryptionUtil.encrypt(sanitizedContent, secretKey); // Encrypt the sanitized content
 
-        UserProfile receiver = userProfileRepository.findByEmail(receiverEmail).orElseThrow(
+        UserProfile receiver = userProfileRepository.findByEmail(receiverEmail.trim()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified receiver not found.")
         );
 

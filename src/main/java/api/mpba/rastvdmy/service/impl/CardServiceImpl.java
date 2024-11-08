@@ -12,9 +12,8 @@ import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.BankAccountRepository;
 import api.mpba.rastvdmy.repository.BankIdentityRepository;
 import api.mpba.rastvdmy.repository.CardRepository;
-import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.CardService;
-import api.mpba.rastvdmy.service.JwtService;
+import api.mpba.rastvdmy.service.UserValidationService;
 import api.mpba.rastvdmy.service.generator.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +48,7 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
     private final CardRepository cardRepository;
     private final BankIdentityRepository bankIdentityRepository;
     private final BankAccountRepository bankAccountRepository;
-    private final JwtService jwtService;
-    private final UserProfileRepository userProfileRepository;
+    private final UserValidationService userValidationService;
 
     /**
      * Constructs a CardServiceImpl with the specified repositories and services.
@@ -58,20 +56,16 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
      * @param cardRepository         the repository for card data
      * @param bankIdentityRepository the repository for bank identity data
      * @param bankAccountRepository  the repository for bank account data
-     * @param jwtService             the service for handling JWT tokens
-     * @param userProfileRepository  the repository for user profile data
+     * @param userValidationService  the service for extracting user token and getting user data from the request
      */
     @Autowired
     public CardServiceImpl(CardRepository cardRepository,
-                           BankIdentityRepository bankIdentityRepository,
-                           BankAccountRepository bankAccountRepository,
-                           JwtService jwtService,
-                           UserProfileRepository userProfileRepository) {
+                           BankIdentityRepository bankIdentityRepository, BankAccountRepository bankAccountRepository,
+                           UserValidationService userValidationService) {
         this.cardRepository = cardRepository;
         this.bankIdentityRepository = bankIdentityRepository;
         this.bankAccountRepository = bankAccountRepository;
-        this.jwtService = jwtService;
-        this.userProfileRepository = userProfileRepository;
+        this.userValidationService = userValidationService;
     }
 
     /**
@@ -288,9 +282,10 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
      * @throws ApplicationException if the specified bank account or bank identity is not found
      */
     private BankAccount getBankAccount(String bankName, UUID accountId, HttpServletRequest request) {
-        UserProfile userProfile = BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository);
+        UserProfile userProfile = userValidationService.getUserData(request);
 
-        BankIdentity identity = bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), bankName)
+        BankIdentity identity = bankIdentityRepository
+                .findByUserProfileIdAndBankName(userProfile.getId(), bankName.trim())
                 .orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
                 );

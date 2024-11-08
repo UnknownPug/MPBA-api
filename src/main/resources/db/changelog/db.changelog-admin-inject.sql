@@ -16,9 +16,9 @@ VALUES ('00000000-0000-0000-0000-000000000001',
         'STATUS_DEFAULT',
         'Admin',
         'Admin',
-        'LeAuXQVPc5zY7+vYHvi2uQ==',
+        'UDW9hFYgvJQ8JrPtm9KWaQ==', -- decrypt: 2001-01-01
         'Czechia',
         'admin@mpba.com',
-        '$2a$12$15j07jN5lfXbRrewQGwW/OAW3yjUXDK.ubMrAm8y8Gowc9WPbiI0.', -- decrypt: admin
+        '$2a$12$6tP0EfemWAZfwkGeLPc68eXL9bXfSBC8zpyNbMbkG5yYAxs3afiCO', -- decrypt: admin (BCrypt)
         'https://www.shareicon.net/data/2015/09/18/103157_man_512x512.png',
-        'v75ySFMAY5Cjz4msGwFKVl046szL9Kk3wIypTmJOorA='); -- decrypt: +420111222333
+        '5IUSHqA/9Ba/X9RWQJVSCQ=='); -- decrypt: +420111222333

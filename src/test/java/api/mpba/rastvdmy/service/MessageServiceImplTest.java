@@ -8,8 +8,8 @@ import api.mpba.rastvdmy.entity.enums.UserStatus;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.MessageRepository;
 import api.mpba.rastvdmy.repository.UserProfileRepository;
-import api.mpba.rastvdmy.service.impl.BankAccountServiceImpl;
 import api.mpba.rastvdmy.service.impl.MessageServiceImpl;
+import api.mpba.rastvdmy.service.impl.UserValidationServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,9 +42,6 @@ class MessageServiceImplTest {
     private UserProfileRepository userProfileRepository;
 
     @Mock
-    private JwtService jwtService;
-
-    @Mock
     private UserProfile sender;
 
     @Mock
@@ -52,6 +49,9 @@ class MessageServiceImplTest {
 
     @Mock
     private HttpServletRequest request;
+
+    @Mock
+    private UserValidationServiceImpl userValidationService;
 
     @InjectMocks
     private MessageServiceImpl messageService;
@@ -171,10 +171,10 @@ class MessageServiceImplTest {
             ).thenReturn("encryptedContent");
 
             UserProfile mockSender = spy(sender);
-            try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock =
-                         Mockito.mockStatic(BankAccountServiceImpl.class)) {
-                bankAccountServiceMock.when(
-                        () -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository)
+            try (MockedStatic<UserValidationServiceImpl> validationServiceMock =
+                         Mockito.mockStatic(UserValidationServiceImpl.class)) {
+                validationServiceMock.when(
+                        () -> userValidationService.getUserData(request)
                 ).thenReturn(mockSender);
 
                 Message result = messageService.sendMessage(
@@ -196,11 +196,12 @@ class MessageServiceImplTest {
     void sendMessage_ShouldThrowException_WhenUserIsBlocked() {
         sender.setStatus(UserStatus.STATUS_BLOCKED);
 
-        try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock =
-                     Mockito.mockStatic(BankAccountServiceImpl.class)) {
-            bankAccountServiceMock.when(
-                    () -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository)
+        try (MockedStatic<UserValidationServiceImpl> validationServiceMock =
+                     Mockito.mockStatic(UserValidationServiceImpl.class)) {
+            validationServiceMock.when(
+                    () -> userValidationService.getUserData(request)
             ).thenReturn(sender);
+
 
             ApplicationException exception = assertThrows(ApplicationException.class, () ->
                     messageService.sendMessage(request, "janedoe@mpba.com", "Hello, Jane!"));
@@ -212,10 +213,10 @@ class MessageServiceImplTest {
 
     @Test
     void sendMessage_ShouldThrowException_WhenContentIsEmpty() {
-        try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock =
-                     Mockito.mockStatic(BankAccountServiceImpl.class)) {
-            bankAccountServiceMock.when(
-                    () -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository)
+        try (MockedStatic<UserValidationServiceImpl> validationServiceMock =
+                     Mockito.mockStatic(UserValidationServiceImpl.class)) {
+            validationServiceMock.when(
+                    () -> userValidationService.getUserData(request)
             ).thenReturn(sender);
 
             ApplicationException exception = assertThrows(ApplicationException.class, () ->
@@ -228,10 +229,10 @@ class MessageServiceImplTest {
 
     @Test
     void sendMessage_ShouldThrowException_WhenReceiverNotFound() {
-        try (MockedStatic<BankAccountServiceImpl> bankAccountServiceMock =
-                     Mockito.mockStatic(BankAccountServiceImpl.class)) {
-            bankAccountServiceMock.when(
-                    () -> BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository)
+        try (MockedStatic<UserValidationServiceImpl> validationServiceMock =
+                     Mockito.mockStatic(UserValidationServiceImpl.class)) {
+            validationServiceMock.when(
+                    () -> userValidationService.getUserData(request)
             ).thenReturn(sender);
 
             when(userProfileRepository.findByEmail("janedoe@mpba.com")).thenReturn(Optional.empty());

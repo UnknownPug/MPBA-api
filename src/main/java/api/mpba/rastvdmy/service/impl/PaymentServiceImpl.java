@@ -35,10 +35,8 @@ import static api.mpba.rastvdmy.entity.enums.PaymentType.*;
  */
 @Service
 public class PaymentServiceImpl implements PaymentService {
-    /**
-     * Maximum payment amount allowed.
-     */
-    private static final int MAX_PAYMENT = 6000;
+
+    private static final int MAX_PAYMENT = 6000; // Maximum amount for a card payment
 
     private final PaymentRepository paymentRepository;
     private final BankAccountRepository accountRepository;
@@ -83,7 +81,7 @@ public class PaymentServiceImpl implements PaymentService {
     public List<Payment> getAllPayments(HttpServletRequest request, String bankName, UUID accountId) {
         BankAccount bankAccount = getBankAccount(request, accountId);
 
-        if (!bankAccount.getBankIdentity().getBankName().equalsIgnoreCase(bankName)) {
+        if (!bankAccount.getBankIdentity().getBankName().equalsIgnoreCase(bankName.trim())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "Payments are not connected to the specified bank.");
         }
@@ -113,7 +111,7 @@ public class PaymentServiceImpl implements PaymentService {
                                   UUID accountId, UUID paymentId) {
         BankAccount bankAccount = getBankAccount(request, accountId);
 
-        if (!bankAccount.getBankIdentity().getBankName().equalsIgnoreCase(bankName)) {
+        if (!bankAccount.getBankIdentity().getBankName().equalsIgnoreCase(bankName.trim())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Payment is not connected to the specified bank.");
         }
 
@@ -220,7 +218,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         return accounts.stream()
-                .filter(account -> isNumberValid(recipientNumber, account))
+                .filter(account -> isNumberValid(recipientNumber.trim(), account))
                 .findFirst().orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "Recipient account not found.")
                 );
@@ -236,7 +234,7 @@ public class PaymentServiceImpl implements PaymentService {
     private static boolean isNumberValid(String recipientNumber, BankAccount bankAccount) {
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
-            return recipientNumber.equals(EncryptionUtil.decrypt(bankAccount.getAccountNumber(), secretKey));
+            return recipientNumber.trim().equals(EncryptionUtil.decrypt(bankAccount.getAccountNumber(), secretKey));
         } catch (Exception e) {
             throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Error while decrypting account data.");
         }
@@ -263,7 +261,7 @@ public class PaymentServiceImpl implements PaymentService {
         String encryptedRecipientName = EncryptionUtil.encrypt(
                 recipientAccount.getBankIdentity().getUserProfile().getName() + " "
                         + recipientAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
-        String sanitizedDescription = StringEscapeUtils.escapeHtml4(description);
+        String sanitizedDescription = StringEscapeUtils.escapeHtml4(description.trim());
         String encryptedDescription = EncryptionUtil.encrypt(sanitizedDescription, secretKey);
 
         return Payment.builder()
@@ -288,56 +286,6 @@ public class PaymentServiceImpl implements PaymentService {
         if (amount.equals(BigDecimal.ZERO)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Amount must be greater than zero.");
         }
-    }
-
-    /**
-     * Checks if the sender's account has sufficient balance for the payment.
-     * If the balance is sufficient, the amount is subtracted from the sender's account.
-     * If the currencies of the sender and recipient are different, the amount is converted.
-     *
-     * @param senderAccount the bank account of the sender
-     * @param amount        the amount to be transferred
-     * @param currency      the currency of the recipient
-     * @param payment       the payment object to be updated
-     * @return true if the amount is sufficient, false otherwise
-     */
-    private boolean isAmountSufficient(BankAccount senderAccount, BigDecimal amount,
-                                       Currency currency, Payment payment) {
-
-        if (senderAccount.getBalance().compareTo(amount) < 0) {
-            payment.setStatus(DENIED);
-            payment.setAmount(amount.setScale(2, RoundingMode.HALF_UP));
-            payment.setCurrency(currency);
-            return false;
-        }
-        // Subtract amount from sender account balance
-        senderAccount.setBalance(senderAccount.getBalance().subtract(amount));
-        accountRepository.save(senderAccount);
-
-        if (!senderAccount.getCurrency().equals(currency)) {
-            convertCurrency(amount, senderAccount.getCurrency(), currency, payment);
-        } else {
-            payment.setAmount(amount.setScale(2, RoundingMode.HALF_UP));
-            payment.setCurrency(currency);
-        }
-        return true;
-    }
-
-    /**
-     * Converts the amount to be transferred to the recipient's currency.
-     *
-     * @param amount           the amount to be transferred
-     * @param senderCurrency   the currency of the sender
-     * @param receiverCurrency the currency of the recipient
-     * @param payment          the payment object to be updated
-     */
-    private void convertCurrency(BigDecimal amount, Currency senderCurrency,
-                                 Currency receiverCurrency, Payment payment) {
-        BigDecimal exchangeRate = currencyDataService.convertCurrency(
-                senderCurrency.toString(), receiverCurrency.toString()).getRate();
-        BigDecimal convertedAmount = amount.multiply(exchangeRate);
-        payment.setAmount(convertedAmount.setScale(2, RoundingMode.HALF_UP));
-        payment.setCurrency(receiverCurrency);
     }
 
     /**
@@ -441,4 +389,55 @@ public class PaymentServiceImpl implements PaymentService {
         Random randomAmount = new Random();
         return BigDecimal.valueOf(randomAmount.nextDouble(MAX_PAYMENT) + 1);
     }
+
+    /**
+     * Checks if the sender's account has sufficient balance for the payment.
+     * If the balance is sufficient, the amount is subtracted from the sender's account.
+     * If the currencies of the sender and recipient are different, the amount is converted.
+     *
+     * @param senderAccount the bank account of the sender
+     * @param amount        the amount to be transferred
+     * @param currency      the currency of the recipient
+     * @param payment       the payment object to be updated
+     * @return true if the amount is sufficient, false otherwise
+     */
+    private boolean isAmountSufficient(BankAccount senderAccount, BigDecimal amount,
+                                       Currency currency, Payment payment) {
+
+        if (senderAccount.getBalance().compareTo(amount) < 0) {
+            payment.setStatus(DENIED);
+            payment.setAmount(amount.setScale(2, RoundingMode.HALF_UP));
+            payment.setCurrency(currency);
+            return false;
+        }
+        // Subtract amount from sender account balance
+        senderAccount.setBalance(senderAccount.getBalance().subtract(amount));
+        accountRepository.save(senderAccount);
+
+        if (!senderAccount.getCurrency().equals(currency)) {
+            convertCurrency(amount, senderAccount.getCurrency(), currency, payment);
+        } else {
+            payment.setAmount(amount.setScale(2, RoundingMode.HALF_UP));
+            payment.setCurrency(currency);
+        }
+        return true;
+    }
+
+    /**
+     * Converts the amount to be transferred to the recipient's currency.
+     *
+     * @param amount           the amount to be transferred
+     * @param senderCurrency   the currency of the sender
+     * @param receiverCurrency the currency of the recipient
+     * @param payment          the payment object to be updated
+     */
+    private void convertCurrency(BigDecimal amount, Currency senderCurrency,
+                                 Currency receiverCurrency, Payment payment) {
+        BigDecimal exchangeRate = currencyDataService.convertCurrency(
+                senderCurrency.toString(), receiverCurrency.toString()).getRate();
+        BigDecimal convertedAmount = amount.multiply(exchangeRate);
+        payment.setAmount(convertedAmount.setScale(2, RoundingMode.HALF_UP));
+        payment.setCurrency(receiverCurrency);
+    }
+
 }

@@ -12,7 +12,6 @@ import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.CurrencyDataRepository;
 import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.AuthService;
-import api.mpba.rastvdmy.service.validator.CountryValidator;
 import api.mpba.rastvdmy.service.generator.FinancialDataGenerator;
 import api.mpba.rastvdmy.service.generator.GenerateAccessToken;
 import api.mpba.rastvdmy.service.validator.UserDataValidator;
@@ -22,7 +21,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.SecretKey;
 import java.util.List;
@@ -40,8 +38,8 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
     private final PasswordEncoder passwordEncoder;
     private final UserProfileRepository userProfileRepository;
     private final CurrencyDataRepository currencyDataRepository;
-    private final RestTemplate restTemplate;
     private final GenerateAccessToken generateAccessToken;
+    private final UserDataValidator userDataValidator;
 
     /**
      * Constructor for the AuthServiceImpl class.
@@ -50,21 +48,21 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
      * @param authenticationManager  Manages the authentication processes.
      * @param passwordEncoder        Encodes user passwords for secure storage.
      * @param currencyDataRepository Repository for currency data operations.
-     * @param restTemplate           Used for REST API calls.
      * @param generateAccessToken    Generates access tokens for authenticated users.
+     * @param userDataValidator      Validates user data during registration.
      */
     public AuthServiceImpl(
             UserProfileRepository userProfileRepository,
             AuthenticationManager authenticationManager,
             PasswordEncoder passwordEncoder,
             CurrencyDataRepository currencyDataRepository,
-            RestTemplate restTemplate, GenerateAccessToken generateAccessToken) {
+            GenerateAccessToken generateAccessToken, UserDataValidator userDataValidator) {
         this.authenticationManager = authenticationManager;
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.currencyDataRepository = currencyDataRepository;
-        this.restTemplate = restTemplate;
         this.generateAccessToken = generateAccessToken;
+        this.userDataValidator = userDataValidator;
     }
 
     /**
@@ -78,18 +76,12 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
     public JwtAuthResponse signUp(UserProfileRequest request) throws Exception {
 
         // Validate user data
-        UserDataValidator.isInvalidName(request.name());
-        UserDataValidator.isInvalidSurname(request.surname());
-        UserDataValidator.isInvalidEmail(request.email());
-        UserDataValidator.isInvalidPassword(request.password());
-        UserDataValidator.isInvalidPhoneNumber(request.phoneNumber());
-        UserDataValidator.isInvalidDateOfBirth(request.dateOfBirth());
-        validateUserData(request);
+        validateBasicUserInfo(request);
 
         // Encrypt sensitive data before saving
         SecretKey secretKey = EncryptionUtil.getSecretKey();
-        String encodedDateOfBirth = EncryptionUtil.encrypt(request.dateOfBirth(), secretKey);
-        String encodedPhoneNumber = EncryptionUtil.encrypt(request.phoneNumber(), secretKey);
+        String encodedDateOfBirth = EncryptionUtil.encrypt(request.dateOfBirth().trim(), secretKey);
+        String encodedPhoneNumber = EncryptionUtil.encrypt(request.phoneNumber().trim(), secretKey);
 
         // Retrieve all available currency data
         List<CurrencyData> currencyData = currencyDataRepository.findAll();
@@ -99,12 +91,12 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
                 .id(UUID.randomUUID())
                 .role(UserRole.ROLE_DEFAULT)
                 .status(UserStatus.STATUS_DEFAULT)
-                .name(request.name())
-                .surname(request.surname())
+                .name(request.name().trim())
+                .surname(request.surname().trim())
                 .dateOfBirth(encodedDateOfBirth)
-                .countryOfOrigin(request.countryOfOrigin())
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
+                .countryOfOrigin(request.countryOfOrigin().trim())
+                .email(request.email().trim())
+                .password(passwordEncoder.encode(request.password().trim()))
                 .avatar("https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1")
                 .phoneNumber(encodedPhoneNumber)
                 .currencyData(currencyData)
@@ -158,14 +150,21 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
     }
 
     /**
-     * Validates user data during signup.
+     * Validates the basic user information provided in the request.
      *
      * @param request Contains the user profile details to validate.
+     * @throws ApplicationException if any validation fails.
      */
-    private void validateUserData(UserProfileRequest request) {
+    private void validateBasicUserInfo(UserProfileRequest request) {
+        userDataValidator.validateField("name", request.name());
+        userDataValidator.validateField("surname", request.surname());
+        userDataValidator.validateField("email", request.email());
+        userDataValidator.validateField("password", request.password());
+        userDataValidator.validateField("phoneNumber", request.phoneNumber());
+        userDataValidator.validateField("dateOfBirth", request.dateOfBirth());
+        userDataValidator.validateField("country", request.countryOfOrigin());
         checkIfUserExistsByEmail(request);
         checkIfUserExistsByPhoneNumber(request);
-        countryValidation(request);
     }
 
     /**
@@ -211,18 +210,6 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
             return decryptedPhoneNumber.equals(request.phoneNumber());
         } catch (Exception e) {
             return false;
-        }
-    }
-
-    /**
-     * Validates the country of origin provided during signup.
-     *
-     * @param request Contains the user profile details to validate.
-     */
-    private void countryValidation(UserProfileRequest request) {
-        CountryValidator countryValidator = new CountryValidator(restTemplate);
-        if (countryValidator.countryExists(request.countryOfOrigin())) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Country does not exist.");
         }
     }
 }

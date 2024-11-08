@@ -64,6 +64,7 @@ class CurrencyDataServiceImplTest {
 
         CurrencyData result = currencyDataService.convertCurrency("USD", "EUR");
 
+
         assertEquals("EUR", result.getCurrency());
         assertEquals(BigDecimal.valueOf(0.85), result.getRate());
     }

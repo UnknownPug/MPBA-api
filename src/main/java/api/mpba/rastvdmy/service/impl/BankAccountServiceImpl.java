@@ -5,14 +5,12 @@ import api.mpba.rastvdmy.entity.BankAccount;
 import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.entity.UserProfile;
 import api.mpba.rastvdmy.entity.enums.Currency;
-import api.mpba.rastvdmy.entity.enums.UserStatus;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.BankAccountRepository;
 import api.mpba.rastvdmy.repository.BankIdentityRepository;
-import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.BankAccountService;
 import api.mpba.rastvdmy.service.CardService;
-import api.mpba.rastvdmy.service.JwtService;
+import api.mpba.rastvdmy.service.UserValidationService;
 import api.mpba.rastvdmy.service.generator.FinancialDataGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,30 +53,25 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
 
     private final BankAccountRepository accountRepository;
     private final BankIdentityRepository bankIdentityRepository;
-    private final JwtService jwtService;
     private final CardService cardService;
-    private final UserProfileRepository userProfileRepository;
+    private final UserValidationService userValidationService;
 
     /**
      * Constructs a new instance of {@link BankAccountServiceImpl}.
      *
      * @param accountRepository      the repository for bank account operations
      * @param bankIdentityRepository the repository for bank identity operations
-     * @param jwtService             the service for handling JWT operations
      * @param cardService            the service for handling card operations
-     * @param userProfileRepository  the repository for user profile operations
+     * @param userValidationService  the service for extracting user token and getting user data from the request
      */
     @Autowired
     public BankAccountServiceImpl(BankAccountRepository accountRepository,
                                   BankIdentityRepository bankIdentityRepository,
-                                  JwtService jwtService,
-                                  CardService cardService,
-                                  UserProfileRepository userProfileRepository) {
+                                  CardService cardService, UserValidationService userValidationService) {
         this.accountRepository = accountRepository;
         this.bankIdentityRepository = bankIdentityRepository;
-        this.jwtService = jwtService;
         this.cardService = cardService;
-        this.userProfileRepository = userProfileRepository;
+        this.userValidationService = userValidationService;
     }
 
     /**
@@ -190,7 +183,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
      * @throws ApplicationException if no bank identities are found for the user
      */
     public Map<String, BigDecimal> getTotalBalance(HttpServletRequest request) {
-        UserProfile userProfile = getUserData(request, jwtService, userProfileRepository);
+        UserProfile userProfile = userValidationService.getUserData(request);
         List<BankIdentity> bankIdentities =
                 bankIdentityRepository.findAllByUserProfileId(userProfile.getId()).orElseThrow(
                         () -> new ApplicationException(HttpStatus.NOT_FOUND, "No bank identities found.")
@@ -353,34 +346,10 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
      * @throws ApplicationException if the bank identity is not found
      */
     private BankIdentity getBankIdentity(HttpServletRequest request, String bankName) {
-        UserProfile userProfile = getUserData(request, jwtService, userProfileRepository);
+        UserProfile userProfile = userValidationService.getUserData(request);
 
-        return bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), bankName).orElseThrow(
+        return bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), bankName.trim()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
         );
-    }
-
-    /**
-     * Retrieves the user data for the user identified by the request.
-     *
-     * @param request               the HTTP request containing user information
-     * @param jwtService            the service for handling JWT operations
-     * @param userProfileRepository the repository for user profile operations
-     * @return the user profile
-     * @throws ApplicationException if the user is not found or is blocked
-     */
-    public static UserProfile getUserData(HttpServletRequest request, JwtService jwtService,
-                                          UserProfileRepository userProfileRepository) {
-        final String token = jwtService.extractToken(request);
-        final String userEmail = jwtService.extractSubject(token);
-
-        UserProfile userProfile = userProfileRepository.findByEmail(userEmail).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
-        );
-
-        if (userProfile.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
-            throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
-        }
-        return userProfile;
     }
 }

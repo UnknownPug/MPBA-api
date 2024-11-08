@@ -9,9 +9,6 @@ import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,7 +30,6 @@ import java.util.UUID;
 @PreAuthorize("hasRole('ROLE_DEFAULT')")
 @RequestMapping(path = "/api/v1/{accountId}/payments")
 public class PaymentController {
-    private final static Logger LOG = LoggerFactory.getLogger(PaymentController.class);
     private final PaymentService paymentService;
     private final PaymentMapper paymentMapper;
 
@@ -43,9 +39,7 @@ public class PaymentController {
      * @param paymentService The service for payment operations.
      * @param paymentMapper  The mapper to convert between Payment and PaymentResponse.
      */
-    @Autowired
-    public PaymentController(PaymentService paymentService,
-                             PaymentMapper paymentMapper) {
+    public PaymentController(PaymentService paymentService, PaymentMapper paymentMapper) {
         this.paymentService = paymentService;
         this.paymentMapper = paymentMapper;
     }
@@ -58,7 +52,6 @@ public class PaymentController {
      * @param bankName  The name of the bank.
      * @return A response entity containing a list of payment responses.
      */
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{bankName}", produces = "application/json")
     public ResponseEntity<List<PaymentResponse>> getAllPayments(HttpServletRequest request,
                                                                 @PathVariable("accountId") UUID accountId,
@@ -68,18 +61,9 @@ public class PaymentController {
 
         List<Payment> payments = paymentService.getAllPayments(request, bankName, accountId);
 
-        List<PaymentResponse> paymentResponses = payments.stream().map(payment -> paymentMapper.toResponse(
-                new PaymentRequest(
-                        payment.getId(),
-                        payment.getSenderName(),
-                        payment.getRecipientName(),
-                        payment.getDateTime(),
-                        payment.getDescription(),
-                        payment.getAmount(),
-                        payment.getType(),
-                        payment.getStatus(),
-                        payment.getCurrency()))
-        ).toList();
+        List<PaymentResponse> paymentResponses = payments.stream()
+                .map(payment -> paymentMapper.toResponse(convertToPaymentRequest(payment)))
+                .toList();
 
         return ResponseEntity.ok(paymentResponses);
     }
@@ -93,7 +77,6 @@ public class PaymentController {
      * @param paymentId The UUID of the payment.
      * @return A response entity containing the payment response.
      */
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{bankName}/{id}", produces = "application/json")
     public ResponseEntity<PaymentResponse> getPaymentById(HttpServletRequest request,
                                                           @PathVariable("bankName") String bankName,
@@ -101,17 +84,7 @@ public class PaymentController {
                                                           @PathVariable("id") UUID paymentId) {
         logInfo("Getting payment info ...");
         Payment payment = paymentService.getPaymentById(request, bankName, accountId, paymentId);
-        PaymentResponse paymentResponse = paymentMapper.toResponse(new PaymentRequest(
-                payment.getId(),
-                payment.getSenderName(),
-                payment.getRecipientName(),
-                payment.getDateTime(),
-                payment.getDescription(),
-                payment.getAmount(),
-                payment.getType(),
-                payment.getStatus(),
-                payment.getCurrency()
-        ));
+        PaymentResponse paymentResponse = paymentMapper.toResponse(convertToPaymentRequest(payment));
         return ResponseEntity.ok(paymentResponse);
     }
 
@@ -124,7 +97,6 @@ public class PaymentController {
      * @return A response entity containing the created payment response.
      * @throws ApplicationException If the payment type is invalid or not specified.
      */
-    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<PaymentResponse> createPayment(HttpServletRequest request,
                                                          @PathVariable("accountId") UUID accountId,
@@ -136,7 +108,6 @@ public class PaymentController {
                     HttpStatus.BAD_REQUEST, "Payment type is not chosen. Please, choose payment type."
             );
         }
-
         Payment payment;
         PaymentResponse paymentResponse;
         logInfo("Choosing payment type ...");
@@ -144,41 +115,39 @@ public class PaymentController {
         switch (paymentParamsRequest.type()) {
             case BANK_TRANSFER -> {
                 logInfo("Creating bank transfer ...");
-
                 payment = paymentService.createBankTransfer(request, accountId,
                         paymentParamsRequest.recipientNumber(), paymentParamsRequest.amount(),
                         paymentParamsRequest.description());
 
-                paymentResponse = paymentMapper.toResponse(new PaymentRequest(
-                        payment.getId(),
-                        payment.getSenderName(),
-                        payment.getRecipientName(),
-                        payment.getDateTime(),
-                        payment.getDescription(),
-                        payment.getAmount(),
-                        payment.getType(),
-                        payment.getStatus(),
-                        payment.getCurrency()
-                ));
+                paymentResponse = paymentMapper.toResponse(convertToPaymentRequest(payment));
             }
             case CARD_PAYMENT -> {
                 logInfo("Creating card payment ...");
                 payment = paymentService.createCardPayment(request, accountId, paymentParamsRequest.cardId());
-                paymentResponse = paymentMapper.toResponse(new PaymentRequest(
-                        payment.getId(),
-                        payment.getSenderName(),
-                        payment.getRecipientName(),
-                        payment.getDateTime(),
-                        payment.getDescription(),
-                        payment.getAmount(),
-                        payment.getType(),
-                        payment.getStatus(),
-                        payment.getCurrency()
-                ));
+                paymentResponse = paymentMapper.toResponse(convertToPaymentRequest(payment));
             }
             default -> throw new ApplicationException(HttpStatus.BAD_REQUEST, "Invalid payment type.");
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(paymentResponse);
+    }
+
+    /**
+     * Converts a Payment object to a PaymentRequest object.
+     *
+     * @param payment The payment object to convert.
+     * @return A PaymentRequest object.
+     */
+    private static PaymentRequest convertToPaymentRequest(Payment payment) {
+        return new PaymentRequest(
+                payment.getId(),
+                payment.getSenderName(),
+                payment.getRecipientName(),
+                payment.getDateTime(),
+                payment.getDescription(),
+                payment.getAmount(),
+                payment.getType(),
+                payment.getStatus(),
+                payment.getCurrency());
     }
 
     /**
@@ -188,6 +157,6 @@ public class PaymentController {
      * @param args    Optional arguments to format the message.
      */
     private void logInfo(String message, Object... args) {
-        LOG.info(message, args);
+        log.info(message, args);
     }
 }

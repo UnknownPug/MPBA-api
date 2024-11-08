@@ -36,10 +36,10 @@ class CardServiceImplTest {
     private BankAccountRepository bankAccountRepository;
 
     @Mock
-    private JwtService jwtService;
+    private UserProfileRepository userProfileRepository;
 
     @Mock
-    private UserProfileRepository userProfileRepository;
+    private UserValidationService userValidationService;
 
     @InjectMocks
     private CardServiceImpl cardService;
@@ -108,9 +108,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCards_ShouldReturnCards_WhenCardsExist() {
-        when(jwtService.extractToken(request)).thenReturn("token");
-        when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
-        when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
+        when(userValidationService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -137,9 +135,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCards_ShouldThrowException_WhenNoCardsFound() {
-        when(jwtService.extractToken(request)).thenReturn("token");
-        when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
-        when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
+        when(userValidationService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -155,9 +151,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCardById_ShouldThrowException_WhenCardNotFound() {
-        when(jwtService.extractToken(request)).thenReturn("token");
-        when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
-        when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
+        when(userValidationService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -178,9 +172,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCardById_ShouldReturnCard_WhenCardExists() {
-        when(jwtService.extractToken(request)).thenReturn("token");
-        when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
-        when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
+        when(userValidationService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -211,9 +203,7 @@ class CardServiceImplTest {
 
     @Test
     void getAccountCardById_ShouldThrowException_WhenNoCardsFound() {
-        when(jwtService.extractToken(request)).thenReturn("token");
-        when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
-        when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
+        when(userValidationService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -234,9 +224,7 @@ class CardServiceImplTest {
 
     @Test
     void addAccountCard_ShouldAddCard_WhenValidRequest() throws Exception {
-        when(jwtService.extractToken(request)).thenReturn("token");
-        when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
-        when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
+        when(userValidationService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -251,9 +239,7 @@ class CardServiceImplTest {
 
     @Test
     void addAccountCard_ShouldThrowException_WhenBankAccountNotFound() {
-        when(jwtService.extractToken(request)).thenReturn("token");
-        when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
-        when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
+        when(userValidationService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId())).thenReturn(Optional.empty());
@@ -267,9 +253,7 @@ class CardServiceImplTest {
 
     @Test
     void removeAccountCard_ShouldRemoveCard_WhenCardExists() {
-        when(jwtService.extractToken(request)).thenReturn("token");
-        when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
-        when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
+        when(userValidationService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))
@@ -283,9 +267,7 @@ class CardServiceImplTest {
 
     @Test
     void removeAccountCard_ShouldThrowException_WhenNoCardsFound() {
-        when(jwtService.extractToken(request)).thenReturn("token");
-        when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
-        when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
+        when(userValidationService.getUserData(request)).thenReturn(userProfile);
         when(bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), "bankName"))
                 .thenReturn(Optional.of(bankIdentity));
         when(bankAccountRepository.findAllByBankIdentityId(bankIdentity.getId()))

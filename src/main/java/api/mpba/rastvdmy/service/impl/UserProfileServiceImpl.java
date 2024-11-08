@@ -10,12 +10,12 @@ import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.UserProfileService;
-import api.mpba.rastvdmy.service.validator.CountryValidator;
 import api.mpba.rastvdmy.service.generator.FinancialDataGenerator;
 import api.mpba.rastvdmy.service.generator.GenerateAccessToken;
 import api.mpba.rastvdmy.service.validator.UserDataValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,7 +27,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.SecretKey;
@@ -41,13 +40,14 @@ import java.util.UUID;
  * as well as handling user authentication and authorization.
  * It also includes methods for encrypting and decrypting user data.
  */
+@Slf4j
 @Service
 public class UserProfileServiceImpl extends FinancialDataGenerator implements UserProfileService {
     private final UserProfileRepository userProfileRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
-    private final RestTemplate restTemplate;
     private final GenerateAccessToken generateAccessToken;
+    private final UserDataValidator userDataValidator;
 
     /**
      * Constructs a new UserProfileServiceImpl with the specified repository, JWT service,
@@ -56,20 +56,19 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
      * @param userProfileRepository The repository for user profiles.
      * @param jwtService            The service for handling JWT tokens.
      * @param passwordEncoder       The encoder for hashing passwords.
-     * @param restTemplate          The REST template for making HTTP requests.
      * @param generateAccessToken   The generator for access tokens.
+     * @param userDataValidator     The validator for user data.
      */
     @Autowired
     public UserProfileServiceImpl(UserProfileRepository userProfileRepository,
                                   JwtService jwtService,
                                   PasswordEncoder passwordEncoder,
-                                  RestTemplate restTemplate,
-                                  GenerateAccessToken generateAccessToken) {
+                                  GenerateAccessToken generateAccessToken, UserDataValidator userDataValidator) {
         this.userProfileRepository = userProfileRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
-        this.restTemplate = restTemplate;
         this.generateAccessToken = generateAccessToken;
+        this.userDataValidator = userDataValidator;
     }
 
     /**
@@ -172,29 +171,33 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         UserProfile userProfile = validateUserData(request);
 
         // Validate user data
-        UserDataValidator.isInvalidEmail(userRequest.email());
-        UserDataValidator.isInvalidPassword(userRequest.password());
-        UserDataValidator.isInvalidPhoneNumber(userRequest.phoneNumber());
-        checkIfUserExistsByEmail(userRequest);
-        checkIfUserExistsByPhoneNumber(userRequest);
+        userDataValidator.validateField("email", userRequest.email().trim());
+        userDataValidator.validateField("password", userRequest.password().trim());
+        userDataValidator.validateField("phoneNumber", userRequest.phoneNumber().trim());
+        checkIfUserExistsByEmail(request, userRequest);
+        checkIfUserExistsByPhoneNumber(request, userRequest);
 
-        userProfile.setEmail(userRequest.email());
-        userProfile.setPassword(passwordEncoder.encode(userRequest.password()));
+        userProfile.setEmail(userRequest.email().trim());
+        userProfile.setPassword(passwordEncoder.encode(userRequest.password().trim()));
 
         SecretKey secretKey = EncryptionUtil.getSecretKey();
-        String encodedPhoneNumber = EncryptionUtil.encrypt(userRequest.phoneNumber(), secretKey);
+        String encodedPhoneNumber = EncryptionUtil.encrypt(userRequest.phoneNumber().trim(), secretKey);
         userProfile.setPhoneNumber(encodedPhoneNumber);
 
         return userProfileRepository.save(userProfile);
     }
 
     /**
-     * Checks if a user with the specified email already exists.
+     * Checks if a user with the given email already exists.
      *
-     * @param request the user update request
+     * @param request     the HTTP request containing user authentication data
+     * @param userRequest the user update request containing the new email
+     * @throws ApplicationException if a user with the given email already exists
      */
-    private void checkIfUserExistsByEmail(UserUpdateRequest request) {
-        if (userProfileRepository.findByEmail(request.email()).isPresent()) {
+    private void checkIfUserExistsByEmail(HttpServletRequest request, UserUpdateRequest userRequest) {
+        UserProfile currentUser = validateUserData(request);
+        if (!currentUser.getEmail().equals(userRequest.email()) &&
+                userProfileRepository.findByEmail(userRequest.email()).isPresent()) {
             throw new ApplicationException(
                     HttpStatus.BAD_REQUEST, "User with this email already exists."
             );
@@ -202,17 +205,20 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
     }
 
     /**
-     * Checks if a user with the specified phone number already exists.
+     * Checks if a user with the given phone number already exists.
      *
-     * @param request the user update request
+     * @param request     the HTTP request containing user authentication data
+     * @param userRequest the user update request containing the new phone number
+     * @throws ApplicationException if a user with the given phone number already exists
      */
-    private void checkIfUserExistsByPhoneNumber(UserUpdateRequest request) {
+    private void checkIfUserExistsByPhoneNumber(HttpServletRequest request, UserUpdateRequest userRequest) {
+        UserProfile currentUser = validateUserData(request);
         List<UserProfile> userProfiles = userProfileRepository.findAll();
         boolean isPhoneUsed = userProfiles.stream()
-                .anyMatch(u -> checkIsNumberUsed(u, request));
+                .anyMatch(u -> !u.getId().equals(currentUser.getId()) && checkIsNumberUsed(u, userRequest));
         if (isPhoneUsed) {
             throw new ApplicationException(
-                    HttpStatus.BAD_REQUEST, "User with phone number " + request.phoneNumber() + " already exists."
+                    HttpStatus.BAD_REQUEST, "User with phone number " + userRequest.phoneNumber() + " already exists."
             );
         }
     }
@@ -246,11 +252,11 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
     public UserProfile updateUserSpecificCredentials(HttpServletRequest request, UUID userId,
                                                      @Valid AdminUpdateUserRequest userRequest) {
         validateUserData(request);
-
         UserProfile userProfile = retrieveAndValidateUser(userProfileRepository.findById(userId));
 
-        UserDataValidator.isInvalidSurname(userRequest.surname());
-        countryValidation(userRequest);
+        // Validate user data
+        userDataValidator.validateField("surname", userRequest.surname());
+        userDataValidator.validateField("country", userRequest.countryOfOrigin());
 
         userProfile.setSurname(userRequest.surname());
         userProfile.setCountryOfOrigin(userRequest.countryOfOrigin());
@@ -267,18 +273,6 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
     public String generateToken(UserProfile userProfile) {
         GenerateAccessToken.TokenDetails generatedToken = generateAccessToken.generate(userProfile);
         return generatedToken.token();
-    }
-
-    /**
-     * Validates the country of origin for the user.
-     *
-     * @param request the admin update user request
-     */
-    private void countryValidation(AdminUpdateUserRequest request) {
-        CountryValidator countryValidator = new CountryValidator(restTemplate);
-        if (countryValidator.countryExists(request.countryOfOrigin())) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Country does not exist.");
-        }
     }
 
     /**
@@ -372,6 +366,7 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
      * @return the user profile
      */
     private UserProfile retrieveAndValidateUser(Optional<UserProfile> userProfileRepository) {
+        log.debug("User profile: {}", userProfileRepository);
         UserProfile userProfile = userProfileRepository.orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
@@ -406,7 +401,6 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         if (userProfile.getRole().equals(UserRole.ROLE_ADMIN)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Admin cannot deleted himself.");
         }
-
         userProfileRepository.delete(userProfile);
     }
 

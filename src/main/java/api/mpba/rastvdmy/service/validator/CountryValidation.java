@@ -1,8 +1,10 @@
 package api.mpba.rastvdmy.service.validator;
 
+import api.mpba.rastvdmy.exception.ApplicationException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.spi.exception.RestClientException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -10,28 +12,41 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 
 /**
- * A utility class that validates if a country exists by checking against an external REST API.
+ * A strategy for validating a country by checking if a country exists by checking against an external REST API.
  */
 @Component
-public class CountryValidator {
+public class CountryValidation implements ValidationStrategy {
     private final RestTemplate restTemplate;
 
     /**
-     * Constructs a CountryValidator with the given RestTemplate.
+     * Constructor for CountryValidation.
      *
-     * @param restTemplate the RestTemplate used to make HTTP requests
+     * @param restTemplate The RestTemplate to use for making HTTP requests.
      */
-    public CountryValidator(RestTemplate restTemplate) {
+    public CountryValidation(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
     /**
-     * Checks if a country exists by making a request to the REST countries API.
+     * Validates the given country name.
      *
-     * @param countryName the name of the country to check
-     * @return {@code true} if the country does not exist; {@code false} if it exists
+     * @param countryName The name of the country to validate.
+     * @throws ApplicationException if the country does not exist.
      */
-    public boolean countryExists(String countryName) {
+    @Override
+    public void validate(String countryName) throws ApplicationException {
+        if (countryDoesNotExist(countryName)) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Country does not exist.");
+        }
+    }
+
+    /**
+     * Checks if the given country name does not exist by querying an external REST API.
+     *
+     * @param countryName The name of the country to check.
+     * @return true if the country does not exist, false otherwise.
+     */
+    private boolean countryDoesNotExist(String countryName) {
         final String url = "https://restcountries.com/v3.1/all?fields=name";
         try {
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);

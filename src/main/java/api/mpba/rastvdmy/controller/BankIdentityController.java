@@ -7,9 +7,6 @@ import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.service.BankIdentityService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,7 +31,6 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasRole('ROLE_DEFAULT')")
 @RequestMapping(path = "/api/v1/banks")
 public class BankIdentityController {
-    private final static Logger LOG = LoggerFactory.getLogger(BankIdentityController.class);
     private final BankIdentityService identityService;
     private final BankIdentityMapper identityMapper;
 
@@ -44,7 +40,6 @@ public class BankIdentityController {
      * @param identityService The {@link BankIdentityService} to be used.
      * @param identityMapper  The {@link BankIdentityMapper} to be used.
      */
-    @Autowired
     public BankIdentityController(BankIdentityService identityService, BankIdentityMapper identityMapper) {
         this.identityService = identityService;
         this.identityMapper = identityMapper;
@@ -56,18 +51,13 @@ public class BankIdentityController {
      * @param request The HTTP servlet request containing user information.
      * @return A {@link ResponseEntity} containing a list of {@link BankIdentityResponse}.
      */
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<BankIdentityResponse>> getBanks(HttpServletRequest request) {
         logInfo("Getting bank identities ...");
         List<BankIdentity> identities = identityService.getBanks(request);
         List<BankIdentityResponse> response = identities.stream()
-                .map(identity -> identityMapper.toResponse(
-                        new BankIdentityRequest(
-                                identity.getBankName(),
-                                identity.getBankNumber(),
-                                identity.getSwift())
-                )).collect(Collectors.toList());
+                .map(identity -> identityMapper.toResponse(convertToIdentityRequest(identity)))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
 
@@ -78,16 +68,12 @@ public class BankIdentityController {
      * @param name    The name of the bank to retrieve.
      * @return A {@link ResponseEntity} containing the requested {@link BankIdentityResponse}.
      */
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "/{name}", produces = "application/json")
     public ResponseEntity<BankIdentityResponse> getBankByName(HttpServletRequest request,
                                                               @PathVariable("name") String name) {
         logInfo("Getting bank info ...");
         BankIdentity identity = identityService.getBankByName(request, name);
-        BankIdentityResponse response = identityMapper.toResponse(new BankIdentityRequest(
-                identity.getBankName(),
-                identity.getBankNumber(),
-                identity.getSwift())
+        BankIdentityResponse response = identityMapper.toResponse(convertToIdentityRequest(identity)
         );
         return ResponseEntity.ok(response);
     }
@@ -100,19 +86,28 @@ public class BankIdentityController {
      * @return A {@link ResponseEntity} containing the created {@link BankIdentityResponse}.
      * @throws Exception If there is an error while adding the bank identity.
      */
-    @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<BankIdentityResponse> addBank(
             HttpServletRequest request,
             @Valid @RequestBody BankIdentityRequest identityRequest) throws Exception {
         logInfo("Connecting to the bank API to add bank ...");
         BankIdentity identity = identityService.addBank(request, identityRequest);
-        BankIdentityResponse response = identityMapper.toResponse(new BankIdentityRequest(
+        BankIdentityResponse response = identityMapper.toResponse(convertToIdentityRequest(identity)
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Converts a {@link BankIdentity} to a {@link BankIdentityRequest}.
+     *
+     * @param identity The bank identity to convert.
+     * @return A {@link BankIdentityRequest} containing the bank identity details.
+     */
+    private static BankIdentityRequest convertToIdentityRequest(BankIdentity identity) {
+        return new BankIdentityRequest(
                 identity.getBankName(),
                 identity.getBankNumber(),
-                identity.getSwift())
-        );
-        return ResponseEntity.accepted().body(response);
+                identity.getSwift());
     }
 
     /**
@@ -122,7 +117,6 @@ public class BankIdentityController {
      * @param bankName The name of the bank to delete.
      * @return A {@link ResponseEntity} with no content.
      */
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping(path = "/{name}")
     public ResponseEntity<Void> deleteBank(HttpServletRequest request, @PathVariable("name") String bankName) {
         logInfo("Removing bank identity ...");
@@ -137,6 +131,6 @@ public class BankIdentityController {
      * @param args    Optional arguments to format the message.
      */
     private void logInfo(String message, Object... args) {
-        LOG.info(message, args);
+        log.info(message, args);
     }
 }

@@ -3,9 +3,8 @@ package api.mpba.rastvdmy.config.utils;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -15,7 +14,11 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Arrays;
@@ -24,19 +27,17 @@ import java.util.Base64;
 /**
  * Utility class for encryption, decryption, and hashing operations.
  * This class handles AES encryption and decryption with CBC and PKCS5 padding,
- * Argon2 hashing, and secret key management, including key generation, saving,
- * and loading from file.
+ * Argon2 hashing, and secret key management, including key generation, saving, and loading from the file.
  * <p>
  * The class uses BouncyCastle as a security provider for cryptographic operations.
  * It ensures the presence of a secret key for encryption/decryption purposes,
  * either by loading an existing one or generating a new one if none is found.
  */
+@Slf4j
 public class EncryptionUtil {
-
     private static final String ALGORITHM = "AES"; // AES encryption algorithm
     private static final String TRANSFORMATION = "AES/CBC/PKCS5Padding"; // Cipher transformation
     private static final Argon2 argon2 = Argon2Factory.create(); // Argon2 hashing instance
-    private static final Logger log = LoggerFactory.getLogger(EncryptionUtil.class);
 
     @Getter
     private static SecretKey secretKey; // The AES secret key used for encryption/decryption
@@ -56,71 +57,63 @@ public class EncryptionUtil {
     }
 
     /**
-     * Generates a new AES secret key.
+     * Generates a new AES secret key with a key size of 256 bits.
      *
-     * @return A new {@link SecretKey} for AES encryption.
-     * @throws Exception if there is an error generating the key.
+     * @return a new {@link SecretKey} for AES encryption.
+     * @throws NoSuchAlgorithmException if the AES algorithm is not available.
      */
-    public static synchronized SecretKey generateKey() throws Exception {
+    public static synchronized SecretKey generateKey() throws NoSuchAlgorithmException {
         KeyGenerator keyGen = KeyGenerator.getInstance(ALGORITHM);
         keyGen.init(256); // Key size of 256 bits
         return keyGen.generateKey();
     }
 
     /**
-     * Encrypts the given string data using the provided AES secret key.
-     * The encryption uses the AES algorithm with CBC mode and PKCS5 padding.
+     * Encrypts the given plaintext using AES with CBC mode and PKCS5 padding.
+     * A unique IV is generated for each encryption and prepended to the encrypted data.
      *
-     * @param data The plaintext string to encrypt.
-     * @param key  The AES secret key to use for encryption.
-     * @return The Base64-encoded string of the IV and encrypted data.
-     * @throws Exception if any encryption error occurs.
+     * @param data the plaintext string to encrypt.
+     * @param key  the AES secret key to use for encryption.
+     * @return the Base64-encoded string of the IV and encrypted data.
+     * @throws GeneralSecurityException if encryption fails.
      */
-    public static synchronized String encrypt(String data, SecretKey key) throws Exception {
+    public static synchronized String encrypt(String data, SecretKey key) throws GeneralSecurityException {
         Cipher cipher = Cipher.getInstance(TRANSFORMATION);
 
-        // Generate a new IV for this encryption
+        // Generate a random IV for encryption
         IvParameterSpec iv = generateIv();
         cipher.init(Cipher.ENCRYPT_MODE, key, iv);
 
         // Encrypt the data
-        byte[] encryptedData = cipher.doFinal(data.getBytes());
+        byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
 
-        // Combine the IV and encrypted data
-        byte[] ivBytes = iv.getIV();
-        byte[] combinedData = new byte[ivBytes.length + encryptedData.length];
-
-        // Copy the IV and encrypted data into the combinedData array
-        System.arraycopy(ivBytes, 0, combinedData, 0, ivBytes.length);
-        System.arraycopy(encryptedData, 0, combinedData, ivBytes.length, encryptedData.length);
+        // Combine IV and encrypted data
+        byte[] combinedData = ByteBuffer.allocate(16 + encryptedData.length)
+                .put(iv.getIV())
+                .put(encryptedData)
+                .array();
 
         // Return the Base64-encoded combined data
         return Base64.getEncoder().encodeToString(combinedData);
     }
 
     /**
-     * Decrypts the given Base64-encoded encrypted data using the provided AES secret key.
-     * The decryption uses the AES algorithm with CBC mode and PKCS5 padding.
+     * Decrypts the given Base64-encoded string using AES with CBC mode and PKCS5 padding.
+     * The IV is extracted from the first 16 bytes of the encrypted data.
      *
-     * @param encryptedData The Base64-encoded string of IV and encrypted data.
-     * @param key           The AES secret key to use for decryption.
-     * @return The decrypted plaintext string.
-     * @throws Exception if any decryption error occurs.
+     * @param encryptedData the Base64-encoded string of the IV and encrypted data.
+     * @param key           the AES secret key to use for decryption.
+     * @return the decrypted plaintext string.
+     * @throws GeneralSecurityException if decryption fails.
      */
-    public static synchronized String decrypt(String encryptedData, SecretKey key) throws Exception {
-        // Decode the Base64-encoded string
+    public static synchronized String decrypt(String encryptedData, SecretKey key) throws GeneralSecurityException {
         byte[] combinedData = Base64.getDecoder().decode(encryptedData);
 
-        // Extract the IV (first 16 bytes for AES with 16-byte IV)
-        if (combinedData.length < 16) {
-            throw new IllegalArgumentException("Invalid encrypted data length");
-        }
-
-        // Extract IV and encrypted data
+        // Extract IV from the first 16 bytes
         byte[] ivBytes = Arrays.copyOfRange(combinedData, 0, 16);
         IvParameterSpec iv = new IvParameterSpec(ivBytes);
 
-        // Extract the encrypted data (remaining bytes)
+        // Extract encrypted data (remaining bytes)
         byte[] encryptedBytes = Arrays.copyOfRange(combinedData, 16, combinedData.length);
 
         // Initialize cipher for decryption
@@ -130,13 +123,13 @@ public class EncryptionUtil {
         // Decrypt the data
         byte[] decryptedData = cipher.doFinal(encryptedBytes);
 
-        return new String(decryptedData);
+        return new String(decryptedData, StandardCharsets.UTF_8);
     }
 
     /**
-     * Generates a random Initialization Vector (IV) for AES encryption.
+     * Generates a random Initialization Vector (IV) of 16 bytes for AES encryption.
      *
-     * @return An {@link IvParameterSpec} object containing the generated IV.
+     * @return an {@link IvParameterSpec} object containing the generated IV.
      */
     public static IvParameterSpec generateIv() {
         byte[] iv = new byte[16]; // AES block size is 16 bytes
@@ -145,50 +138,61 @@ public class EncryptionUtil {
     }
 
     /**
-     * Hashes the given string data using the Argon2 hashing algorithm.
+     * Hashes the given string using the Argon2 hashing algorithm.
      *
-     * @param data The string data to hash.
-     * @return The hashed string using Argon2.
+     * @param data the plaintext string to hash.
+     * @return the hashed string generated by Argon2.
      */
     public static String hash(String data) {
         char[] dataChars = data.toCharArray();
-        return argon2.hash(10, 65536, 1, dataChars); // Argon2 hash with specified parameters
+        try {
+            return argon2.hash(10, 65536, 1, dataChars); // Argon2 hash with specified parameters
+        } finally {
+            Arrays.fill(dataChars, '\0');
+        }
     }
 
     /**
-     * Saves the AES secret key to a file for persistent storage.
-     * A backup key file is also created.
+     * Saves the AES secret key to persistent storage.
+     * The key is saved in both a primary and backup file for redundancy.
      *
-     * @param key The {@link SecretKey} to save.
-     * @throws IOException if there is an error writing the key to file.
+     * @param key the AES secret key to save.
+     * @throws IOException if an error occurs while writing the key to the files.
      */
     public static synchronized void saveKey(SecretKey key) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream("secret.key")) {
+        saveKeyToFile(key, "secret.key");
+        saveKeyToFile(key, "backup_secret.key");
+    }
+
+    /**
+     * Saves the provided AES secret key to a specified file.
+     *
+     * @param key      the AES secret key to save.
+     * @param fileName the name of the file to save the key to.
+     * @throws IOException if an error occurs while writing the key to the file.
+     */
+    private static void saveKeyToFile(SecretKey key, String fileName) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(fileName)) {
             fos.write(key.getEncoded());
-        }
-        try (FileOutputStream backupFos = new FileOutputStream("backup_secret.key")) {
-            backupFos.write(key.getEncoded());
         }
     }
 
     /**
-     * Loads the AES secret key from a file. If the primary key file does not exist,
-     * it attempts to load the key from a backup file.
+     * Loads the AES secret key from persistent storage.
+     * It first attempts to load the key from a primary file, and if not found, attempts to load it from a backup file.
      *
-     * @return The {@link SecretKey} if successfully loaded, or null if no key is found.
-     * @throws IOException if there is an error reading the key from file.
+     * @return the loaded {@link SecretKey}, or {@code null} if no key is found.
+     * @throws IOException if an error occurs while reading the key from a file.
      */
     public static synchronized SecretKey loadKey() throws IOException {
         File keyFile = new File("secret.key");
         if (!keyFile.exists()) {
-            File backupFile = new File("backup_secret.key");
-            if (backupFile.exists()) {
-                byte[] keyBytes = Files.readAllBytes(backupFile.toPath());
-                log.debug("Backup key loaded successfully.");
-                return new SecretKeySpec(keyBytes, ALGORITHM);
-            } else {
+            keyFile = new File("backup_secret.key");
+            if (!keyFile.exists()) {
+                log.warn("No encryption key found.");
                 return null;
             }
+            log.debug("Backup key loaded successfully.");
         }
         byte[] keyBytes = Files.readAllBytes(keyFile.toPath());
         log.debug("Primary key loaded successfully.");

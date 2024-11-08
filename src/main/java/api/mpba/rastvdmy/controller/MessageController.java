@@ -7,10 +7,6 @@ import api.mpba.rastvdmy.entity.Message;
 import api.mpba.rastvdmy.service.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,7 +31,6 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_DEFAULT')")
 @RequestMapping(path = "/api/v1/messages")
 public class MessageController {
-    private final static Logger LOG = LoggerFactory.getLogger(MessageController.class);
     private final MessageService messageService;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final MessageMapper messageMapper;
@@ -47,7 +42,6 @@ public class MessageController {
      * @param kafkaTemplate  The template to send messages to Kafka.
      * @param messageMapper  The mapper for converting between request and response objects.
      */
-    @Autowired
     public MessageController(MessageService messageService,
                              KafkaTemplate<String, String> kafkaTemplate,
                              MessageMapper messageMapper) {
@@ -61,20 +55,13 @@ public class MessageController {
      *
      * @return A {@link ResponseEntity} containing a list of {@link MessageResponse}.
      */
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<MessageResponse>> getMessages() {
         logInfo("Getting messages ...");
         List<Message> messages = messageService.getMessages();
         List<MessageResponse> messagesResponses = messages.stream()
-                .map(message -> messageMapper.toResponse(
-                        new MessageRequest(
-                                message.getReceiver().getEmail(),
-                                message.getContent(),
-                                message.getSender().getEmail(),
-                                message.getTimestamp()
-                        )
-                )).collect(Collectors.toList());
+                .map(message -> messageMapper.toResponse(convertToMessageRequest(message)))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(messagesResponses);
     }
 
@@ -86,7 +73,6 @@ public class MessageController {
      * @return A {@link ResponseEntity} containing the sent {@link MessageResponse}.
      * @throws Exception if there is an error sending the message.
      */
-    @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<MessageResponse> sendMessage(
             HttpServletRequest request, @Valid @RequestBody MessageRequest messageRequest) throws Exception {
@@ -97,14 +83,23 @@ public class MessageController {
 
         kafkaTemplate.send("messages", messageRequest.receiverEmail(), messageRequest.content());
 
-        MessageResponse response = messageMapper.toResponse(
-                new MessageRequest(
-                        message.getReceiver().getEmail(),
-                        message.getContent(),
-                        message.getSender().getEmail(),
-                        message.getTimestamp()
-                ));
+        MessageResponse response = messageMapper.toResponse(convertToMessageRequest(message));
         return ResponseEntity.accepted().body(response);
+    }
+
+    /**
+     * Converts a {@link Message} object to a {@link MessageRequest} object.
+     *
+     * @param message The {@link Message} object to convert.
+     * @return A {@link MessageRequest} object.
+     */
+    private static MessageRequest convertToMessageRequest(Message message) {
+        return new MessageRequest(
+                message.getReceiver().getEmail(),
+                message.getContent(),
+                message.getSender().getEmail(),
+                message.getTimestamp()
+        );
     }
 
     /**
@@ -114,6 +109,6 @@ public class MessageController {
      * @param args    Optional arguments to format the message.
      */
     private void logInfo(String message, Object... args) {
-        LOG.info(message, args);
+        log.info(message, args);
     }
 }

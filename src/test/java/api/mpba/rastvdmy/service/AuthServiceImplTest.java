@@ -13,8 +13,8 @@ import api.mpba.rastvdmy.entity.enums.UserStatus;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.impl.AuthServiceImpl;
-import api.mpba.rastvdmy.service.validator.CountryValidator;
 import api.mpba.rastvdmy.service.generator.GenerateAccessToken;
+import api.mpba.rastvdmy.service.validator.UserDataValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
@@ -46,7 +45,7 @@ public class AuthServiceImplTest {
     private RestTemplate restTemplate;
 
     @Mock
-    private CountryValidator countryValidator;
+    private UserDataValidator userDataValidator;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -83,9 +82,6 @@ public class AuthServiceImplTest {
                 .status(UserStatus.STATUS_DEFAULT)
                 .role(UserRole.ROLE_DEFAULT)
                 .build();
-
-        // Inject the mocked RestTemplate into CountryValidator
-        ReflectionTestUtils.setField(countryValidator, "restTemplate", restTemplate);
     }
 
 

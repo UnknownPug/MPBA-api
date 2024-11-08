@@ -109,7 +109,7 @@ public class BankIdentityControllerIT {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(bankIdentityRequest))
                 )
-                .andExpect(status().isAccepted())
+                .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.bank_name").value(bankIdentity.getBankName()))
                 .andExpect(jsonPath("$.bank_number").value(bankIdentity.getBankNumber()))

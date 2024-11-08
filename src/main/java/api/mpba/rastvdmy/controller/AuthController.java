@@ -5,10 +5,7 @@ import api.mpba.rastvdmy.dto.request.UserProfileRequest;
 import api.mpba.rastvdmy.dto.response.JwtAuthResponse;
 import api.mpba.rastvdmy.service.AuthService;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +16,10 @@ import org.springframework.web.bind.annotation.*;
  * leveraging the {@link AuthService} to manage the underlying authentication logic.
  * </p>
  */
+@Slf4j
 @RestController
 @RequestMapping(path = "/api/v1/auth")
 public class AuthController {
-    private static final Logger LOG = LoggerFactory.getLogger(AuthController.class);
-
     private final AuthService authService;
 
     /**
@@ -31,7 +27,6 @@ public class AuthController {
      *
      * @param authService The {@link AuthService} to be used.
      */
-    @Autowired
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
@@ -43,7 +38,6 @@ public class AuthController {
      * @return A {@link ResponseEntity} containing the JWT authentication response.
      * @throws Exception If there is an error during signup.
      */
-    @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(path = "/signup", consumes = "application/json", produces = "application/json")
     public ResponseEntity<JwtAuthResponse> signUp(@Valid @RequestBody UserProfileRequest request) throws Exception {
         logInfo("Signing up user ...");
@@ -56,7 +50,6 @@ public class AuthController {
      * @param userLoginRequest The {@link UserLoginRequest} containing user credentials.
      * @return A {@link ResponseEntity} containing the JWT authentication response.
      */
-    @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(path = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<JwtAuthResponse> authenticate(@Valid @RequestBody UserLoginRequest userLoginRequest) {
         logInfo("Authenticating user ...");
@@ -70,6 +63,6 @@ public class AuthController {
      * @param args    Optional arguments to format the message.
      */
     private void logInfo(String message, Object... args) {
-        LOG.info(message, args);
+        log.info(message, args);
     }
 }

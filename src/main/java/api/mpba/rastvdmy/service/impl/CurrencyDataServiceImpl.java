@@ -4,9 +4,8 @@ import api.mpba.rastvdmy.entity.enums.Currency;
 import api.mpba.rastvdmy.entity.CurrencyData;
 import api.mpba.rastvdmy.exception.ApplicationException;
 import api.mpba.rastvdmy.repository.CurrencyDataRepository;
-import api.mpba.rastvdmy.repository.UserProfileRepository;
 import api.mpba.rastvdmy.service.CurrencyDataService;
-import api.mpba.rastvdmy.service.JwtService;
+import api.mpba.rastvdmy.service.UserValidationService;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +33,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
     private final CurrencyDataRepository currencyDataRepository;
     private final RestTemplate restTemplate;
     private final JdbcTemplate jdbcTemplate;
-    private final JwtService jwtService;
-    private final UserProfileRepository userProfileRepository;
+    private final UserValidationService userValidationService;
 
     @Value("${api.key}")
     private String apiKey; // API key for the external currency API
@@ -47,20 +45,17 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
      * @param currencyDataRepository the repository for currency data
      * @param restTemplate           the RestTemplate for making HTTP requests
      * @param jdbcTemplate           the JdbcTemplate for executing SQL queries
-     * @param jwtService             the JwtService for handling JWT tokens
-     * @param userProfileRepository  the repository for user profiles
+     * @param userValidationService  the service for extracting user token and getting user data from the request
      */
     @Autowired
     public CurrencyDataServiceImpl(CurrencyDataRepository currencyDataRepository,
                                    RestTemplate restTemplate,
                                    JdbcTemplate jdbcTemplate,
-                                   JwtService jwtService,
-                                   UserProfileRepository userProfileRepository) {
+                                   UserValidationService userValidationService) {
         this.currencyDataRepository = currencyDataRepository;
         this.restTemplate = restTemplate;
         this.jdbcTemplate = jdbcTemplate;
-        this.jwtService = jwtService;
-        this.userProfileRepository = userProfileRepository;
+        this.userValidationService = userValidationService;
     }
 
     /**
@@ -70,7 +65,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
      * @return a list of all available currencies
      */
     public List<CurrencyData> findAllCurrencies(HttpServletRequest request) {
-        isUserValid(request);
+        userValidationService.getUserData(request);
         return currencyDataRepository.findAll();
     }
 
@@ -84,15 +79,15 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
      * @throws ApplicationException if the specified currency type is invalid or not found
      */
     public CurrencyData findByCurrency(HttpServletRequest request, String currencyType) {
-        isUserValid(request);
+        userValidationService.getUserData(request);
         if (currencyType.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Specify currency type.");
         }
-        List<CurrencyData> currencyDataList = currencyDataRepository.findAllByCurrency(currencyType);
+        List<CurrencyData> currencyDataList = currencyDataRepository.findAllByCurrency(currencyType.trim());
         if (!currencyDataList.isEmpty()) {
             return currencyDataList.getFirst();
         } else {
-            CurrencyData currencyData = getCurrencyFromApi(currencyType);
+            CurrencyData currencyData = getCurrencyFromApi(currencyType.trim());
             if (currencyData != null) {
                 currencyData = currencyDataRepository.save(currencyData);
                 return currencyData;
@@ -100,16 +95,6 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
                 throw new ApplicationException(HttpStatus.NOT_FOUND, "Currency " + currencyType + " is not found.");
             }
         }
-    }
-
-    /**
-     * Validates the user based on the HTTP request.
-     *
-     * @param request the HTTP request containing user data
-     * @throws ApplicationException if the user is not valid
-     */
-    private void isUserValid(HttpServletRequest request) {
-        BankAccountServiceImpl.getUserData(request, jwtService, userProfileRepository);
     }
 
     /**
