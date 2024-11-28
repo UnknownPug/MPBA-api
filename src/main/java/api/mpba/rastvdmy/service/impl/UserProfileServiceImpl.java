@@ -259,9 +259,9 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         userDataValidator.validateField("surname", userRequest.surname().trim());
         userDataValidator.validateField("country", userRequest.countryOfOrigin().trim());
 
-        userProfile.setName(userRequest.name());
-        userProfile.setSurname(userRequest.surname());
-        userProfile.setCountryOfOrigin(userRequest.countryOfOrigin());
+        userProfile.setName(userRequest.name().trim());
+        userProfile.setSurname(userRequest.surname().trim());
+        userProfile.setCountryOfOrigin(userRequest.countryOfOrigin().trim());
 
         return userProfileRepository.save(userProfile);
     }
