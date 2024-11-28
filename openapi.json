@@ -389,13 +389,14 @@
           "User Profile"
         ],
         "summary": "Admin user update",
-        "description": "Updating user specific credentials (surname, country of origin).",
+        "description": "Updating user specific credentials (name, surname, country of origin).",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "example": {
+                  "name": "string",
                   "surname": "string",
                   "country_of_origin": "string"
                 }

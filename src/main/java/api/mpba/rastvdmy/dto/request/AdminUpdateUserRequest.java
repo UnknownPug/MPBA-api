@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param countryOfOrigin The country of origin of the user.
  */
 public record AdminUpdateUserRequest(
+        String name,
+
         String surname,
 
         @JsonProperty("country_of_origin")
