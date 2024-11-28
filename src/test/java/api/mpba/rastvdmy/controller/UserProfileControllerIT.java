@@ -365,6 +365,7 @@ public class UserProfileControllerIT {
         setUpAdminUser();
         UUID userId = UUID.randomUUID();
         AdminUpdateUserRequest updateRequest = new AdminUpdateUserRequest(
+                "Maria",
                 "Valencia",
                 "United Kingdom"
 

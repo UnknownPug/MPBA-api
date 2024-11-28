@@ -122,7 +122,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
     public JwtAuthResponse authenticate(UserLoginRequest request) {
 
         // Retrieve user profile by email
-        UserProfile userProfile = userProfileRepository.findByEmail(request.email()).orElseThrow(
+        UserProfile userProfile = userProfileRepository.findByEmail(request.email().trim()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found.")
         );
 
@@ -134,7 +134,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         try {
             // Authenticate the user with provided credentials
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.email(), request.password())
+                    new UsernamePasswordAuthenticationToken(request.email().trim(), request.password().trim())
             );
         } catch (Exception e) {
             throw new ApplicationException(HttpStatus.UNAUTHORIZED, "Invalid email or password. Please try again.");
@@ -156,13 +156,13 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
      * @throws ApplicationException if any validation fails.
      */
     private void validateBasicUserInfo(UserProfileRequest request) {
-        userDataValidator.validateField("name", request.name());
-        userDataValidator.validateField("surname", request.surname());
-        userDataValidator.validateField("email", request.email());
-        userDataValidator.validateField("password", request.password());
-        userDataValidator.validateField("phoneNumber", request.phoneNumber());
-        userDataValidator.validateField("dateOfBirth", request.dateOfBirth());
-        userDataValidator.validateField("country", request.countryOfOrigin());
+        userDataValidator.validateField("name", request.name().trim());
+        userDataValidator.validateField("surname", request.surname().trim());
+        userDataValidator.validateField("email", request.email().trim());
+        userDataValidator.validateField("password", request.password().trim());
+        userDataValidator.validateField("phoneNumber", request.phoneNumber().trim());
+        userDataValidator.validateField("dateOfBirth", request.dateOfBirth().trim());
+        userDataValidator.validateField("country", request.countryOfOrigin().trim());
         checkIfUserExistsByEmail(request);
         checkIfUserExistsByPhoneNumber(request);
     }
@@ -173,7 +173,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
      * @param request Contains the user profile details.
      */
     private void checkIfUserExistsByEmail(UserProfileRequest request) {
-        if (userProfileRepository.findByEmail(request.email()).isPresent()) {
+        if (userProfileRepository.findByEmail(request.email().trim()).isPresent()) {
             throw new ApplicationException(
                     HttpStatus.BAD_REQUEST, "User with this email already exists."
             );
@@ -207,7 +207,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
         SecretKey secretKey = EncryptionUtil.getSecretKey();
         try {
             String decryptedPhoneNumber = EncryptionUtil.decrypt(userProfile.getPhoneNumber(), secretKey);
-            return decryptedPhoneNumber.equals(request.phoneNumber());
+            return decryptedPhoneNumber.equals(request.phoneNumber().trim());
         } catch (Exception e) {
             return false;
         }

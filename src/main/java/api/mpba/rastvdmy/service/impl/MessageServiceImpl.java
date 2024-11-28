@@ -91,13 +91,16 @@ public class MessageServiceImpl implements MessageService {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
-        if (content.isEmpty() || content.isBlank()) {
+        if (content.trim().isBlank()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Message must contain a text.");
         }
         SecretKey secretKey = EncryptionUtil.getSecretKey();
 
-        String sanitizedContent = StringEscapeUtils.escapeHtml4(content.trim()); // Sanitize input content to prevent XSS
-        String encryptedContent = EncryptionUtil.encrypt(sanitizedContent, secretKey); // Encrypt the sanitized content
+        // Sanitize input content to prevent XSS
+        String sanitizedContent = StringEscapeUtils.escapeHtml4(content.trim());
+
+        // Encrypt the sanitized content
+        String encryptedContent = EncryptionUtil.encrypt(sanitizedContent, secretKey);
 
         UserProfile receiver = userProfileRepository.findByEmail(receiverEmail.trim()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Specified receiver not found.")

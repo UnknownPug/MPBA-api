@@ -24,8 +24,6 @@ import java.util.Random;
 import java.util.UUID;
 
 import static api.mpba.rastvdmy.entity.enums.Currency.getRandomCurrency;
-import static api.mpba.rastvdmy.entity.enums.FinancialStatus.*;
-import static api.mpba.rastvdmy.entity.enums.PaymentType.*;
 
 /**
  * Implementation of the PaymentService interface for managing payment operations,
@@ -255,12 +253,15 @@ public class PaymentServiceImpl implements PaymentService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Cannot send money to the same account.");
         }
         SecretKey secretKey = EncryptionUtil.getSecretKey();
+
         String encryptedSenderName = EncryptionUtil.encrypt(
                 senderAccount.getBankIdentity().getUserProfile().getName() + " "
                         + senderAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
+
         String encryptedRecipientName = EncryptionUtil.encrypt(
                 recipientAccount.getBankIdentity().getUserProfile().getName() + " "
                         + recipientAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
+
         String sanitizedDescription = StringEscapeUtils.escapeHtml4(description.trim());
         String encryptedDescription = EncryptionUtil.encrypt(sanitizedDescription, secretKey);
 
@@ -270,7 +271,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .recipientName(encryptedRecipientName)
                 .dateTime(LocalDate.now())
                 .description(encryptedDescription)
-                .type(BANK_TRANSFER)
+                .type(PaymentType.BANK_TRANSFER)
                 .senderAccount(senderAccount)
                 .recipientAccount(recipientAccount)
                 .build();
@@ -297,7 +298,7 @@ public class PaymentServiceImpl implements PaymentService {
     private void processBankPayment(BankAccount recipientAccount, Payment payment) {
         recipientAccount.setBalance(recipientAccount.getBalance().add(payment.getAmount()));
         accountRepository.save(recipientAccount);
-        payment.setStatus(RECEIVED);
+        payment.setStatus(FinancialStatus.RECEIVED);
     }
 
     /**
@@ -317,7 +318,7 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = initializeCardPayment(account, card);
 
         if (isAmountSufficient(account, payment.getAmount(), payment.getCurrency(), payment)) {
-            payment.setStatus(RECEIVED);
+            payment.setStatus(FinancialStatus.RECEIVED);
             paymentRepository.save(payment);
         }
         return paymentRepository.save(payment);
@@ -348,6 +349,7 @@ public class PaymentServiceImpl implements PaymentService {
     private void validateCardStatus(Card card) {
         if (card.getStatus().equals(CardStatus.STATUS_CARD_BLOCKED)
                 || card.getExpirationDate().isBefore(LocalDate.now())) {
+
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "Operation is unavailable, card is unavailable to use.");
         }
@@ -366,6 +368,7 @@ public class PaymentServiceImpl implements PaymentService {
         String encryptedSenderName = EncryptionUtil.encrypt(
                 senderAccount.getBankIdentity().getUserProfile().getName() + " "
                         + senderAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
+
         String encryptedRecipientName = EncryptionUtil.encrypt(PurchaseCategory.getRandomCategory(), secretKey);
 
         return Payment.builder()
@@ -374,7 +377,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .recipientName(encryptedRecipientName)
                 .dateTime(LocalDate.now())
                 .amount(generateRandomAmount())
-                .type(CARD_PAYMENT)
+                .type(PaymentType.CARD_PAYMENT)
                 .currency(getRandomCurrency())
                 .senderCard(card)
                 .build();
@@ -405,7 +408,7 @@ public class PaymentServiceImpl implements PaymentService {
                                        Currency currency, Payment payment) {
 
         if (senderAccount.getBalance().compareTo(amount) < 0) {
-            payment.setStatus(DENIED);
+            payment.setStatus(FinancialStatus.DENIED);
             payment.setAmount(amount.setScale(2, RoundingMode.HALF_UP));
             payment.setCurrency(currency);
             return false;
@@ -435,7 +438,9 @@ public class PaymentServiceImpl implements PaymentService {
                                  Currency receiverCurrency, Payment payment) {
         BigDecimal exchangeRate = currencyDataService.convertCurrency(
                 senderCurrency.toString(), receiverCurrency.toString()).getRate();
+
         BigDecimal convertedAmount = amount.multiply(exchangeRate);
+
         payment.setAmount(convertedAmount.setScale(2, RoundingMode.HALF_UP));
         payment.setCurrency(receiverCurrency);
     }

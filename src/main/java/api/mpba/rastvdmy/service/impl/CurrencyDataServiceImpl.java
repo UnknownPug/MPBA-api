@@ -92,7 +92,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
                 currencyData = currencyDataRepository.save(currencyData);
                 return currencyData;
             } else {
-                throw new ApplicationException(HttpStatus.NOT_FOUND, "Currency " + currencyType + " is not found.");
+                throw new ApplicationException(HttpStatus.NOT_FOUND, "Currency " + currencyType.trim() + " is not found.");
             }
         }
     }

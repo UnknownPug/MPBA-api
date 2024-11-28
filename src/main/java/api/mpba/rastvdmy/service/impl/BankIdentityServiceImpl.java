@@ -108,7 +108,7 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
-        if (identityRequest.bankName().isEmpty() || identityRequest.bankName().isBlank()) {
+        if (identityRequest.bankName().trim().isEmpty() || identityRequest.bankName().trim().isBlank()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Bank name must not be empty.");
         }
 
@@ -169,8 +169,9 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
-        if (identityRepository.findByUserProfileIdAndBankName(userProfile.getId(), identityRequest.bankName().trim()
-        ).isPresent()) {
+        if (identityRepository
+                .findByUserProfileIdAndBankName(userProfile.getId(), identityRequest.bankName().trim())
+                .isPresent()) {
             throw new ApplicationException(HttpStatus.CONFLICT, "Bank with the same name already added.");
         }
 

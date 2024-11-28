@@ -196,8 +196,8 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
      */
     private void checkIfUserExistsByEmail(HttpServletRequest request, UserUpdateRequest userRequest) {
         UserProfile currentUser = validateUserData(request);
-        if (!currentUser.getEmail().equals(userRequest.email()) &&
-                userProfileRepository.findByEmail(userRequest.email()).isPresent()) {
+        if (!currentUser.getEmail().equals(userRequest.email().trim()) &&
+                userProfileRepository.findByEmail(userRequest.email().trim()).isPresent()) {
             throw new ApplicationException(
                     HttpStatus.BAD_REQUEST, "User with this email already exists."
             );
@@ -218,7 +218,7 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
                 .anyMatch(u -> !u.getId().equals(currentUser.getId()) && checkIsNumberUsed(u, userRequest));
         if (isPhoneUsed) {
             throw new ApplicationException(
-                    HttpStatus.BAD_REQUEST, "User with phone number " + userRequest.phoneNumber() + " already exists."
+                    HttpStatus.BAD_REQUEST, "User with this phone number already exists."
             );
         }
     }
@@ -234,7 +234,7 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         try {
             SecretKey secretKey = EncryptionUtil.getSecretKey();
             String decryptedPhoneNumber = EncryptionUtil.decrypt(userProfile.getPhoneNumber(), secretKey);
-            return decryptedPhoneNumber.equals(request.phoneNumber());
+            return decryptedPhoneNumber.equals(request.phoneNumber().trim());
         } catch (Exception e) {
             return false;
         }
@@ -368,7 +368,6 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
      * @return the user profile
      */
     private UserProfile retrieveAndValidateUser(Optional<UserProfile> userProfileRepository) {
-        log.debug("User profile: {}", userProfileRepository);
         UserProfile userProfile = userProfileRepository.orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
         );
@@ -399,7 +398,6 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         if (!userProfile.getBankIdentities().isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Make sure to delete all bank accounts first.");
         }
-
         if (userProfile.getRole().equals(UserRole.ROLE_ADMIN)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Admin cannot deleted himself.");
         }

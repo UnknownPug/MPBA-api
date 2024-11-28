@@ -244,12 +244,27 @@ class UserProfileServiceImplTest {
     }
 
     @Test
+    void testUpdateUserSpecificCredentials_InvalidName() {
+        // Arrange
+        when(request.getUserPrincipal()).thenReturn(() -> userProfile.getEmail());
+
+        // Invalid surname
+        AdminUpdateUserRequest userRequest = new AdminUpdateUserRequest("", "Surname", "Czechia");
+
+        // Act & Assert
+        assertThrows(
+                ApplicationException.class,
+                () -> userService.updateUserSpecificCredentials(request, userProfile.getId(), userRequest)
+        );
+    }
+
+    @Test
     void testUpdateUserSpecificCredentials_InvalidSurname() {
         // Arrange
         when(request.getUserPrincipal()).thenReturn(() -> userProfile.getEmail());
 
         // Invalid surname
-        AdminUpdateUserRequest userRequest = new AdminUpdateUserRequest("", "Czechia");
+        AdminUpdateUserRequest userRequest = new AdminUpdateUserRequest("John", "", "Czechia");
 
         // Act & Assert
         assertThrows(
@@ -265,6 +280,7 @@ class UserProfileServiceImplTest {
 
         // Initialize userRequest
         AdminUpdateUserRequest userRequest = new AdminUpdateUserRequest(
+                "Name",
                 "Surname",
                 "InvalidCountry"
         );

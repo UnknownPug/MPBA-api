@@ -105,7 +105,7 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
         );
 
-        boolean unmask = type.equals("visible");
+        boolean unmask = type.trim().equals("visible");
         return cards.stream()
                 .filter(card -> card.getId().equals(cardId))
                 .filter(card -> decryptCardData(card, unmask))
@@ -240,10 +240,10 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
      */
     public void removeAccountCard(String bankName, UUID accountId, UUID cardId, HttpServletRequest request) {
         BankAccount account = getBankAccount(bankName, accountId, request);
-
         List<Card> cards = cardRepository.findAllByAccountId(account.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No cards found for specified account.")
         );
+
         Card card = cards.stream()
                 .filter(cc -> cc.getId().equals(cardId))
                 .findFirst().orElseThrow(

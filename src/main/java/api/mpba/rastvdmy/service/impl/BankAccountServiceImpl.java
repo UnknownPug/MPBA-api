@@ -85,6 +85,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
      */
     public List<BankAccount> getUserAccounts(HttpServletRequest request, String bankName) {
         BankIdentity bankIdentity = getBankIdentity(request, bankName);
+
         List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId()).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "No accounts found.")
         );
@@ -111,7 +112,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Requested account not found.")
         );
 
-        boolean unmask = type.equals("visible");
+        boolean unmask = type.trim().equals("visible");
         return accounts.stream()
                 .filter(acc -> acc.getId().equals(accountId))
                 .filter(acc -> decryptAccountData(acc, unmask))
