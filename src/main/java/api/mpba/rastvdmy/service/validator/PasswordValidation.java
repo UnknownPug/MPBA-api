@@ -20,7 +20,6 @@ public class PasswordValidation implements ValidationStrategy {
      */
     @Override
     public void validate(String password) throws ApplicationException {
-        password = password.trim();
         validateNotEmpty(password, "Password cannot be null or empty.");
         if (!password.matches(PASSWORD_REGEX)) {
             throwApplicationException("Invalid password. Password must contain at least " +

@@ -26,7 +26,7 @@ public class DateOfBirthValidation implements ValidationStrategy {
      */
     @Override
     public void validate(String dateOfBirth) throws ApplicationException {
-        validateNotEmpty(dateOfBirth.trim(), "Date of birth cannot be null or empty.");
+        validateNotEmpty(dateOfBirth, "Date of birth cannot be null or empty.");
         if (!dateOfBirth.matches(DATE_OF_BIRTH_REGEX)) {
             throwApplicationException("Invalid format of date of birth. " +
                     "Provide the date of birth in the format ‘YYYY-MM-DD’");

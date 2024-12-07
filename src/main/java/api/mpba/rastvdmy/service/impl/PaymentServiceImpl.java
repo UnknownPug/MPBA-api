@@ -9,7 +9,6 @@ import api.mpba.rastvdmy.service.CurrencyDataService;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,10 +19,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
-
-import static api.mpba.rastvdmy.entity.enums.Currency.getRandomCurrency;
 
 /**
  * Implementation of the PaymentService interface for managing payment operations,
@@ -33,8 +29,6 @@ import static api.mpba.rastvdmy.entity.enums.Currency.getRandomCurrency;
  */
 @Service
 public class PaymentServiceImpl implements PaymentService {
-
-    private static final int MAX_PAYMENT = 6000; // Maximum amount for a card payment
 
     private final PaymentRepository paymentRepository;
     private final BankAccountRepository accountRepository;
@@ -184,14 +178,14 @@ public class PaymentServiceImpl implements PaymentService {
      */
     public Payment createBankTransfer(HttpServletRequest request, UUID accountId,
                                       String recipientNumber, BigDecimal amount, String description) throws Exception {
-
         BankAccount senderAccount = accountRepository.findById(accountId).orElseThrow(
                 () -> new ApplicationException(HttpStatus.NOT_FOUND, "Account not found.")
         );
 
         BankAccount recipientAccount = findBankAccountByNumber(recipientNumber);
 
-        Payment payment = initializeBankPayment(senderAccount, description, recipientAccount);
+        PaymentFactory paymentFactory = new BankTransferPaymentFactory();
+        Payment payment = paymentFactory.createPayment(senderAccount, description, recipientAccount, null);
 
         validateAmount(amount);
 
@@ -239,45 +233,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     /**
-     * Initializes a bank transfer payment with encrypted data.
-     *
-     * @param senderAccount    the bank account of the sender
-     * @param description      a description for the payment
-     * @param recipientAccount the bank account of the recipient
-     * @return the initialized Payment object
-     * @throws Exception if an error occurs during encryption
-     */
-    private Payment initializeBankPayment(BankAccount senderAccount, String description,
-                                          BankAccount recipientAccount) throws Exception {
-        if (senderAccount.getId().equals(recipientAccount.getId())) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Cannot send money to the same account.");
-        }
-        SecretKey secretKey = EncryptionUtil.getSecretKey();
-
-        String encryptedSenderName = EncryptionUtil.encrypt(
-                senderAccount.getBankIdentity().getUserProfile().getName() + " "
-                        + senderAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
-
-        String encryptedRecipientName = EncryptionUtil.encrypt(
-                recipientAccount.getBankIdentity().getUserProfile().getName() + " "
-                        + recipientAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
-
-        String sanitizedDescription = StringEscapeUtils.escapeHtml4(description.trim());
-        String encryptedDescription = EncryptionUtil.encrypt(sanitizedDescription, secretKey);
-
-        return Payment.builder()
-                .id(UUID.randomUUID())
-                .senderName(encryptedSenderName)
-                .recipientName(encryptedRecipientName)
-                .dateTime(LocalDate.now())
-                .description(encryptedDescription)
-                .type(PaymentType.BANK_TRANSFER)
-                .senderAccount(senderAccount)
-                .recipientAccount(recipientAccount)
-                .build();
-    }
-
-    /**
      * Validates the amount to be transferred.
      *
      * @param amount the amount to be transferred
@@ -315,7 +270,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         Card card = findCardByIdAndAccountId(account.getId(), cardId);
 
-        Payment payment = initializeCardPayment(account, card);
+        PaymentFactory paymentFactory = new CardPaymentFactory();
+        Payment payment = paymentFactory.createPayment(account, null, null, card);
 
         if (isAmountSufficient(account, payment.getAmount(), payment.getCurrency(), payment)) {
             payment.setStatus(FinancialStatus.RECEIVED);
@@ -353,44 +309,6 @@ public class PaymentServiceImpl implements PaymentService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     "Operation is unavailable, card is unavailable to use.");
         }
-    }
-
-    /**
-     * Initializes a card payment with encrypted data.
-     *
-     * @param senderAccount the bank account of the sender
-     * @param card          the card used for the payment
-     * @return the initialized Payment object
-     * @throws Exception if an error occurs during encryption
-     */
-    private Payment initializeCardPayment(BankAccount senderAccount, Card card) throws Exception {
-        SecretKey secretKey = EncryptionUtil.getSecretKey();
-        String encryptedSenderName = EncryptionUtil.encrypt(
-                senderAccount.getBankIdentity().getUserProfile().getName() + " "
-                        + senderAccount.getBankIdentity().getUserProfile().getSurname(), secretKey);
-
-        String encryptedRecipientName = EncryptionUtil.encrypt(PurchaseCategory.getRandomCategory(), secretKey);
-
-        return Payment.builder()
-                .id(UUID.randomUUID())
-                .senderName(encryptedSenderName)
-                .recipientName(encryptedRecipientName)
-                .dateTime(LocalDate.now())
-                .amount(generateRandomAmount())
-                .type(PaymentType.CARD_PAYMENT)
-                .currency(getRandomCurrency())
-                .senderCard(card)
-                .build();
-    }
-
-    /**
-     * Generates a random amount for a card payment.
-     *
-     * @return a random amount
-     */
-    private BigDecimal generateRandomAmount() {
-        Random randomAmount = new Random();
-        return BigDecimal.valueOf(randomAmount.nextDouble(MAX_PAYMENT) + 1);
     }
 
     /**
