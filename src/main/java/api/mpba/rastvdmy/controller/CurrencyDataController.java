@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasAnyRole('ROLE_DEFAULT', 'ROLE_ADMIN')")
 @RequestMapping("/api/v1/currency-data")
 public class CurrencyDataController {
-
     private final CurrencyDataService currencyDataService;
     private final CurrencyDataMapper currencyDataMapper;
 
@@ -70,7 +69,7 @@ public class CurrencyDataController {
     public ResponseEntity<CurrencyDataResponse> findByCurrency(
             HttpServletRequest request,
             @PathVariable(value = "currency") String currencyType) {
-        logInfo("Getting currency {} ...", currencyType);
+        logInfo("Getting currency ...");
         currencyDataService.findAllExchangeRates();
         CurrencyData currencyData = currencyDataService.findByCurrency(request, currencyType);
         CurrencyDataResponse currencyDataResponse = currencyDataMapper.toResponse(
@@ -95,9 +94,8 @@ public class CurrencyDataController {
      * Logs informational messages to the console.
      *
      * @param message The message to log.
-     * @param args    Optional arguments to format the message.
      */
-    private void logInfo(String message, Object... args) {
-        log.info(message, args);
+    private void logInfo(String message) {
+        log.info(message);
     }
 }

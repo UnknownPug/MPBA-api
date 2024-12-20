@@ -7,6 +7,7 @@ import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.service.BankIdentityService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
  * <p>
  * This controller provides endpoints for users to interact with bank identities,
  * including retrieving bank information, adding new banks, and deleting bank identities.
- * It utilizes the {@link BankIdentityService} for business logic and {@link BankIdentityMapper}
+ * It uses the {@link BankIdentityService} for business logic and {@link BankIdentityMapper}
  * for mapping between request and response objects.
  * </p>
  */
@@ -40,7 +41,8 @@ public class BankIdentityController {
      * @param identityService The {@link BankIdentityService} to be used.
      * @param identityMapper  The {@link BankIdentityMapper} to be used.
      */
-    public BankIdentityController(BankIdentityService identityService, BankIdentityMapper identityMapper) {
+    public BankIdentityController(BankIdentityService identityService,
+                                  @Qualifier("bankIdentityMapperImpl") BankIdentityMapper identityMapper) {
         this.identityService = identityService;
         this.identityMapper = identityMapper;
     }
@@ -128,9 +130,8 @@ public class BankIdentityController {
      * Logs informational messages to the console.
      *
      * @param message The message to log.
-     * @param args    Optional arguments to format the message.
      */
-    private void logInfo(String message, Object... args) {
-        log.info(message, args);
+    private void logInfo(String message) {
+        log.info(message);
     }
 }

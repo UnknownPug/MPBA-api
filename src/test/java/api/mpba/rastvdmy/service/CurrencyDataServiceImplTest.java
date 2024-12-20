@@ -3,6 +3,7 @@ package api.mpba.rastvdmy.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import api.mpba.rastvdmy.dto.response.CurrencyApiResponse;
 import api.mpba.rastvdmy.entity.CurrencyData;
 import api.mpba.rastvdmy.repository.CurrencyDataRepository;
 import api.mpba.rastvdmy.service.impl.CurrencyDataServiceImpl;
@@ -55,15 +56,14 @@ class CurrencyDataServiceImplTest {
 
     @Test
     void convertCurrency_ShouldReturnConvertedCurrencyData() {
-        Map<String, Object> responseBody = new HashMap<>();
-        responseBody.put("conversion_rate", 0.85);
-        ResponseEntity<Map<String, Object>> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
+        CurrencyApiResponse responseBody = new CurrencyApiResponse();
+        responseBody.setConversionRate(String.valueOf(0.85));
+        ResponseEntity<CurrencyApiResponse> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
         when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), isNull(), any(ParameterizedTypeReference.class)))
                 .thenReturn(responseEntity);
 
         CurrencyData result = currencyDataService.convertCurrency("USD", "EUR");
-
 
         assertEquals("EUR", result.getCurrency());
         assertEquals(BigDecimal.valueOf(0.85), result.getRate());
@@ -71,11 +71,11 @@ class CurrencyDataServiceImplTest {
 
     @Test
     void findAllExchangeRates_ShouldUpdateCurrencyData() {
-        Map<String, Object> responseBody = new HashMap<>();
-        Map<String, Number> conversionRates = new HashMap<>();
-        conversionRates.put("USD", 1.0);
-        responseBody.put("conversion_rates", conversionRates);
-        ResponseEntity<Map<String, Object>> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
+        CurrencyApiResponse responseBody = new CurrencyApiResponse();
+        Map<String, BigDecimal> conversionRates = new HashMap<>();
+        conversionRates.put("USD", BigDecimal.valueOf(1.0));
+        responseBody.setConversionRates(conversionRates);
+        ResponseEntity<CurrencyApiResponse> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
         when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), isNull(), any(ParameterizedTypeReference.class)))
                 .thenReturn(responseEntity);

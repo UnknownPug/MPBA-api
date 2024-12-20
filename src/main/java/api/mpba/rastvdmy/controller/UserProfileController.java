@@ -328,9 +328,8 @@ public class UserProfileController {
      * Logs an informational message.
      *
      * @param message the message to log
-     * @param args    the message arguments
      */
-    private void logInfo(String message, Object... args) {
-        log.info(message, args);
+    private void logInfo(String message) {
+        log.info(message);
     }
 }

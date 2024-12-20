@@ -53,7 +53,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      * @return The ResponseEntity instance containing the error message and the HTTP status.
      */
     @ExceptionHandler(value = {ApplicationException.class})
-    protected ResponseEntity<Object> applicationException(ApplicationException ex) {
+    protected ResponseEntity<String> applicationException(ApplicationException ex) {
         return httpResponse(APPLICATION_FIELD + ": " + ex.getMessage(), ex.getHttpStatus());
     }
 
@@ -64,7 +64,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      * @param httpStatus The HTTP status.
      * @return The ResponseEntity instance containing the error message and the HTTP status.
      */
-    private ResponseEntity<Object> httpResponse(String msg, HttpStatus httpStatus) {
+    private ResponseEntity<String> httpResponse(String msg, HttpStatus httpStatus) {
         return ResponseEntity.status(httpStatus).body(msg);
     }
 }

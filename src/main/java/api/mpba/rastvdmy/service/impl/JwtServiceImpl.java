@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.io.Serializable;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -93,7 +94,7 @@ public class JwtServiceImpl implements JwtService {
      * @param userDetails the user details for which the token is to be generated
      * @return the generated JWT token
      */
-    private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    private String generateToken(Map<String, Serializable> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())

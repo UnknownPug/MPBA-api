@@ -1,5 +1,6 @@
 package api.mpba.rastvdmy.service.impl;
 
+import api.mpba.rastvdmy.dto.response.CurrencyApiResponse;
 import api.mpba.rastvdmy.entity.enums.Currency;
 import api.mpba.rastvdmy.entity.CurrencyData;
 import api.mpba.rastvdmy.exception.ApplicationException;
@@ -45,7 +46,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
      * @param currencyDataRepository the repository for currency data
      * @param restTemplate           the RestTemplate for making HTTP requests
      * @param jdbcTemplate           the JdbcTemplate for executing SQL queries
-     * @param tokenVerifierService  the service for extracting user token and getting user data from the request
+     * @param tokenVerifierService   the service for extracting user token and getting user data from the request
      */
     @Autowired
     public CurrencyDataServiceImpl(CurrencyDataRepository currencyDataRepository,
@@ -83,7 +84,7 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
         if (currencyType.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Specify currency type.");
         }
-        List<CurrencyData> currencyDataList = currencyDataRepository.findAllByCurrency(currencyType.trim());
+        List<CurrencyData> currencyDataList = currencyDataRepository.findAllByCurrency(currencyType.toUpperCase().trim());
         if (!currencyDataList.isEmpty()) {
             return currencyDataList.getFirst();
         } else {
@@ -106,14 +107,14 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
     private CurrencyData getCurrencyFromApi(String currencyType) {
         final String apiUrl = "https://v6.exchangerate-api.com/v6/" + apiKey + "/latest/" + Currency.CZK;
         try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+            ResponseEntity<Map<String, BigDecimal>> response = restTemplate.exchange(
                     apiUrl,
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {
                     });
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> responseBody = response.getBody();
+                Map<String, BigDecimal> responseBody = response.getBody();
                 if (responseBody.containsKey("conversion_rates")) {
                     @SuppressWarnings("unchecked")
                     Map<String, Number> conversionRates = (Map<String, Number>) responseBody.get("conversion_rates");
@@ -142,19 +143,20 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
         final String apiUrl =
                 "https://v6.exchangerate-api.com/v6/" + apiKey + "/pair/" + baseCurrency + "/" + targetCurrency;
         try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+            ResponseEntity<CurrencyApiResponse> response = restTemplate.exchange(
                     apiUrl,
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {
                     });
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> responseBody = response.getBody();
-                if (responseBody.containsKey("conversion_rate")) {
+            CurrencyApiResponse responseEntity = response.getBody();
+            if (response.getStatusCode().is2xxSuccessful() && responseEntity != null) {
+                String responseBody = responseEntity.getConversionRate();
+                if (!responseBody.isEmpty()) {
                     CurrencyData currencyData = new CurrencyData();
                     currencyData.setCurrency(targetCurrency);
                     currencyData.setRate(
-                            BigDecimal.valueOf(((Number) responseBody.get("conversion_rate")).doubleValue())
+                            BigDecimal.valueOf(Double.parseDouble(responseBody))
                     );
                     return currencyData;
                 }
@@ -195,28 +197,27 @@ public class CurrencyDataServiceImpl implements CurrencyDataService {
     @Scheduled(fixedRate = 86400000) // Update every 24 hours
     public void findAllExchangeRates() {
         String apiUrl = "https://v6.exchangerate-api.com/v6/" + apiKey + "/latest/CZK";
-        ResponseEntity<Map<String, Object>> responseEntity = restTemplate.exchange(
+        ResponseEntity<CurrencyApiResponse> responseEntity = restTemplate.exchange(
                 apiUrl,
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
                 }
         );
-        Map<String, Object> response = responseEntity.getBody();
-        if (response != null && response.containsKey("conversion_rates")) {
-            @SuppressWarnings("unchecked")
-            Map<String, Number> ratesMap = (Map<String, Number>) response.get("conversion_rates");
+        CurrencyApiResponse response = responseEntity.getBody();
+        if (response != null && response.getConversionRates() != null) {
+            Map<String, BigDecimal> ratesMap = response.getConversionRates();
 
-            for (Map.Entry<String, Number> entry : ratesMap.entrySet()) {
+            for (Map.Entry<String, BigDecimal> entry : ratesMap.entrySet()) {
                 CurrencyData currencyData = currencyDataRepository.findByCurrency(entry.getKey());
                 if (currencyData != null) {
                     // Update the existing CurrencyData
-                    currencyData.setRate(BigDecimal.valueOf(entry.getValue().doubleValue()));
+                    currencyData.setRate(entry.getValue());
                 } else {
                     // Create a new CurrencyData
                     currencyData = new CurrencyData();
                     currencyData.setCurrency(entry.getKey());
-                    currencyData.setRate(BigDecimal.valueOf(entry.getValue().doubleValue()));
+                    currencyData.setRate(entry.getValue());
                 }
                 currencyDataRepository.save(currencyData);
             }

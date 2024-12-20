@@ -20,8 +20,8 @@ import java.util.stream.Collectors;
 /**
  * Controller for handling message-related requests.
  * <p>
- * This class provides endpoints for sending and retrieving messages. It utilizes the
- * {@link MessageService} for business logic and {@link MessageMapper} for mapping
+ * This class provides endpoints for sending and retrieving messages.
+ * It uses the {@link MessageService} for business logic and {@link MessageMapper} for mapping
  * between request and response objects. Messages are also sent to a Kafka topic for
  * further processing.
  * </p>
@@ -106,9 +106,8 @@ public class MessageController {
      * Logs informational messages to the console.
      *
      * @param message The message to log.
-     * @param args    Optional arguments to format the message.
      */
-    private void logInfo(String message, Object... args) {
-        log.info(message, args);
+    private void logInfo(String message) {
+        log.info(message);
     }
 }

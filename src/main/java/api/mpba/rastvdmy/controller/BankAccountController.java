@@ -7,6 +7,7 @@ import api.mpba.rastvdmy.entity.BankAccount;
 import api.mpba.rastvdmy.service.BankAccountService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
  * <p>
  * This controller provides endpoints for users to interact with their bank accounts,
  * including retrieving account information, adding new accounts, and removing accounts.
- * It utilizes the {@link BankAccountService} for business logic and {@link BankAccountMapper}
+ * It uses the {@link BankAccountService} for business logic and {@link BankAccountMapper}
  * for mapping between request and response objects.
  * </p>
  */
@@ -41,7 +42,8 @@ public class BankAccountController {
      * @param accountMapper  The {@link BankAccountMapper} to be used.
      * @param accountService The {@link BankAccountService} to be used.
      */
-    public BankAccountController(BankAccountMapper accountMapper, BankAccountService accountService) {
+    public BankAccountController(@Qualifier("bankAccountMapperImpl") BankAccountMapper accountMapper,
+                                 BankAccountService accountService) {
         this.accountMapper = accountMapper;
         this.accountService = accountService;
     }
@@ -167,9 +169,8 @@ public class BankAccountController {
      * Logs informational messages to the console.
      *
      * @param message The message to log.
-     * @param args    Optional arguments to format the message.
      */
-    private void logInfo(String message, Object... args) {
-        log.info(message, args);
+    private void logInfo(String message) {
+        log.info(message);
     }
 }

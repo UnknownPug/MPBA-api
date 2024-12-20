@@ -23,9 +23,9 @@ public class ErrorHandler implements ErrorController {
      */
     @RequestMapping("/error")
     public String whitelabelError(HttpServletRequest request) {
-        Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+        String status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE).toString();
         if (status != null) {
-            int statusCode = Integer.parseInt(status.toString());
+            int statusCode = Integer.parseInt(status);
             if (statusCode == HttpStatus.UNAUTHORIZED.value()) {
                 return "error-401";
             }

@@ -354,6 +354,7 @@ public class PaymentServiceImpl implements PaymentService {
      */
     private void convertCurrency(BigDecimal amount, Currency senderCurrency,
                                  Currency receiverCurrency, Payment payment) {
+
         BigDecimal exchangeRate = currencyDataService.convertCurrency(
                 senderCurrency.toString(), receiverCurrency.toString()).getRate();
 
@@ -362,5 +363,4 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setAmount(convertedAmount.setScale(2, RoundingMode.HALF_UP));
         payment.setCurrency(receiverCurrency);
     }
-
 }

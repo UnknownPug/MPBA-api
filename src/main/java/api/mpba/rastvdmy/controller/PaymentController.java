@@ -154,9 +154,8 @@ public class PaymentController {
      * Logs informational messages to the console.
      *
      * @param message The message to log.
-     * @param args    Optional arguments to format the message.
      */
-    private void logInfo(String message, Object... args) {
-        log.info(message, args);
+    private void logInfo(String message) {
+        log.info(message);
     }
 }
