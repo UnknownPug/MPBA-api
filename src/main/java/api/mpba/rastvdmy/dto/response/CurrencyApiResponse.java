@@ -67,6 +67,9 @@ public class CurrencyApiResponse {
     @JsonProperty("conversion_rates")
     private Map<String, BigDecimal> conversionRates;
 
+    /**
+     * The conversion rate of the currency.
+     */
     @JsonProperty("conversion_rate")
     private String conversionRate;
 }
