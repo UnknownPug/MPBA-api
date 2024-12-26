@@ -118,7 +118,7 @@ public class AuthServiceImplTest {
                 () -> authService.authenticate(userLoginRequest));
 
         assertEquals(HttpStatus.UNAUTHORIZED, exception.getHttpStatus());
-        assertEquals("User not found.", exception.getMessage());
+        assertEquals("User not authorized.", exception.getMessage());
     }
 
     @Test

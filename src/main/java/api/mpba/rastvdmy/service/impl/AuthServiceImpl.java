@@ -123,7 +123,7 @@ public class AuthServiceImpl extends FinancialDataGenerator implements AuthServi
 
         // Retrieve user profile by email
         UserProfile userProfile = userProfileRepository.findByEmail(request.email().trim()).orElseThrow(
-                () -> new ApplicationException(HttpStatus.UNAUTHORIZED, "User not found.")
+                () -> new ApplicationException(HttpStatus.UNAUTHORIZED, "User not authorized.")
         );
 
         // Check if the user's account is blocked
