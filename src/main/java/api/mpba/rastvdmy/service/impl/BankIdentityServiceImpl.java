@@ -144,7 +144,7 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
         BankIdentity bankIdentity =
                 identityRepository.findByUserIdAndBankNameWithAccounts(userProfile.getId(), bankName.trim())
                         .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND,
-                                "User is not found or bank with the given name is not connected to the user."
+                                "Bank is not connected to the user."
                         ));
 
         if (!bankIdentity.getBankAccounts().isEmpty()) {
@@ -183,12 +183,12 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
      *
      * @param request the HTTP request containing user information
      * @return the user profile associated with the request
-     * @throws ApplicationException if the user is not found
+     * @throws ApplicationException if the user is not authorized
      */
     private UserProfile getUser(HttpServletRequest request) {
         final String token = jwtService.extractToken(request);
         final String userEmail = jwtService.extractSubject(token);
         return userProfileRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found."));
+                .orElseThrow(() -> new ApplicationException(HttpStatus.UNAUTHORIZED, "User not authorized."));
     }
 }

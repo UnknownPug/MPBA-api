@@ -302,7 +302,7 @@ class UserProfileServiceImplTest {
                 () -> userService.updateUserSpecificCredentials(request, userProfile.getId(), userRequest)
         );
 
-        assertEquals("User does not exist.", exception.getMessage());
+        assertEquals("User not authorized.", exception.getMessage());
     }
 
     @Test
@@ -344,7 +344,7 @@ class UserProfileServiceImplTest {
                 () -> userService.deleteUser(request)
         );
 
-        assertEquals("User does not exist.", exception.getMessage());
+        assertEquals("User not authorized.", exception.getMessage());
         verify(userProfileRepository, never()).delete(any());
     }
 

@@ -36,7 +36,7 @@ public class TokenVerifierServiceImpl implements TokenVerifierService {
      *
      * @param request the HTTP request containing user information
      * @return the user profile
-     * @throws ApplicationException if the user is not found or is blocked
+     * @throws ApplicationException if the user is not authorized or is blocked
      */
     @Override
     public UserProfile getUserData(HttpServletRequest request) throws ApplicationException {
@@ -44,7 +44,7 @@ public class TokenVerifierServiceImpl implements TokenVerifierService {
         final String userEmail = jwtService.extractSubject(token);
 
         UserProfile userProfile = userProfileRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found."));
+                .orElseThrow(() -> new ApplicationException(HttpStatus.UNAUTHORIZED, "User not authorized."));
 
         if (UserStatus.STATUS_BLOCKED.equals(userProfile.getStatus())) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");

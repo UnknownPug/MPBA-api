@@ -342,7 +342,7 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
         validateUserData(request);
 
         UserProfile userProfile = userProfileRepository.findById(userId).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
+                () -> new ApplicationException(HttpStatus.UNAUTHORIZED, "User not authorized.")
         );
 
         if (getUserFromToken(request).equals(userId.toString())) {
@@ -369,7 +369,7 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
      */
     private UserProfile retrieveAndValidateUser(Optional<UserProfile> userProfileRepository) {
         UserProfile userProfile = userProfileRepository.orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
+                () -> new ApplicationException(HttpStatus.UNAUTHORIZED, "User not authorized.")
         );
         validateUserStatus(userProfile);
         return userProfile;
@@ -432,7 +432,7 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
      */
     public UserDetailsService userDetailsService() {
         return userData -> (UserDetails) userProfileRepository.findByEmail(userData).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User does not exist.")
+                () -> new ApplicationException(HttpStatus.UNAUTHORIZED, "User not authorized.")
         );
     }
 

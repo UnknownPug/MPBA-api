@@ -128,14 +128,14 @@ public class PaymentServiceImpl implements PaymentService {
      * @param request   the HTTP request containing user data
      * @param accountId the ID of the bank account to retrieve
      * @return the associated BankAccount
-     * @throws ApplicationException if the user is not found, the account is not found, or the user is blocked
+     * @throws ApplicationException if the user is not authorized, the user is blocked, or the account is not found.
      */
     private BankAccount getBankAccount(HttpServletRequest request, UUID accountId) {
         String token = jwtService.extractToken(request);
         String userEmail = jwtService.extractSubject(token);
 
         UserProfile userProfile = userProfileRepository.findByEmail(userEmail).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found."));
+                () -> new ApplicationException(HttpStatus.UNAUTHORIZED, "User not authorized."));
 
         if (userProfile.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Operation is unavailable. User is blocked.");

@@ -297,7 +297,7 @@ class BankAccountServiceImplTest {
         });
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
-        assertEquals("Bank Identity not found.", exception.getMessage());
+        assertEquals("Bank identity not found.", exception.getMessage());
     }
 
     @Test

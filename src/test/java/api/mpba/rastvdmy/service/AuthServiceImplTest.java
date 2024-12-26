@@ -117,7 +117,7 @@ public class AuthServiceImplTest {
         ApplicationException exception = assertThrows(ApplicationException.class,
                 () -> authService.authenticate(userLoginRequest));
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
+        assertEquals(HttpStatus.UNAUTHORIZED, exception.getHttpStatus());
         assertEquals("User not found.", exception.getMessage());
     }
 

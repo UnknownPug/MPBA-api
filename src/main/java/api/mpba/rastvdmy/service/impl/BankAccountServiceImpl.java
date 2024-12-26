@@ -323,7 +323,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         BankIdentity bankIdentity = getBankIdentity(request, bankName);
 
         List<BankAccount> accounts = accountRepository.findAllByBankIdentityId(bankIdentity.getId()).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")
         );
         if (accounts.isEmpty()) {
             throw new ApplicationException(HttpStatus.NOT_FOUND,
@@ -350,7 +350,7 @@ public class BankAccountServiceImpl extends FinancialDataGenerator implements Ba
         UserProfile userProfile = tokenVerifierService.getUserData(request);
 
         return bankIdentityRepository.findByUserProfileIdAndBankName(userProfile.getId(), bankName.trim()).orElseThrow(
-                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
+                () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")
         );
     }
 }

@@ -287,7 +287,7 @@ public class CardServiceImpl extends FinancialDataGenerator implements CardServi
         BankIdentity identity = bankIdentityRepository
                 .findByUserProfileIdAndBankName(userProfile.getId(), bankName.trim())
                 .orElseThrow(
-                        () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank Identity not found.")
+                        () -> new ApplicationException(HttpStatus.NOT_FOUND, "Bank identity not found.")
                 );
 
         List<BankAccount> bankAccounts = bankAccountRepository.findAllByBankIdentityId(identity.getId()).orElseThrow(
