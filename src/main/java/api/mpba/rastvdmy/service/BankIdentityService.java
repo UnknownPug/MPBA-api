@@ -1,6 +1,5 @@
 package api.mpba.rastvdmy.service;
 
-import api.mpba.rastvdmy.dto.request.BankIdentityRequest;
 import api.mpba.rastvdmy.entity.BankIdentity;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -31,12 +30,11 @@ public interface BankIdentityService {
     /**
      * Adds a new bank identity for the user.
      *
-     * @param request         the HTTP request containing user information
-     * @param identityRequest the request object containing the details of the bank identity to add
-     * @return the newly created {@link BankIdentity}
-     * @throws Exception if an error occurs during the bank identity creation process
+     * @param request the HTTP request containing user information
+     * @return the added {@link BankIdentity} object
+     * @throws Exception if an error occurs during the addition of the bank identity
      */
-    BankIdentity addBank(HttpServletRequest request, BankIdentityRequest identityRequest) throws Exception;
+    BankIdentity addBank(HttpServletRequest request) throws Exception;
 
     /**
      * Deletes a bank identity associated with the user by its name.

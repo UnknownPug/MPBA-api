@@ -8,6 +8,9 @@ import api.mpba.rastvdmy.repository.*;
 import api.mpba.rastvdmy.service.CurrencyDataService;
 import api.mpba.rastvdmy.service.JwtService;
 import api.mpba.rastvdmy.service.PaymentService;
+import api.mpba.rastvdmy.service.impl.factory.BankTransferPayment;
+import api.mpba.rastvdmy.service.impl.factory.CardPayment;
+import api.mpba.rastvdmy.service.impl.factory.PaymentProcess;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -184,8 +187,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         BankAccount recipientAccount = findBankAccountByNumber(recipientNumber);
 
-        PaymentFactory paymentFactory = new BankTransferPaymentFactory();
-        Payment payment = paymentFactory.createPayment(senderAccount, description, recipientAccount, null);
+        PaymentProcess paymentProcess = new BankTransferPayment();
+        Payment payment = paymentProcess.createPayment(senderAccount, description, recipientAccount, null);
 
         validateAmount(amount);
 
@@ -270,8 +273,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         Card card = findCardByIdAndAccountId(account.getId(), cardId);
 
-        PaymentFactory paymentFactory = new CardPaymentFactory();
-        Payment payment = paymentFactory.createPayment(account, null, null, card);
+        PaymentProcess paymentProcess = new CardPayment();
+        Payment payment = paymentProcess.createPayment(account, null, null, card);
 
         if (isAmountSufficient(account, payment.getAmount(), payment.getCurrency(), payment)) {
             payment.setStatus(FinancialStatus.RECEIVED);

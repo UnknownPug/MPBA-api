@@ -687,18 +687,6 @@
         ],
         "summary": "Add Bank",
         "description": "Add a new bank to user. It will also add accounts and cards.",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "bank_name": "string"
-                }
-              }
-            }
-          }
-        },
         "security": [
           {
             "bearerAuth": []

@@ -13,8 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,19 +81,15 @@ public class BankIdentityController {
     /**
      * Adds a new bank identity.
      *
-     * @param request         The HTTP servlet request containing user information.
-     * @param identityRequest The request body containing bank identity details.
+     * @param request The HTTP servlet request containing user information.
      * @return A {@link ResponseEntity} containing the created {@link BankIdentityResponse}.
-     * @throws Exception If there is an error while adding the bank identity.
+     * @throws Exception if an error occurs while adding the bank identity.
      */
-    @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<BankIdentityResponse> addBank(
-            HttpServletRequest request,
-            @Valid @RequestBody BankIdentityRequest identityRequest) throws Exception {
+    @PostMapping(produces = "application/json")
+    public ResponseEntity<BankIdentityResponse> addBank(HttpServletRequest request) throws Exception {
         logInfo("Connecting to the bank API to add bank ...");
-        BankIdentity identity = identityService.addBank(request, identityRequest);
-        BankIdentityResponse response = identityMapper.toResponse(convertToIdentityRequest(identity)
-        );
+        BankIdentity identity = identityService.addBank(request);
+        BankIdentityResponse response = identityMapper.toResponse(convertToIdentityRequest(identity));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

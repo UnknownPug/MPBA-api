@@ -8,6 +8,7 @@ import api.mpba.rastvdmy.dto.response.BankIdentityResponse;
 import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.service.BankIdentityService;
 import api.mpba.rastvdmy.service.JwtService;
+import api.mpba.rastvdmy.service.impl.SupportedBanks;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,21 +82,22 @@ public class BankIdentityControllerIT {
     @Test
     public void callAddBank_ShouldReturn_CreatedBankIdentity() throws Exception {
         // Given
+        SupportedBanks supportedBanks = SupportedBanks.CESKA_SPORITELNA;
         BankIdentityRequest bankIdentityRequest = new BankIdentityRequest(
-                "CzechBank",
+                supportedBanks.toString(),
                 "123456",
                 "CZBACZPP"
         );
 
         BankIdentity bankIdentity = BankIdentity.builder()
                 .id(UUID.randomUUID())
-                .bankName(bankIdentityRequest.bankName())
+                .bankName(supportedBanks.toString())
                 .bankNumber(bankIdentityRequest.bankNumber())
                 .swift(bankIdentityRequest.swift())
                 .build();
 
         // When
-        when(identityService.addBank(any(HttpServletRequest.class), eq(bankIdentityRequest))).thenReturn(bankIdentity);
+        when(identityService.addBank(any(HttpServletRequest.class))).thenReturn(bankIdentity);
         when(identityMapper.toResponse(any(BankIdentityRequest.class))).thenReturn(new BankIdentityResponse(
                 bankIdentity.getBankName(),
                 bankIdentity.getBankNumber(),

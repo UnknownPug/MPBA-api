@@ -1,6 +1,5 @@
 package api.mpba.rastvdmy.service.impl;
 
-import api.mpba.rastvdmy.dto.request.BankIdentityRequest;
 import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.entity.UserProfile;
 import api.mpba.rastvdmy.entity.enums.UserStatus;
@@ -93,28 +92,25 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
     }
 
     /**
-     * Adds a new bank identity for the user.
+     * Adds a new bank identity for the user identified by the request.
      *
-     * @param request         the HTTP request containing user information
-     * @param identityRequest the bank identity request containing necessary information
+     * @param request the HTTP request containing user information
      * @return the created bank identity
-     * @throws Exception if the user is blocked, if the bank name is empty, or if an error occurs during account connection
+     * @throws Exception            if an error occurs during bank identity creation
+     * @throws ApplicationException if the user is blocked or if a bank with the same name already exists
      */
     @Transactional
-    public BankIdentity addBank(HttpServletRequest request, BankIdentityRequest identityRequest) throws Exception {
-        UserProfile userProfile = validateUserData(request, identityRequest);
+    public BankIdentity addBank(HttpServletRequest request) throws Exception {
+        String bankName = SupportedBanks.getRandomBank();
+        UserProfile userProfile = validateUserData(request, bankName);
 
         if (userProfile.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
             throw new ApplicationException(HttpStatus.FORBIDDEN, "Operation is forbidden. User is blocked.");
         }
 
-        if (identityRequest.bankName().trim().isEmpty() || identityRequest.bankName().trim().isBlank()) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Bank name must not be empty.");
-        }
-
         BankIdentity bankIdentity = BankIdentity.builder()
                 .id(UUID.randomUUID())
-                .bankName(identityRequest.bankName().trim())
+                .bankName(bankName)
                 .bankNumber(generateBankNumber())
                 .swift(generateSwift())
                 .userProfile(userProfile)
@@ -155,14 +151,14 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
     }
 
     /**
-     * Validates user data for adding a bank identity.
+     * Validates the user data and checks if the bank name already exists for the user.
      *
-     * @param request         the HTTP request containing user information
-     * @param identityRequest the bank identity request to validate
+     * @param request  the HTTP request containing user information
+     * @param bankName the name of the bank to validate
      * @return the user profile associated with the request
      * @throws ApplicationException if the user is blocked or if a bank with the same name already exists
      */
-    private UserProfile validateUserData(HttpServletRequest request, BankIdentityRequest identityRequest) {
+    private UserProfile validateUserData(HttpServletRequest request, String bankName) {
         UserProfile userProfile = getUser(request);
 
         if (userProfile.getStatus().equals(UserStatus.STATUS_BLOCKED)) {
@@ -170,7 +166,7 @@ public class BankIdentityServiceImpl extends FinancialDataGenerator implements B
         }
 
         if (identityRepository
-                .findByUserProfileIdAndBankName(userProfile.getId(), identityRequest.bankName().trim())
+                .findByUserProfileIdAndBankName(userProfile.getId(), bankName)
                 .isPresent()) {
             throw new ApplicationException(HttpStatus.CONFLICT, "Bank with the same name already added.");
         }

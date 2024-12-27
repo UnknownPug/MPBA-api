@@ -1,4 +1,4 @@
-package api.mpba.rastvdmy.service.impl;
+package api.mpba.rastvdmy.service.impl.factory;
 
 import api.mpba.rastvdmy.entity.BankAccount;
 import api.mpba.rastvdmy.entity.Card;
@@ -7,7 +7,7 @@ import api.mpba.rastvdmy.entity.Payment;
 /**
  * Factory interface for creating Payment objects.
  */
-public interface PaymentFactory {
+public interface PaymentProcess {
     /**
      * Creates a Payment object.
      *

@@ -3,7 +3,6 @@ package api.mpba.rastvdmy.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import api.mpba.rastvdmy.dto.request.BankIdentityRequest;
 import api.mpba.rastvdmy.entity.BankIdentity;
 import api.mpba.rastvdmy.entity.UserProfile;
 import api.mpba.rastvdmy.entity.enums.UserRole;
@@ -135,17 +134,12 @@ class BankIdentityServiceImplTest {
 
     @Test
     void addBank_ShouldAddBank_WhenValidRequest() throws Exception {
-        BankIdentityRequest identityRequest = new BankIdentityRequest(
-                bankIdentity.getBankName(),
-                bankIdentity.getBankNumber(),
-                bankIdentity.getSwift()
-        );
         when(jwtService.extractToken(request)).thenReturn("token");
         when(jwtService.extractSubject("token")).thenReturn(userProfile.getEmail());
         when(userProfileRepository.findByEmail(userProfile.getEmail())).thenReturn(Optional.of(userProfile));
         when(identityRepository.save(any(BankIdentity.class))).thenReturn(bankIdentity);
 
-        BankIdentity newBank = bankIdentityService.addBank(request, identityRequest);
+        BankIdentity newBank = bankIdentityService.addBank(request);
 
         assertNotNull(newBank);
         assertEquals(bankIdentity.getId(), newBank.getId());
