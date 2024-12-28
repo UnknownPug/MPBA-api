@@ -1,5 +1,8 @@
 package api.mpba.rastvdmy.service.impl;
 
+/**
+ * Enum representing various supported banks.
+ */
 public enum SupportedBanks {
     CESKA_SPORITELNA("Ceska Sporitelna"),
     CSOB("CSOB"),
@@ -14,15 +17,30 @@ public enum SupportedBanks {
 
     private final String bankName;
 
+    /**
+     * Constructor for SupportedBanks enum.
+     *
+     * @param bankName the name of the bank
+     */
     SupportedBanks(String bankName) {
         this.bankName = bankName;
     }
 
+    /**
+     * Returns the string representation of the bank name.
+     *
+     * @return the bank name
+     */
     @Override
     public String toString() {
         return bankName;
     }
 
+    /**
+     * Returns a random bank name from the enum.
+     *
+     * @return a random bank name
+     */
     public static String getRandomBank() {
         return SupportedBanks.values()[(int) (Math.random() * SupportedBanks.values().length)].toString();
     }
