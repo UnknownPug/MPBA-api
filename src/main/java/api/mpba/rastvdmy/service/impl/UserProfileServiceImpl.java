@@ -399,7 +399,7 @@ public class UserProfileServiceImpl extends FinancialDataGenerator implements Us
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Make sure to delete all bank accounts first.");
         }
         if (userProfile.getRole().equals(UserRole.ROLE_ADMIN)) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Admin cannot deleted himself.");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Admin cannot be deleted.");
         }
         userProfileRepository.delete(userProfile);
     }
