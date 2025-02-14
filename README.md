@@ -8,7 +8,7 @@
 
 ### Spring Boot version: 3.2.4
 
-### ● Project documentation can be found by clicking [here]().
+### ● Project documentation can be found by clicking [here](https://drive.google.com/file/d/1vGJxZSUE9aEM3G5B2gR1hHnBTfwhr0ix/view?usp=sharing).
 
 ### ● Project also contains a user manual which can be found by clicking [here](https://unknownpug.github.io/MPBA-api/).
 
